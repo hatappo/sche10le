@@ -64,8 +64,28 @@ let scanTimer = 0;
 let travelMinutes = 30;
 let aiEnabled = false;
 let titleFormat = DEFAULT_TITLE_FORMAT;
-let formatRevision = 0;
-let formatSave = Promise.resolve();
+const settingStates = {
+  travel: {
+    key: "travelMinutes",
+    status: "settings-status",
+    retry: "retry-travel",
+    revision: 0,
+  },
+  format: {
+    key: "titleFormat",
+    status: "format-status",
+    retry: "retry-format",
+    revision: 0,
+  },
+  ai: {
+    key: "aiEnabled",
+    status: "ai-settings-status",
+    retry: "retry-ai",
+    revision: 0,
+  },
+};
+let settingSave = Promise.resolve();
+let panelScroll = 0;
 let sourceTimer = 0;
 let revealedId = "";
 /** @type {AbortController | undefined} */
@@ -628,6 +648,7 @@ button("deselect").addEventListener("click", () => {
 });
 document.querySelector(".brand")?.addEventListener("click", (event) => {
   event.preventDefault();
+  if (!el("settings").hidden) toggleSettings();
   resetSelection();
   renderCandidates();
   window.scrollTo({ top: 0 });
@@ -635,13 +656,20 @@ document.querySelector(".brand")?.addEventListener("click", (event) => {
 button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
+  if (settings.hidden) panelScroll = window.scrollY;
   settings.hidden = !settings.hidden;
+  document.body.classList.toggle("settings-open", !settings.hidden);
+  clearSource();
   button("settings-toggle").setAttribute(
     "aria-expanded",
     String(!settings.hidden),
   );
-  if (!settings.hidden) input("travel").focus();
-  else button("settings-toggle").focus();
+  window.scrollTo({
+    top: settings.hidden ? panelScroll : 0,
+    behavior: "instant",
+  });
+  if (!settings.hidden) input("travel").focus({ preventScroll: true });
+  else button("settings-toggle").focus({ preventScroll: true });
   updateFormatPreview();
 }
 
@@ -649,7 +677,6 @@ function updateFormatPreview() {
   const template = input("title-format").value;
   const error = validateTitleFormat(template);
   input("title-format").setAttribute("aria-invalid", String(Boolean(error)));
-  button("save-title-format").disabled = Boolean(error);
   el("format-preview").parentElement?.classList.toggle("error", Boolean(error));
   if (error) {
     el("format-preview-label").textContent = "書式エラー・適用できません";
@@ -673,35 +700,53 @@ function updateFormatPreview() {
     sample,
   );
 }
+/** @param {keyof typeof settingStates} name @param {string} text @param {boolean} [error] @param {boolean} [retry] */
+function settingMessage(name, text, error = false, retry = false) {
+  const state = settingStates[name];
+  el(state.status).textContent = text;
+  el(state.status).classList.toggle("error", error);
+  button(state.retry).hidden = !retry;
+}
+
+/** All settings apply immediately and use the same ordered persistence and feedback.
+ * @param {keyof typeof settingStates} name @param {string | number | boolean} value
+ */
+function saveSetting(name, value) {
+  const state = settingStates[name];
+  const revision = ++state.revision;
+  settingMessage(name, "保存中…");
+  settingSave = settingSave.then(async () => {
+    try {
+      await chrome.storage.local.set({ [state.key]: value });
+      if (revision === state.revision) settingMessage(name, "自動保存しました");
+    } catch {
+      if (revision === state.revision)
+        settingMessage(
+          name,
+          "変更は反映済みですが、保存できませんでした。",
+          true,
+          true,
+        );
+    }
+  });
+}
+
 function applyTitleFormat() {
-  const revision = ++formatRevision;
   const template = input("title-format").value.trim();
   const error = validateTitleFormat(template);
-  el("format-status").classList.toggle("error", Boolean(error));
   updateFormatPreview();
   if (error) {
-    el("format-status").textContent =
-      "入力した書式は適用・保存されません。最後に適用できた書式を使います。";
+    settingStates.format.revision++;
+    settingMessage(
+      "format",
+      "入力した書式は適用・保存されません。最後に適用できた書式を使います。",
+      true,
+    );
     return;
   }
   titleFormat = template;
   renderDraft();
-  el("format-status").textContent = "適用しました。保存中…";
-  // Serialize writes so a slower earlier input cannot overwrite a later edit.
-  formatSave = formatSave.then(async () => {
-    try {
-      await chrome.storage.local.set({ titleFormat: template });
-      if (revision === formatRevision)
-        el("format-status").textContent =
-          "書式を自動保存しました。タイトルを選び直しても維持されます。";
-    } catch {
-      if (revision === formatRevision) {
-        el("format-status").classList.add("error");
-        el("format-status").textContent =
-          "この予定には適用済みですが、保存できませんでした。「書式を保存」で再試行できます。";
-      }
-    }
-  });
+  saveSetting("format", template);
 }
 input("title-format").addEventListener("input", applyTitleFormat);
 el("format-tokens")
@@ -724,39 +769,50 @@ button("reset-title-format").addEventListener("click", () => {
   input("title-format").value = DEFAULT_TITLE_FORMAT;
   applyTitleFormat();
 });
-button("save-title-format").addEventListener("click", applyTitleFormat);
-button("settings-toggle").addEventListener("click", toggleSettings);
-button("settings-close").addEventListener("click", toggleSettings);
-button("save-settings").addEventListener("click", async () => {
+function applyTravel() {
   const minutes = input("travel").valueAsNumber;
-  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 180) {
-    el("settings-status").textContent = "0〜180分の整数を入力してください。";
+  const invalid = !Number.isInteger(minutes) || minutes < 0 || minutes > 180;
+  input("travel").setAttribute("aria-invalid", String(invalid));
+  if (invalid) {
+    settingStates.travel.revision++;
+    settingMessage(
+      "travel",
+      "0〜180分の整数を入力してください。直前の設定を維持します。",
+      true,
+    );
     return;
   }
-  try {
-    await chrome.storage.local.set({ travelMinutes: minutes });
-    travelMinutes = minutes;
-    el("settings-status").textContent =
-      "保存しました。次に選ぶ予定から適用されます。";
-    if (!draft) renderCandidates();
-  } catch {
-    el("settings-status").textContent =
-      "保存できませんでした。もう一度お試しください。";
+  travelMinutes = minutes;
+  if (!draft) {
+    clearSource();
+    renderCandidates();
   }
-});
-input("ai-enabled").addEventListener("change", async () => {
-  const enabled = input("ai-enabled").checked;
-  try {
-    await chrome.storage.local.set({ aiEnabled: enabled });
-    aiEnabled = enabled;
-    if (enabled && pageText) void prepareAI(generation);
-    else {
-      aiController?.abort();
-      el("ai-area").hidden = true;
-    }
-  } catch {
-    input("ai-enabled").checked = aiEnabled;
-    el("settings-status").textContent = "AI設定を保存できませんでした。";
+  saveSetting("travel", minutes);
+}
+function applyAI() {
+  aiEnabled = input("ai-enabled").checked;
+  aiController?.abort();
+  if (aiEnabled && pageText) void prepareAI(generation);
+  else el("ai-area").hidden = true;
+  saveSetting("ai", aiEnabled);
+}
+button("settings-toggle").addEventListener("click", toggleSettings);
+button("settings-close").addEventListener("click", toggleSettings);
+input("travel").addEventListener("input", applyTravel);
+input("ai-enabled").addEventListener("change", applyAI);
+button("retry-format").addEventListener("click", () =>
+  saveSetting("format", titleFormat),
+);
+button("retry-travel").addEventListener("click", () =>
+  saveSetting("travel", travelMinutes),
+);
+button("retry-ai").addEventListener("click", () =>
+  saveSetting("ai", aiEnabled),
+);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !el("settings").hidden) {
+    event.preventDefault();
+    toggleSettings();
   }
 });
 chrome.runtime.onMessage.addListener((message) => {

@@ -28,31 +28,38 @@
     </header>
     <section id="settings" class="settings" aria-label="設定" hidden>
       <div class="section-heading">
-        <h2>いつもの設定</h2>
+        <h2>設定</h2>
         <button id="settings-close" class="text-button" type="button">
           閉じる
         </button>
       </div>
-      <label for="travel"
-        >前後の移動時間 <span class="muted">片道あたり</span></label
-      >
-      <div class="number-control">
-        <input
-          id="travel"
-          type="number"
-          min="0"
-          max="180"
-          step="5"
-          value="30"
-        /><span>分ずつ</span
-        ><button id="save-settings" class="small-button" type="button">
-          保存
-        </button>
+      <p class="settings-note">変更は自動保存されます</p>
+      <div class="setting-group">
+        <label for="travel"
+          >前後の移動時間 <span class="muted">片道あたり</span></label
+        >
+        <div class="number-control">
+          <input
+            id="travel"
+            type="number"
+            min="0"
+            max="180"
+            step="1"
+            value="30"
+            aria-describedby="travel-help settings-status"
+          /><span>分ずつ</span>
+        </div>
+        <p id="travel-help" class="hint">
+          次に選ぶ「移動込み」に適用されます。
+        </p>
+        <div class="setting-feedback">
+          <p id="settings-status" class="hint setting-status" role="status"></p>
+          <button id="retry-travel" class="text-button" type="button" hidden>
+            再試行
+          </button>
+        </div>
       </div>
-      <p id="settings-status" class="hint" role="status">
-        次に選ぶ「移動込み」に適用されます。
-      </p>
-      <div class="title-format-settings">
+      <div class="setting-group">
         <label for="title-format">タイトルの書式</label>
         <input
           id="title-format"
@@ -80,22 +87,35 @@
         </div>
         <div class="format-actions">
           <button id="reset-title-format" class="text-button" type="button">
-            初期値に戻す</button
-          ><button id="save-title-format" class="small-button" type="button">
-            書式を保存
+            初期値に戻す
           </button>
         </div>
-        <p id="format-status" class="hint" role="status">
-          有効な書式はすぐに適用し、自動保存します。
-        </p>
+        <div class="setting-feedback">
+          <p id="format-status" class="hint setting-status" role="status"></p>
+          <button id="retry-format" class="text-button" type="button" hidden>
+            再試行
+          </button>
+        </div>
       </div>
-      <label class="checkbox-label"
-        ><input id="ai-enabled" type="checkbox" />
-        利用できる場合はローカルAIで補完</label
-      >
-      <p class="hint">
-        機械的な抽出結果を先に表示します。ページの内容は外部へ送信しません。
-      </p>
+      <div class="setting-group">
+        <label class="checkbox-label"
+          ><input id="ai-enabled" type="checkbox" />
+          利用できる場合はローカルAIで補完</label
+        >
+        <p class="hint">
+          機械的な抽出結果を先に表示します。ページの内容は外部へ送信しません。
+        </p>
+        <div class="setting-feedback">
+          <p
+            id="ai-settings-status"
+            class="hint setting-status"
+            role="status"
+          ></p>
+          <button id="retry-ai" class="text-button" type="button" hidden>
+            再試行
+          </button>
+        </div>
+      </div>
     </section>
     <main>
       <section class="source-section" aria-label="対象ページ">

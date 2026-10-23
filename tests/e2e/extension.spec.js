@@ -247,7 +247,6 @@ test("移動時間を保存でき、ページ遷移・パネル終了で選択�
   const { source, panel } = await open();
   await panel.getByRole("button", { name: "設定", exact: true }).click();
   await panel.locator("#travel").fill("45");
-  await panel.getByRole("button", { name: "保存", exact: true }).click();
   await expect(panel.locator("#settings-status")).toContainText("保存しました");
   await panel.getByRole("button", { name: "閉じる", exact: true }).click();
   await select(panel, "移動込み");
@@ -268,9 +267,10 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   const { source, panel } = await open();
   await panel.getByRole("button", { name: "設定", exact: true }).click();
   await panel.locator("#title-format").fill("{unknown}");
-  await expect(
-    panel.getByRole("button", { name: "書式を保存" }),
-  ).toBeDisabled();
+  await expect(panel.locator("#title-format")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   await expect(panel.locator("#format-preview-label")).toHaveText(
     "書式エラー・適用できません",
   );
@@ -414,5 +414,91 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await panel.close();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await source.close();
+});
+
+test("設定を独立表示し、3項目を自動保存・失敗時だけ共通の再試行にする", async () => {
+  const { source, panel } = await open();
+  await select(panel);
+  await source.locator("#event-title").click();
+  await panel.getByRole("button", { name: "設定", exact: true }).click();
+  await expect(panel.locator("main")).toBeHidden();
+  await expect(panel.locator("#footer")).toBeHidden();
+  await expect(panel.locator("#settings")).toContainText(
+    "変更は自動保存されます",
+  );
+  await expect(panel.getByRole("button", { name: /保存|再試行/ })).toHaveCount(
+    0,
+  );
+  await panel.locator("#travel").fill("181");
+  await expect(panel.locator("#travel")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
+  await expect(panel.locator("#settings-status")).toHaveClass(/error/);
+  await panel.locator("#travel").fill("35");
+  await expect(panel.locator("#settings-status")).toHaveText(
+    "自動保存しました",
+  );
+  await panel.locator("#ai-enabled").check();
+  await expect(panel.locator("#ai-settings-status")).toHaveText(
+    "自動保存しました",
+  );
+  await panel.locator("#ai-enabled").uncheck();
+  await expect(panel.locator("#ai-settings-status")).toHaveText(
+    "自動保存しました",
+  );
+  // All settings use the same failure feedback and retry interaction.
+  await panel.evaluate(() => {
+    window.__saveSettings = chrome.storage.local.set.bind(chrome.storage.local);
+    chrome.storage.local.set = async () => {
+      throw new Error("test storage failure");
+    };
+  });
+  for (const [inputId, value, statusId, retryId] of [
+    ["travel", "40", "settings-status", "retry-travel"],
+    ["title-format", "{title} テスト", "format-status", "retry-format"],
+    ["ai-enabled", true, "ai-settings-status", "retry-ai"],
+  ]) {
+    if (typeof value === "boolean") await panel.locator(`#${inputId}`).check();
+    else await panel.locator(`#${inputId}`).fill(value);
+    await expect(panel.locator(`#${statusId}`)).toHaveClass(/error/);
+    await expect(panel.locator(`#${retryId}`)).toBeVisible();
+    await expect(panel.locator(`#${retryId}`)).toHaveText("再試行");
+  }
+  await panel.evaluate(() => {
+    chrome.storage.local.set = window.__saveSettings;
+  });
+  for (const id of ["retry-travel", "retry-format", "retry-ai"]) {
+    await panel.locator(`#${id}`).click();
+    await expect(panel.locator(`#${id}`)).toBeHidden();
+  }
+  await expect
+    .poll(() =>
+      panel.evaluate(() =>
+        chrome.storage.local.get(["travelMinutes", "titleFormat", "aiEnabled"]),
+      ),
+    )
+    .toEqual({
+      travelMinutes: 40,
+      titleFormat: "{title} テスト",
+      aiEnabled: true,
+    });
+  await panel.setViewportSize({ width: 300, height: 700 });
+  await panel.screenshot({
+    path: "test-results/settings-unified.png",
+    fullPage: true,
+  });
+  expect(
+    await panel.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "蔵前の活版印刷ワークショップ テスト",
+  );
+  await expect(panel.locator("#footer")).toBeVisible();
+  await panel.close();
   await source.close();
 });
