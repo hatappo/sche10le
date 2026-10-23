@@ -271,11 +271,20 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   await expect(
     panel.getByRole("button", { name: "書式を保存" }),
   ).toBeDisabled();
+  await expect(panel.locator("#format-preview-label")).toHaveText(
+    "書式エラー・適用できません",
+  );
+  await expect(panel.locator(".format-preview")).toHaveClass(/error/);
+  await expect(panel.locator("#format-preview")).toHaveCSS(
+    "color",
+    "rgb(151, 45, 40)",
+  );
+  await panel.screenshot({ path: "test-results/panel-format-error.png" });
   await panel.locator("#title-format").fill("{from:hhmm} {title} あいうえお");
   await expect(panel.locator("#format-preview")).toHaveText(
     "1730 勉強会 あいうえお",
   );
-  await panel.getByRole("button", { name: "書式を保存" }).click();
+  // Valid input is applied and persisted without an extra save action.
   await expect(panel.locator("#format-status")).toContainText("保存しました");
   await panel.screenshot({
     path: "test-results/panel-title-settings.png",
@@ -287,11 +296,35 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   await expect(panel.locator("#picked-title")).toHaveText(
     "1400 蔵前の活版印刷ワークショップ あいうえお",
   );
-  await panel.locator('#steps button[data-step="0"]').click();
+  const titleStep = panel.locator("#steps li").first();
+  const bounds = await titleStep.boundingBox();
+  // Click the actual pill's edge, outside the label and number.
+  await panel.mouse.click(bounds.x + 3, bounds.y + 3);
+  await expect(panel.locator('#steps button[data-step="0"]')).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
   await source.locator("#event-link").click();
   await expect(panel.locator("#picked-title")).toHaveText(
     "1400 活版印刷について詳しく あいうえお",
   );
+  await panel.getByRole("button", { name: "設定", exact: true }).click();
+  await panel.locator("#title-format").fill("{title} 一時的な編集");
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "活版印刷について詳しく 一時的な編集",
+  );
+  await panel.locator("#title-format").fill("{from:hhmm} {title} あいうえお");
+  await expect(panel.locator("#format-status")).toContainText(
+    "自動保存しました",
+  );
+  await panel.locator("#title-format").fill("{unsupported}");
+  await expect(panel.locator("#format-status")).toContainText(
+    "適用・保存されません",
+  );
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "1400 活版印刷について詳しく あいうえお",
+  );
+  await panel.getByRole("button", { name: "閉じる", exact: true }).click();
   const opened = context.waitForEvent("page");
   await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
   const calendar = await opened;

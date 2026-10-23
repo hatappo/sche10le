@@ -459,6 +459,14 @@ main {
   counter-reset: step;
 }
 .steps li {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+.steps button {
+  width: 100%;
+  border: 0;
+  font: inherit;
   border-radius: 8px;
   padding: 7px 4px;
   background: var(--wash);
@@ -471,7 +479,7 @@ main {
   color: var(--muted);
   position: relative;
 }
-.steps li:before {
+.steps button:before {
   counter-increment: step;
   content: counter(step);
   font:
@@ -484,18 +492,18 @@ main {
   display: grid;
   place-items: center;
 }
-.steps li.active {
+.steps li.active button {
   color: white;
   background: var(--green);
   box-shadow: 0 3px 8px #2c604520;
   font-weight: bold;
 }
-.steps li.active:before {
+.steps li.active button:before {
   background: var(--green);
   color: #fff;
   border-color: var(--green);
 }
-.steps li.done:before {
+.steps li.done button:before {
   content: "✓";
   color: var(--green);
   background: var(--wash);
@@ -744,22 +752,6 @@ main {
 .reload-button:hover {
   color: var(--green);
 }
-.steps button {
-  font: inherit;
-  color: inherit;
-  border: 0;
-  background: none;
-  padding: 0;
-}
-.steps li {
-  position: relative;
-}
-.steps button::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 8px;
-}
 .picked-confirmation {
   position: absolute;
   right: 0;
@@ -832,4 +824,19 @@ main {
   align-items: center;
   justify-content: space-between;
   margin-top: 10px;
+}
+
+.format-preview.error {
+  background: #fff0ed;
+  border: 1px solid #c3635b;
+  color: #972d28;
+}
+.format-preview.error span,
+.format-preview.error output,
+#format-status.error {
+  color: #972d28;
+}
+.format-preview.error span {
+  font-size: 11px;
+  font-weight: 700;
 }

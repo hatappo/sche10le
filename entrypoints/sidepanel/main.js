@@ -64,6 +64,8 @@ let scanTimer = 0;
 let travelMinutes = 30;
 let aiEnabled = false;
 let titleFormat = DEFAULT_TITLE_FORMAT;
+let formatRevision = 0;
+let formatSave = Promise.resolve();
 /** @type {AbortController | undefined} */
 let aiController;
 
@@ -611,7 +613,9 @@ function updateFormatPreview() {
   const error = validateTitleFormat(template);
   input("title-format").setAttribute("aria-invalid", String(Boolean(error)));
   button("save-title-format").disabled = Boolean(error);
+  el("format-preview").parentElement?.classList.toggle("error", Boolean(error));
   if (error) {
+    el("format-preview-label").textContent = "書式エラー・適用できません";
     el("format-preview").textContent = error;
     return;
   }
@@ -632,7 +636,37 @@ function updateFormatPreview() {
     sample,
   );
 }
-input("title-format").addEventListener("input", updateFormatPreview);
+function applyTitleFormat() {
+  const revision = ++formatRevision;
+  const template = input("title-format").value.trim();
+  const error = validateTitleFormat(template);
+  el("format-status").classList.toggle("error", Boolean(error));
+  updateFormatPreview();
+  if (error) {
+    el("format-status").textContent =
+      "入力した書式は適用・保存されません。最後に適用できた書式を使います。";
+    return;
+  }
+  titleFormat = template;
+  renderDraft();
+  el("format-status").textContent = "適用しました。保存中…";
+  // Serialize writes so a slower earlier input cannot overwrite a later edit.
+  formatSave = formatSave.then(async () => {
+    try {
+      await chrome.storage.local.set({ titleFormat: template });
+      if (revision === formatRevision)
+        el("format-status").textContent =
+          "書式を自動保存しました。タイトルを選び直しても維持されます。";
+    } catch {
+      if (revision === formatRevision) {
+        el("format-status").classList.add("error");
+        el("format-status").textContent =
+          "この予定には適用済みですが、保存できませんでした。「書式を保存」で再試行できます。";
+      }
+    }
+  });
+}
+input("title-format").addEventListener("input", applyTitleFormat);
 el("format-tokens")
   .querySelectorAll("button")
   .forEach((control) => {
@@ -646,32 +680,14 @@ el("format-tokens")
         "end",
       );
       field.focus();
-      updateFormatPreview();
+      applyTitleFormat();
     });
   });
 button("reset-title-format").addEventListener("click", () => {
   input("title-format").value = DEFAULT_TITLE_FORMAT;
-  el("format-status").textContent = "「書式を保存」で初期値を適用します。";
-  updateFormatPreview();
+  applyTitleFormat();
 });
-button("save-title-format").addEventListener("click", async () => {
-  const template = input("title-format").value.trim();
-  const error = validateTitleFormat(template);
-  if (error) {
-    el("format-status").textContent = error;
-    return;
-  }
-  try {
-    await chrome.storage.local.set({ titleFormat: template });
-    titleFormat = template;
-    el("format-status").textContent =
-      "書式を保存しました。選択中のタイトルにも適用されます。";
-    renderDraft();
-  } catch {
-    el("format-status").textContent =
-      "書式を保存できませんでした。もう一度お試しください。";
-  }
-});
+button("save-title-format").addEventListener("click", applyTitleFormat);
 button("settings-toggle").addEventListener("click", toggleSettings);
 button("settings-close").addEventListener("click", toggleSettings);
 button("save-settings").addEventListener("click", async () => {
