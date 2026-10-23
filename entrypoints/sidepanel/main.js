@@ -6,6 +6,7 @@ import {
 } from "../../lib/extract.js";
 import { calendarUrl, candidateOptions } from "../../lib/calendar.js";
 import { orderCandidates } from "../../lib/candidate-order.js";
+import { pickFooterQuote } from "../../lib/footer-quotes.js";
 import {
   createDraft,
   FIELD_LABELS,
@@ -299,7 +300,6 @@ function renderCandidates() {
   el("empty-description").textContent = pageUrl
     ? "画像内の文字は対象外です。日付がテキストで書かれたページをお試しください。"
     : "日程のあるページを開いて、拡張アイコンを押してください。";
-  el("list-hint").hidden = !candidates.length;
   const fragment = document.createDocumentFragment();
   for (const { candidate, variants } of options)
     fragment.append(candidateCard(candidate, variants));
@@ -347,7 +347,6 @@ function reconcileCandidates(options) {
   }
   el("count").textContent = String(options.length);
   el("empty").hidden = options.length > 0;
-  el("list-hint").hidden = !options.length;
   updateOrderControl(options.length);
 }
 
@@ -905,6 +904,9 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 window.addEventListener("pagehide", stopConnection);
 
 async function initialize() {
+  const quote = pickFooterQuote();
+  el("footer-quote").textContent = quote.text;
+  el("footer-quote").title = quote.attribution;
   try {
     const saved = await chrome.storage.local.get([
       "travelMinutes",

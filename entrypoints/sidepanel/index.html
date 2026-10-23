@@ -181,9 +181,6 @@
           AIを準備する
         </button>
       </div>
-      <p id="list-hint" class="list-hint" hidden>
-        日程に触れると、登録方法を選べます。
-      </p>
       <section
         id="selection"
         class="selection"
@@ -246,7 +243,8 @@
         <p class="footer-hint">情報の取得は途中でもOK。保存はカレンダーで。</p>
       </div>
       <p id="idle-footer" class="idle-footer">
-        <span class="tiny-dot"></span> 予定を見つける、小さな近道。
+        <span class="tiny-dot" aria-hidden="true"></span
+        ><span id="footer-quote"></span>
       </p>
     </footer>
     <script type="module" src="./main.js"></script>

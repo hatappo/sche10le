@@ -404,12 +404,6 @@ main {
   color: var(--muted);
   padding: 2px 7px 5px;
 }
-.list-hint {
-  text-align: center;
-  color: var(--muted);
-  font-size: 10px;
-  margin-top: 16px;
-}
 .empty {
   text-align: center;
   padding: 25px 8px 20px;
@@ -736,9 +730,6 @@ main {
   margin-top: 18px;
 }
 .is-selected .candidate:not(.selected) {
-  display: none;
-}
-.is-selected .list-hint {
   display: none;
 }
 @keyframes appear {

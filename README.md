@@ -153,3 +153,21 @@ AI APIの成功・失敗・セッション破棄はモックで検証してい�
 ページ内容・候補・取得内容は永続保存しません。設定のみ端末内に保存します。解析は端末内で完結し、カレンダーを開く操作で選択した予定情報と元ページURLをGoogleへ渡します。解析用サーバー・アクセス解析・外部フォントはありません。
 
 設計の詳細は [製品・技術設計書](docs/dev/product_technical_design.md) を参照してください。
+
+<details>
+<summary>フッターのことば（全6種・出典）</summary>
+
+パネルを開くたびに1つをランダムに表示します。再スキャンや選び直しでは変えず、時間経過による切り替えもしません。同じことばが続く場合もあります。文言は拡張に同梱し、外部へ取得しに行きません。フッターにホバーすると出典の補足を表示します。
+
+| 表示することば | 出典・確認先 |
+| --- | --- |
+| 思い立ったが吉日 | ことわざ：[漢字ペディア](https://www.kanjipedia.jp/kotoba/0002766600) |
+| 一日の計は朝にあり | ことわざ：[漢字ペディア](https://www.kanjipedia.jp/kotoba/0000217100) |
+| 急がば回れ | ことわざ：[滋賀県立図書館の回答（レファレンス協同データベース）](https://crd.ndl.go.jp/reference/entry/index.php?id=1000132194&page=ref_view) |
+| 光陰矢の如し | ことわざ：[堺市立中央図書館の回答（レファレンス協同データベース）](https://crd.ndl.go.jp/reference/entry/index.php?id=1000302206&page=ref_view) |
+| 明日は明日の風が吹く | ことわざ：[ことわざ辞典オンライン](https://kotowaza.jitenon.jp/kotowaza/1149.php) |
+| 失った時間は二度と戻らない。 | フランクリン編『Poor Richard Improved』（1748年）より、独自訳。[Founders Online（米国国立公文書館）](https://founders.archives.gov/documents/Franklin/01-03-02-0103) |
+
+最後の原文は “Lost Time is never found again.”。既存の日本語訳は転載していません。その他は伝承されてきたことわざとして掲載し、特定の人物の発言とは扱っていません。辞書の解説文は転載していません。
+
+</details>

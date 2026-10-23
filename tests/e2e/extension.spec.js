@@ -1,4 +1,5 @@
 import { test, expect, chromium } from "@playwright/test";
+import { FOOTER_QUOTES } from "../../lib/footer-quotes.js";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -59,11 +60,15 @@ test.afterAll(async () => {
   if (workspace) await rm(workspace, { recursive: true, force: true });
 });
 
-async function open() {
+async function open(footerRandom) {
   const source = await context.newPage();
   await source.goto(baseUrl);
   const panel = await context.newPage();
   await panel.setViewportSize({ width: 390, height: 900 });
+  if (footerRandom !== undefined)
+    await panel.addInitScript((value) => {
+      Math.random = () => value;
+    }, footerRandom);
   await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
   await expect(panel.getByRole("button", { name: "再スキャン" })).toBeEnabled();
   await source.bringToFront();
@@ -966,4 +971,40 @@ test("並び順の保存失敗は再試行でき、連続変更でも最後の�
   await expect(panel.locator("#order-feedback")).toBeHidden();
   await panel.close();
   await source.close();
+});
+
+test("フッターのことばを起動時に選び、再走査や選び直しでは変えない", async () => {
+  for (const [random, quote] of [
+    [0, FOOTER_QUOTES[0]],
+    [0.999, FOOTER_QUOTES.at(-1)],
+  ]) {
+    const { source, panel } = await open(random);
+    const footer = panel.locator("#footer-quote");
+    await expect(footer).toHaveText(quote.text);
+    await expect(footer).toHaveAttribute("title", quote.attribution);
+    await expect(panel.locator("#list-hint")).toHaveCount(0);
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(footer).toHaveText(quote.text);
+    await select(panel);
+    await expect(panel.locator("#idle-footer")).toBeHidden();
+    await expect(
+      panel.getByRole("button", { name: "Googleカレンダーで開く" }),
+    ).toBeVisible();
+    await panel.getByRole("button", { name: "選び直す" }).click();
+    await expect(footer).toBeVisible();
+    await expect(footer).toHaveText(quote.text);
+    await panel.setViewportSize({ width: 280, height: 700 });
+    expect(
+      await panel.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await panel.screenshot({
+      path: `test-results/footer-quote-${random}.png`,
+      animations: "disabled",
+    });
+    await panel.close();
+    await source.close();
+  }
 });
