@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sche10le</title>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="#" aria-label="Sche10le ホーム"
+        ><span class="brand-mark" aria-hidden="true">10</span
+        ><span
+          >sche<span class="brand-ten">10</span>le<span class="brand-period"
+            >.</span
+          ></span
+        ></a
+      >
+      <button
+        id="settings-toggle"
+        class="icon-button"
+        type="button"
+        aria-label="設定"
+        aria-expanded="false"
+        aria-controls="settings"
+      >
+        ⚙
+      </button>
+    </header>
+    <section id="settings" class="settings" aria-label="設定" hidden>
+      <div class="section-heading">
+        <h2>いつもの設定</h2>
+        <button id="settings-close" class="text-button" type="button">
+          閉じる
+        </button>
+      </div>
+      <label for="travel"
+        >前後の移動時間 <span class="muted">片道あたり</span></label
+      >
+      <div class="number-control">
+        <input
+          id="travel"
+          type="number"
+          min="0"
+          max="180"
+          step="5"
+          value="30"
+        /><span>分ずつ</span
+        ><button id="save-settings" class="small-button" type="button">
+          保存
+        </button>
+      </div>
+      <p id="settings-status" class="hint" role="status">
+        次に選ぶ「移動込み」に適用されます。
+      </p>
+      <label class="checkbox-label"
+        ><input id="ai-enabled" type="checkbox" />
+        利用できる場合はローカルAIで補完</label
+      >
+      <p class="hint">
+        機械的な抽出結果を先に表示します。ページの内容は外部へ送信しません。
+      </p>
+    </section>
+    <main>
+      <section class="intro">
+        <p class="eyebrow">A LITTLE LESS FRICTION</p>
+        <h1>気になる日を、<br />予定にしよう。</h1>
+        <p class="intro-description">日程を選んで、カレンダーへ。</p>
+      </section>
+      <section class="source-section" aria-label="対象ページ">
+        <div class="source-icon" aria-hidden="true">↗</div>
+        <div class="source-text">
+          <span class="eyebrow">THIS PAGE</span>
+          <p id="source-title">ページを確認しています</p>
+          <span id="source-domain" class="muted"></span>
+        </div>
+        <button
+          id="rescan"
+          class="icon-button"
+          type="button"
+          aria-label="再スキャン"
+          title="再スキャン"
+        >
+          ↻
+        </button>
+      </section>
+      <div class="section-heading candidates-heading">
+        <h2>見つかった日程 <span id="count" class="count">0</span></h2>
+        <span id="scan-state" class="status-dot">待機中</span>
+      </div>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+      <div id="candidates" class="candidates" aria-label="日程候補"></div>
+      <div id="empty" class="empty" hidden>
+        <div class="empty-calendar" aria-hidden="true"><span>—</span></div>
+        <h2 id="empty-title">日程はまだ見つかっていません</h2>
+        <p id="empty-description">
+          日程のあるページを開いて、拡張アイコンを押してください。
+        </p>
+      </div>
+      <div id="ai-area" class="ai-area" hidden>
+        <span id="ai-status"></span
+        ><button id="ai-download" class="text-button" type="button" hidden>
+          AIを準備する
+        </button>
+      </div>
+      <p id="list-hint" class="list-hint" hidden>
+        日程に触れると、登録方法を選べます。
+      </p>
+      <section
+        id="selection"
+        class="selection"
+        aria-label="選択した予定"
+        hidden
+      >
+        <div class="section-heading">
+          <span class="eyebrow">YOUR PLAN</span
+          ><button id="deselect" class="text-button" type="button">
+            選び直す
+          </button>
+        </div>
+        <h2 id="selected-date"></h2>
+        <p id="selected-time" class="selected-time"></p>
+        <ol id="steps" class="steps" aria-label="ページから取得する項目">
+          <li>タイトル</li>
+          <li>場所</li>
+          <li>詳細</li>
+        </ol>
+        <div class="pick-instruction" aria-live="polite">
+          <span class="pick-cursor" aria-hidden="true">↖</span>
+          <div>
+            <strong id="pick-title"></strong>
+            <p id="pick-help"></p>
+          </div>
+        </div>
+        <div class="pick-controls">
+          <button id="previous" class="text-button" type="button">← 戻る</button
+          ><button id="skip" class="text-button" type="button">
+            スキップ →</button
+          ><button id="resume" class="text-button" type="button" hidden>
+            ページから取得を再開 →
+          </button>
+        </div>
+        <dl class="picked-values">
+          <div>
+            <dt>タイトル</dt>
+            <dd id="picked-title"></dd>
+          </div>
+          <div>
+            <dt>場所</dt>
+            <dd id="picked-location"></dd>
+          </div>
+          <div>
+            <dt>詳細</dt>
+            <dd id="picked-details"></dd>
+          </div>
+        </dl>
+        <div class="source-note">
+          <span aria-hidden="true">↗</span
+          ><span>元ページのURLは詳細の末尾に残ります</span>
+        </div>
+      </section>
+    </main>
+    <footer id="footer" class="footer">
+      <div id="open-area" hidden>
+        <button id="open-calendar" class="primary-button" type="button">
+          Googleカレンダーで開く <span aria-hidden="true">↗</span>
+        </button>
+        <p class="footer-hint">情報の取得は途中でもOK。保存はカレンダーで。</p>
+      </div>
+      <p id="idle-footer" class="idle-footer">
+        <span class="tiny-dot"></span> 予定を見つける、小さな近道。
+      </p>
+    </footer>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

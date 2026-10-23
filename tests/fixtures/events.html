@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>週末のデザイン散歩 | TOKYO FIELD NOTES</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f5f2e9;
+        color: #24362c;
+        font:
+          16px/1.8 "Hiragino Kaku Gothic ProN",
+          sans-serif;
+      }
+      main {
+        max-width: 800px;
+        margin: 60px auto;
+        padding: 40px;
+      }
+      small {
+        letter-spacing: 3px;
+        color: #727e6c;
+      }
+      h1 {
+        font-family: serif;
+        font-size: 44px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+      article {
+        border-top: 1px solid #cdd2c5;
+        padding: 22px 0;
+      }
+      h2 {
+        font-size: 23px;
+      }
+      a {
+        color: #2c6045;
+      }
+      .date {
+        font-size: 20px;
+      }
+      address {
+        font-style: normal;
+      }
+      button {
+        padding: 8px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <small>TOKYO FIELD NOTES / AUTUMN 2026</small>
+      <h1 tabindex="0">週末のデザイン散歩</h1>
+      <p>街を歩いて、つくる人に出会う。秋のオープンスタジオ。</p>
+      <article>
+        <h2 id="event-title" tabindex="0">蔵前の活版印刷ワークショップ</h2>
+        <p class="date">2026年11月8日（日）14:00〜16:00</p>
+        <address id="venue" tabindex="0">
+          東京都台東区蔵前3丁目 アトリエ蔵前
+        </address>
+        <p id="description" tabindex="0">
+          受付は開始30分前から。入口でチケットを提示してください。
+        </p>
+        <a id="event-link" href="/must-not-navigate">活版印刷について詳しく</a>
+      </article>
+      <article>
+        <h2>まちの建築をめぐる朝</h2>
+        <p class="date">2026年11月15日 10:00〜12:00</p>
+        <p>気になる建築を、ゆっくり訪ねます。</p>
+      </article>
+      <article>
+        <h2>紙と暮らしの小さな展示</h2>
+        <p class="date">2026年11月21日〜11月23日</p>
+        <p>入場無料。お好きな時間にどうぞ。</p>
+      </article>
+      <div class="hidden">2026年12月25日 15:00〜17:00</div>
+      <button
+        id="spa"
+        onclick="
+          history.pushState({}, '', '/next');
+          document.querySelector('h1').textContent = '次のページ';
+        "
+      >
+        別のページへ
+      </button>
+    </main>
+  </body>
+</html>

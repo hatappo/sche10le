@@ -1,0 +1,744 @@
+@import url("../../lib/theme.css");
+
+:root {
+  color-scheme: light;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 280px;
+}
+button,
+input {
+  font: inherit;
+}
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 4px;
+}
+button {
+  transition:
+    background 140ms,
+    transform 140ms;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+p {
+  margin: 0;
+}
+h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+button {
+  color: inherit;
+}
+a {
+  color: inherit;
+}
+::selection {
+  background: #d5e4cc;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  font:
+    600 25px/1 Georgia,
+    "Times New Roman",
+    serif;
+  letter-spacing: -1.4px;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 32px;
+  background: var(--green);
+  border-radius: 7px;
+  color: var(--paper);
+  font:
+    16px/1 Georgia,
+    serif;
+  letter-spacing: -1px;
+  position: relative;
+}
+.brand-mark:before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 6px;
+  right: 6px;
+  border-top: 1px solid #ffffff45;
+}
+.brand-mark {
+  padding-top: 6px;
+}
+.brand-ten {
+  font-style: italic;
+}
+.brand-period {
+  color: var(--ochre);
+}
+.icon-button {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 8px;
+  min-width: 34px;
+  height: 34px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+}
+.icon-button:hover {
+  background: var(--wash);
+  color: var(--green);
+}
+main {
+  padding: 0 24px 125px;
+}
+.intro {
+  padding: 30px 0 27px;
+}
+.eyebrow {
+  font:
+    10px/1.5 "Avenir Next",
+    Avenir,
+    sans-serif;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  color: var(--muted);
+}
+.intro h1 {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  font-size: 30px;
+  line-height: 1.55;
+  font-weight: 500;
+  letter-spacing: -0.7px;
+  margin: 12px 0 10px;
+}
+.intro-description {
+  color: var(--muted);
+  font-size: 12px;
+}
+.source-section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff60;
+}
+.source-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--wash);
+  color: var(--green);
+  font-size: 18px;
+  flex: none;
+}
+.source-text {
+  min-width: 0;
+  flex: 1;
+}
+.source-text .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+.source-text p {
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.source-text > .muted {
+  display: block;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.muted,
+.hint {
+  color: var(--muted);
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.candidates-heading {
+  margin: 25px 0 14px;
+}
+.count {
+  display: inline-grid;
+  place-items: center;
+  font:
+    11px "Avenir Next",
+    sans-serif;
+  margin-left: 5px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+}
+.status-dot {
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.status-dot:before,
+.tiny-dot {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.status-dot.busy:before {
+  animation: pulse 1s infinite;
+}
+.notice {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.notice:empty {
+  display: none;
+}
+.notice.error {
+  color: #984d37;
+  background: #f7ece3;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.candidate {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff8c;
+  transition:
+    border-color 160ms,
+    box-shadow 160ms;
+  overflow: hidden;
+  animation: appear 220ms both;
+}
+.candidate.expanded {
+  border-color: #9daf99;
+  box-shadow: 0 4px 14px #26472c07;
+}
+.candidate.selected {
+  border-color: var(--green);
+  background: #f1f5ed;
+}
+.candidate-heading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+  padding: 15px 13px;
+  border: 0;
+  background: none;
+}
+.candidate-heading:disabled {
+  opacity: 1;
+}
+.date-badge {
+  width: 43px;
+  flex: none;
+  border-right: 1px solid var(--line);
+  text-align: center;
+  padding-right: 11px;
+  line-height: 1;
+}
+.date-badge .month {
+  display: block;
+  font:
+    9px "Avenir Next",
+    sans-serif;
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.6px;
+}
+.date-badge .day {
+  font:
+    28px/0.95 Georgia,
+    serif;
+  letter-spacing: -1px;
+}
+.date-content {
+  min-width: 0;
+  flex: 1;
+}
+.date-content strong {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+}
+.candidate-time {
+  font:
+    14px/1.7 "Avenir Next",
+    Avenir,
+    sans-serif;
+  letter-spacing: 0.4px;
+}
+.candidate-source {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.candidate-arrow {
+  font-size: 15px;
+  color: var(--muted);
+  transition: transform 180ms;
+}
+.expanded .candidate-arrow {
+  transform: rotate(90deg);
+  color: var(--green);
+}
+.variant-region {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 180ms ease;
+  visibility: hidden;
+}
+.expanded .variant-region {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+.variant-inner {
+  overflow: hidden;
+}
+.variant-list {
+  border-top: 1px solid var(--line);
+  padding: 6px 8px 8px;
+  margin: 0 6px;
+}
+.variant {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  border-radius: 6px;
+  padding: 9px 7px;
+  text-align: left;
+}
+.variant:hover,
+.variant:focus-visible {
+  background: var(--wash);
+}
+.variant-label {
+  flex: 1;
+  font-size: 11px;
+}
+.variant-time {
+  font:
+    11px "Avenir Next",
+    sans-serif;
+  color: var(--muted);
+}
+.variant-arrow {
+  color: var(--green);
+  font-size: 14px;
+}
+.variant-note {
+  font-size: 9px;
+  color: var(--muted);
+  padding: 2px 7px 5px;
+}
+.list-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 16px;
+}
+.empty {
+  text-align: center;
+  padding: 25px 8px 20px;
+  color: var(--muted);
+}
+.empty h2 {
+  font-size: 12px;
+  color: var(--ink);
+  margin: 15px 0 8px;
+}
+.empty p {
+  font-size: 11px;
+  line-height: 1.9;
+  max-width: 240px;
+  margin: auto;
+}
+.empty-calendar {
+  width: 44px;
+  height: 46px;
+  border: 1px solid #c7cfbe;
+  border-radius: 9px;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  color: #a5b29e;
+  position: relative;
+}
+.empty-calendar:before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #c7cfbe;
+}
+.empty-calendar span {
+  padding-top: 10px;
+}
+.selection {
+  margin-top: 25px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  animation: appear 200ms;
+}
+.selection h2 {
+  font-size: 17px;
+  margin-top: 12px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+.selected-time {
+  font-size: 12px;
+  color: var(--green);
+  margin-top: 3px;
+}
+.steps {
+  list-style: none;
+  display: flex;
+  gap: 0;
+  padding: 0;
+  margin: 22px 0 18px;
+  counter-reset: step;
+}
+.steps li {
+  flex: 1;
+  font-size: 10px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--muted);
+  position: relative;
+}
+.steps li:before {
+  counter-increment: step;
+  content: counter(step);
+  font:
+    10px "Avenir Next",
+    sans-serif;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+}
+.steps li.active {
+  color: var(--green);
+  font-weight: bold;
+}
+.steps li.active:before {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.steps li.done:before {
+  content: "✓";
+  color: var(--green);
+  background: var(--wash);
+  border-color: var(--wash);
+}
+.pick-instruction {
+  display: flex;
+  gap: 11px;
+  padding: 13px;
+  background: var(--wash);
+  border-radius: 10px;
+}
+.pick-cursor {
+  font-size: 25px;
+  line-height: 1;
+  color: var(--green);
+}
+.pick-instruction strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.pick-instruction p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.pick-controls {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 14px;
+}
+.text-button {
+  border: 0;
+  background: none;
+  padding: 5px 0;
+  color: var(--green);
+  font-size: 11px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+.text-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.picked-values {
+  margin: 0;
+}
+.picked-values > div {
+  display: grid;
+  grid-template-columns: 55px minmax(0, 1fr);
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.picked-values dt {
+  font-size: 10px;
+  color: var(--muted);
+  padding-top: 2px;
+}
+.picked-values dd {
+  font-size: 11px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 140px;
+  overflow: auto;
+}
+.picked-values dd.is-empty {
+  color: #949a8e;
+}
+.source-note {
+  display: flex;
+  gap: 6px;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 11px;
+}
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  padding: 16px 24px 14px;
+  z-index: 5;
+}
+.primary-button {
+  background: var(--green);
+  color: #fff;
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 13px 15px;
+  font-size: 12px;
+  box-shadow: 0 3px 5px #243e3210;
+}
+.primary-button:hover {
+  background: #1c4934;
+}
+.primary-button span {
+  font-size: 17px;
+}
+.footer-hint {
+  font-size: 9px;
+  text-align: center;
+  margin-top: 8px;
+  color: var(--muted);
+}
+.idle-footer {
+  font-size: 10px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.settings {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+  background: #eef1e8;
+}
+.settings label {
+  display: block;
+  font-size: 11px;
+  margin-top: 16px;
+}
+.settings label .muted {
+  font-size: 9px;
+  margin-left: 5px;
+}
+.number-control {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 11px;
+}
+.number-control input {
+  width: 75px;
+  padding: 7px;
+  border: 1px solid #bccab5;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.small-button {
+  border: 0;
+  background: var(--green);
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-left: auto;
+  font-size: 11px;
+}
+.hint {
+  font-size: 10px;
+  margin-top: 6px;
+}
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+.checkbox-label input {
+  accent-color: var(--green);
+  margin: 0;
+}
+.ai-area {
+  margin-top: 14px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.ai-area button {
+  display: block;
+  margin-top: 4px;
+}
+.is-selected .intro {
+  display: none;
+}
+.is-selected .source-section {
+  margin-top: 20px;
+}
+.is-selected .candidates-heading {
+  margin-top: 18px;
+}
+.is-selected .candidate:not(.selected) {
+  display: none;
+}
+.is-selected .list-hint {
+  display: none;
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (max-width: 320px) {
+  .header {
+    padding: 18px;
+  }
+  main {
+    padding: 0 16px 125px;
+  }
+  .footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .intro h1 {
+    font-size: 27px;
+  }
+  .variant-time {
+    font-size: 10px;
+  }
+}

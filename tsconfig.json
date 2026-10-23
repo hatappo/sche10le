@@ -11,5 +11,10 @@
     "skipLibCheck": true,
     "types": ["chrome", "node"]
   },
-  "include": ["entrypoints/**/*.js", "lib/**/*.js", "types/**/*.d.ts", "wxt.config.js"]
+  "include": [
+    "entrypoints/**/*.js",
+    "lib/**/*.js",
+    "types/**/*.d.ts",
+    "wxt.config.js"
+  ]
 }
