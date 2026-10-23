@@ -152,43 +152,18 @@ main {
   align-items: center;
   gap: 10px;
 }
-.source-icon {
-  width: 16px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  color: var(--green);
-  font-size: 18px;
-  flex: none;
-}
 .source-text {
   min-width: 0;
   flex: 1;
 }
-.source-text .eyebrow {
-  font-size: 8px;
-  letter-spacing: 1.5px;
-}
-.source-text p {
+.source-text > .muted {
+  display: block;
   font-size: 11px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.source-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.source-meta > .muted {
-  display: block;
-  font-size: 9px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.source-meta .status-dot {
-  flex: none;
+.source-text .status-dot {
   font-size: 9px;
 }
 .muted,
@@ -223,6 +198,19 @@ main {
 .order-select:disabled {
   opacity: 0.45;
   cursor: default;
+}
+.order-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff0ed;
+  font-size: 11px;
+}
+.order-feedback .text-button {
+  flex: none;
 }
 .count {
   display: inline-grid;
@@ -794,18 +782,25 @@ main {
 }
 
 .reload-button {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   flex: none;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-}
-.reload-button:hover {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #b2c5ad;
+  border-radius: 7px;
+  background: var(--wash);
   color: var(--green);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 1px #293d3108;
+}
+.reload-button:hover:not(:disabled) {
+  background: #dce8d7;
+  border-color: var(--green);
 }
 .picked-confirmation {
   position: absolute;

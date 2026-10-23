@@ -119,14 +119,9 @@
     </section>
     <main>
       <section class="source-section" aria-label="対象ページ">
-        <div class="source-icon" aria-hidden="true">↗</div>
         <div class="source-text">
-          <span class="eyebrow">対象ページ</span>
-          <p id="source-title">ページを確認しています</p>
-          <div class="source-meta">
-            <span id="source-domain" class="muted"></span>
-            <span id="scan-state" class="status-dot" role="status">待機中</span>
-          </div>
+          <span id="source-domain" class="muted">ページを確認中</span>
+          <span id="scan-state" class="status-dot" role="status">待機中</span>
         </div>
         <button
           id="rescan"
@@ -149,6 +144,7 @@
             <path d="M20 7v5h-5" />
             <path d="M20 12a8 8 0 1 0-2.3 5.7M20 12l-3-4" />
           </svg>
+          <span>再スキャン</span>
         </button>
       </section>
       <div class="section-heading candidates-heading">
@@ -163,6 +159,12 @@
           <option value="page">登場順</option>
           <option value="date">日時順</option>
         </select>
+      </div>
+      <div id="order-feedback" class="order-feedback" hidden>
+        <p id="order-status" class="setting-status" role="status"></p>
+        <button id="retry-order" class="text-button" type="button" hidden>
+          再試行
+        </button>
       </div>
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
       <div id="candidates" class="candidates" aria-label="日程候補"></div>

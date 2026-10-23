@@ -86,6 +86,12 @@ const settingStates = {
     retry: "retry-ai",
     revision: 0,
   },
+  order: {
+    key: "candidateOrder",
+    status: "order-status",
+    retry: "retry-order",
+    revision: 0,
+  },
 };
 let settingSave = Promise.resolve();
 let panelScroll = 0;
@@ -98,6 +104,12 @@ let aiController;
 function notice(text, error = false) {
   el("notice").textContent = text;
   el("notice").classList.toggle("error", error);
+}
+
+/** @param {string} label @param {string} [title] */
+function showSource(label, title = "") {
+  el("source-domain").textContent = label;
+  el("source-domain").title = title;
 }
 
 /** @param {object} message */
@@ -143,8 +155,7 @@ function pageChanged() {
   pageText = "";
   pageUrl = "";
   sourceTabId = undefined;
-  el("source-title").textContent = "ページが切り替わりました";
-  el("source-domain").textContent = "";
+  showSource("ページが切り替わりました");
   el("ai-area").hidden = true;
   renderCandidates();
   notice("このページを調べるには、拡張アイコンを押してください。");
@@ -159,6 +170,7 @@ async function scan() {
   const run = generation;
   scanning = true;
   button("rescan").disabled = true;
+  showSource("ページを確認中");
   candidates = [];
   renderCandidates();
   el("empty").hidden = true;
@@ -208,8 +220,7 @@ function scanFailed() {
   sourceTabId = undefined;
   pageUrl = "";
   pageText = "";
-  el("source-title").textContent = "ページにアクセスできません";
-  el("source-domain").textContent = "";
+  showSource("ページにアクセスできません");
   el("scan-state").textContent = "未接続";
   el("scan-state").classList.remove("busy");
   renderCandidates();
@@ -245,9 +256,7 @@ function receive(message, run) {
       extractStructuredEvents(json),
       extractTextEvents(pageText),
     );
-    el("source-title").textContent = pageTitle || "タイトルのないページ";
-    el("source-title").title = pageTitle;
-    el("source-domain").textContent = new URL(pageUrl).hostname;
+    showSource(new URL(pageUrl).hostname, pageTitle || "タイトルのないページ");
     el("scan-state").textContent = "走査完了";
     el("scan-state").classList.remove("busy");
     notice("");
@@ -687,6 +696,7 @@ el("candidate-order").addEventListener("change", (event) => {
   candidateOrder = value === "date" ? "date" : "page";
   clearSource();
   if (!draft) renderCandidates();
+  saveSetting("order", candidateOrder);
 });
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("skip").addEventListener("click", advance);
@@ -764,6 +774,8 @@ function settingMessage(name, text, error = false, retry = false) {
   el(state.status).textContent = text;
   el(state.status).classList.toggle("error", error);
   button(state.retry).hidden = !retry;
+  // Keep the compact list toolbar quiet unless persistence needs attention.
+  if (name === "order") el("order-feedback").hidden = !error;
 }
 
 /** All settings apply immediately and use the same ordered persistence and feedback.
@@ -867,6 +879,9 @@ button("retry-travel").addEventListener("click", () =>
 button("retry-ai").addEventListener("click", () =>
   saveSetting("ai", aiEnabled),
 );
+button("retry-order").addEventListener("click", () =>
+  saveSetting("order", candidateOrder),
+);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !el("settings").hidden) {
     event.preventDefault();
@@ -895,6 +910,7 @@ async function initialize() {
       "travelMinutes",
       "aiEnabled",
       "titleFormat",
+      "candidateOrder",
     ]);
     if (
       typeof saved.travelMinutes === "number" &&
@@ -904,6 +920,7 @@ async function initialize() {
     )
       travelMinutes = saved.travelMinutes;
     aiEnabled = saved.aiEnabled === true;
+    candidateOrder = saved.candidateOrder === "date" ? "date" : "page";
     if (
       typeof saved.titleFormat === "string" &&
       !validateTitleFormat(saved.titleFormat)
@@ -915,6 +932,8 @@ async function initialize() {
   input("travel").value = String(travelMinutes);
   input("ai-enabled").checked = aiEnabled;
   input("title-format").value = titleFormat;
+  /** @type {HTMLSelectElement} */ (el("candidate-order")).value =
+    candidateOrder;
   updateFormatPreview();
   await scan();
 }

@@ -842,3 +842,128 @@ test("日時順のAI追加を正しい位置に挿入し、移動するカード
   await panel.close();
   await source.close();
 });
+
+test("並び順は初回のみ登場順になり、パネルを閉じても最後の選択を復元する", async () => {
+  const initial = await open();
+  await initial.panel.evaluate(() =>
+    chrome.storage.local.remove("candidateOrder"),
+  );
+  await initial.panel.close();
+  await initial.source.close();
+  for (const [expected, next] of [
+    ["page", "date"],
+    ["date", "page"],
+    ["page", null],
+  ]) {
+    const { source, panel } = await open();
+    const order = panel.getByRole("combobox", { name: "日程の並び順" });
+    await expect(order).toHaveValue(expected);
+    await source.evaluate(() => {
+      const main = document.querySelector("main");
+      [...main.querySelectorAll("article")]
+        .reverse()
+        .forEach((article) => main.append(article));
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".candidate .day")).toHaveText(
+      expected === "page" ? ["21", "15", "8"] : ["8", "15", "21"],
+    );
+    await expect(panel.locator("#order-feedback")).toBeHidden();
+    await expect(panel.locator("#source-domain")).toHaveText("127.0.0.1");
+    await expect(panel.locator("#source-domain")).toHaveAttribute(
+      "title",
+      "週末のデザイン散歩 | TOKYO FIELD NOTES",
+    );
+    await expect(panel.getByRole("button", { name: "再スキャン" })).toHaveText(
+      "再スキャン",
+    );
+    if (next) {
+      await order.selectOption(next);
+      await expect
+        .poll(() =>
+          panel.evaluate(
+            async () =>
+              (await chrome.storage.local.get("candidateOrder")).candidateOrder,
+          ),
+        )
+        .toBe(next);
+    } else {
+      await panel.evaluate(() =>
+        chrome.storage.local.set({ candidateOrder: "invalid-value" }),
+      );
+    }
+    await panel.close();
+    await source.close();
+  }
+  const fallback = await open();
+  await expect(
+    fallback.panel.getByRole("combobox", { name: "日程の並び順" }),
+  ).toHaveValue("page");
+  await fallback.panel.close();
+  await fallback.source.close();
+});
+
+test("並び順の保存失敗は再試行でき、連続変更でも最後の選択を保存する", async () => {
+  const { source, panel } = await open();
+  const order = panel.getByRole("combobox", { name: "日程の並び順" });
+  await panel.evaluate(() => {
+    window.__saveOrder = chrome.storage.local.set.bind(chrome.storage.local);
+    chrome.storage.local.set = async () => {
+      throw new Error("test failure");
+    };
+  });
+  await order.selectOption("date");
+  await expect(order).toHaveValue("date");
+  await expect(panel.locator("#order-status")).toHaveClass(/error/);
+  await expect(panel.locator("#order-status")).toContainText(
+    "保存できませんでした",
+  );
+  await expect(panel.locator("#retry-order")).toBeVisible();
+  await panel.evaluate(() => {
+    chrome.storage.local.set = window.__saveOrder;
+  });
+  await panel.locator("#retry-order").click();
+  await expect
+    .poll(() =>
+      panel.evaluate(
+        async () =>
+          (await chrome.storage.local.get("candidateOrder")).candidateOrder,
+      ),
+    )
+    .toBe("date");
+  await expect(panel.locator("#order-feedback")).toBeHidden();
+  await panel.evaluate(() => {
+    let first = true;
+    window.__orderWrites = [];
+    chrome.storage.local.set = async (values) => {
+      if (first) {
+        first = false;
+        await new Promise((resolve) => {
+          window.__releaseOrderSave = resolve;
+        });
+      }
+      await window.__saveOrder(values);
+      window.__orderWrites.push(values.candidateOrder);
+    };
+  });
+  await order.selectOption("page");
+  await expect
+    .poll(() => panel.evaluate(() => typeof window.__releaseOrderSave))
+    .toBe("function");
+  await order.selectOption("date");
+  await panel.evaluate(() => window.__releaseOrderSave());
+  await expect
+    .poll(() => panel.evaluate(() => window.__orderWrites))
+    .toEqual(["page", "date"]);
+  await expect
+    .poll(() =>
+      panel.evaluate(
+        async () =>
+          (await chrome.storage.local.get("candidateOrder")).candidateOrder,
+      ),
+    )
+    .toBe("date");
+  await expect(panel.locator("#order-feedback")).toBeHidden();
+  await panel.close();
+  await source.close();
+});
