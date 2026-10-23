@@ -554,3 +554,34 @@ test("同日の異なる時刻は残し、重複する終日の選択肢と空�
   await panel.close();
   await source.close();
 });
+
+test("令和・英語の日付を走査し、出典の強調から正しい日時をカレンダーへ渡す", async () => {
+  for (const text of [
+    "令和８年１１月８日 14:00〜16:00",
+    "November 8, 2026 2 PM–4 PM",
+  ]) {
+    const { source, panel } = await open();
+    await source
+      .locator(".date")
+      .first()
+      .evaluate((element, value) => {
+        element.textContent = value;
+      }, text);
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+    await panel.locator(".candidate").first().hover();
+    await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
+    await select(panel);
+    await expect(panel.locator("#selected-time")).toContainText("14:00–16:00");
+    const opened = context.waitForEvent("page");
+    await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
+    const calendar = await opened;
+    const url = new URL(await panel.evaluate(() => window.__calendarRequest));
+    expect(url.searchParams.get("dates")).toBe(
+      "20261108T050000Z/20261108T070000Z",
+    );
+    await calendar.close();
+    await panel.close();
+    await source.close();
+  }
+});
