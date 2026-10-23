@@ -132,6 +132,41 @@ async function clickOverlay(source, name) {
   }
 }
 
+async function expectPickerActionsOnly(source) {
+  const session = await context.newCDPSession(source);
+  try {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    const labels = [];
+    function visit(node) {
+      const attributes = node.attributes ?? [];
+      const index = attributes.indexOf("aria-label");
+      if (node.nodeName === "BUTTON" && index >= 0)
+        labels.push(attributes[index + 1]);
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ])
+        visit(child);
+    }
+    visit(root);
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "タイトルを選び直す",
+        "場所を選び直す",
+        "詳細を選び直す",
+        "戻る",
+        "スキップ",
+      ]),
+    );
+    expect(labels).not.toContain("Googleカレンダーで開く");
+  } finally {
+    await session.detach();
+  }
+}
+
 test("候補→パターン→ページから順次取得→カレンダーへのURL", async () => {
   const { source, panel } = await open();
   const errors = [];
@@ -148,6 +183,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   });
   await select(panel, "移動込み");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await expectPickerActionsOnly(source);
   await expect(panel.locator("#pick-help")).toBeHidden();
   const primaryColor = await panel
     .locator("#open-calendar")
@@ -186,6 +222,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await source.locator("#description").click();
   await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await expectPickerActionsOnly(source);
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
