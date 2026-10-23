@@ -66,6 +66,8 @@ let aiEnabled = false;
 let titleFormat = DEFAULT_TITLE_FORMAT;
 let formatRevision = 0;
 let formatSave = Promise.resolve();
+let sourceTimer = 0;
+let revealedId = "";
 /** @type {AbortController | undefined} */
 let aiController;
 
@@ -87,6 +89,7 @@ function send(message) {
 }
 
 function stopConnection() {
+  clearSource();
   generation++;
   aiController?.abort();
   clearTimeout(scanTimer);
@@ -98,6 +101,7 @@ function stopConnection() {
 }
 
 function resetSelection() {
+  clearSource();
   send({ type: "stop" });
   draft = null;
   selectedVariant = null;
@@ -262,6 +266,24 @@ function renderCandidates() {
 }
 
 /** @param {import('../../lib/extract.js').Candidate} candidate */
+function revealSource(candidate) {
+  if (draft || revealedId === candidate.id) return;
+  clearSource();
+  revealedId = candidate.id;
+  const run = generation;
+  sourceTimer = window.setTimeout(() => {
+    if (!draft && run === generation)
+      send({ type: "reveal-source", locator: candidate.locator });
+  }, 180);
+}
+
+function clearSource() {
+  clearTimeout(sourceTimer);
+  revealedId = "";
+  send({ type: "clear-source" });
+}
+
+/** @param {import('../../lib/extract.js').Candidate} candidate */
 function candidateCard(candidate) {
   const card = node(
     "article",
@@ -339,11 +361,19 @@ function candidateCard(candidate) {
     heading.setAttribute("aria-expanded", String(expanded));
     region.inert = !expanded;
   };
-  card.addEventListener("pointerenter", () => expand(true));
+  card.addEventListener("pointerenter", () => {
+    expand(true);
+    revealSource(candidate);
+  });
   card.addEventListener("pointerleave", () => {
     if (!pinned && !card.contains(document.activeElement)) expand(false);
+    if (!card.contains(document.activeElement) && revealedId === candidate.id)
+      clearSource();
   });
-  card.addEventListener("focusin", () => expand(true));
+  card.addEventListener("focusin", () => {
+    expand(true);
+    revealSource(candidate);
+  });
   card.addEventListener("focusout", (event) => {
     // activeElement may briefly be body between blur and focus. Use the intended
     // destination so options never become inert while Tab is entering them.
@@ -351,6 +381,12 @@ function candidateCard(candidate) {
       event.relatedTarget instanceof Node ? event.relatedTarget : null;
     if (!pinned && !card.contains(next) && !card.matches(":hover"))
       expand(false);
+    if (
+      !card.contains(next) &&
+      !card.matches(":hover") &&
+      revealedId === candidate.id
+    )
+      clearSource();
   });
   heading.addEventListener("click", () => {
     pinned = !pinned;
@@ -361,6 +397,7 @@ function candidateCard(candidate) {
 
 /** @param {import('../../lib/extract.js').Candidate} candidate @param {import('../../lib/calendar.js').Variant} variant */
 function selectCandidate(candidate, variant) {
+  clearSource();
   selectedId = candidate.id;
   selectedVariant = variant;
   draft = createDraft(pageTitle, pageUrl);

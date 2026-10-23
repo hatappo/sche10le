@@ -374,3 +374,45 @@ test("狭い幅・キーボード操作・再走査時のリスナー重複を�
   await panel.close();
   await source.close();
 });
+
+test("候補のホバー・フォーカスで元の日時へスクロールし、離脱・選択で強調を解除する", async () => {
+  const { source, panel } = await open();
+  await source.evaluate(() => {
+    document.querySelector("main").style.paddingTop = "1600px";
+    document.querySelector(".date").innerHTML =
+      "<span>２０２６年１１月８日</span>（日）<strong>１４：００〜１６：００</strong>";
+  });
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await expect(panel.locator(".candidate")).toHaveCount(3);
+  const target = source.locator(".date").first();
+  await expect(target).not.toBeInViewport();
+  const first = panel.locator(".candidate").first();
+  await first.hover();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
+  await expect(target).toBeInViewport({ ratio: 1 });
+  await source.screenshot({ path: "test-results/page-source-highlight.png" });
+  // The page's original text and inline markup remain intact.
+  await expect(target.locator("strong")).toHaveText("１４：００〜１６：００");
+  await panel.locator(".header").hover();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await source.emulateMedia({ reducedMotion: "reduce" });
+  await source.evaluate(() => window.scrollTo(0, 0));
+  await first.locator(".candidate-heading").focus();
+  await expect(target).toBeInViewport({ ratio: 1 });
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
+  await first.getByRole("button", { name: /時間どおり/ }).click();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await panel.getByRole("button", { name: "選び直す" }).click();
+  // Changed text after the scan must not be highlighted using stale offsets.
+  await target.evaluate((element) => {
+    element.textContent = "開催日調整中";
+  });
+  await first.hover();
+  await panel.waitForTimeout(250);
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await panel.locator(".candidate").last().hover();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
+  await panel.close();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await source.close();
+});

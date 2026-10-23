@@ -20,6 +20,31 @@ import {
 const now = new Date(2026, 9, 24, 12);
 const extract = (text) => extractTextEvents(text, now);
 
+test("候補の出典は日時の範囲を指し、構造化データとの統合でも残る", () => {
+  const [event] = extract(
+    "説明\n２０２６年１１月８日（日）１４：００〜１６：００\n会場はこちら",
+  );
+  assert.deepEqual(event.locator, {
+    text: "2026年11月8日(日)14:00〜16:00",
+    occurrence: 0,
+  });
+  const structured = extractStructuredEvents([
+    JSON.stringify({
+      "@type": "Event",
+      startDate: "2026-11-08T14:00:00+09:00",
+      endDate: "2026-11-08T16:00:00+09:00",
+    }),
+  ]);
+  assert.deepEqual(
+    mergeCandidates(structured, [event])[0].locator,
+    event.locator,
+  );
+  assert.equal(
+    extract("2026/11/21〜11/23")[0].locator.text,
+    "2026/11/21〜11/23",
+  );
+});
+
 test("日本語・スラッシュ・ISOの日付と時間帯を抽出する", () => {
   for (const text of [
     "2026年11月8日（日）14:00〜16:00",
