@@ -675,10 +675,11 @@ test("同日の終日カードだけ除き、各時刻の終日パターンを�
   await source.close();
 });
 
-test("令和・英語の日付をスキャンし、出典の強調から正しい日時をカレンダーへ渡す", async () => {
+test("令和・英語・午後の日付をスキャンし、出典の強調から正しい日時をカレンダーへ渡す", async () => {
   for (const text of [
     "令和８年１１月８日 14:00〜16:00",
     "November 8, 2026 2 PM–4 PM",
+    "2026年11月8日 午後2時〜4時",
   ]) {
     const { source, panel } = await open();
     await source
@@ -704,6 +705,23 @@ test("令和・英語の日付をスキャンし、出典の強調から正し�
     await panel.close();
     await source.close();
   }
+});
+
+test("本文のタイムゾーン付き日時と曖昧な午後の範囲を候補にしない", async () => {
+  const { source, panel } = await open();
+  await source.evaluate(() => {
+    document.querySelector("main").innerHTML =
+      "<p>Nov 8, 2026 14:00–16:00 PST</p><p>2026年11月9日 午後11時〜1時</p><p>2026年11月10日 午後2時〜4時</p>";
+    document
+      .querySelectorAll('script[type="application/ld+json"]')
+      .forEach((script) => script.remove());
+  });
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await expect(panel.locator(".candidate")).toHaveCount(1);
+  await expect(panel.locator(".candidate .day")).toHaveText(["10"]);
+  await expect(panel.locator(".candidate-time")).toHaveText(["14:00–16:00"]);
+  await panel.close();
+  await source.close();
 });
 
 test("年と時刻のない単独の月日は一覧に出さず、年付き・期間・時間付きは残す", async () => {

@@ -147,3 +147,87 @@ test("新書式の範囲・混在・元の出典を保つ", () => {
   assert.equal(events[0].locator.text, "令和8年11月8日14:00〜16:00");
   assert.equal(events[1].locator.text, "November9,20262PM–4PM");
 });
+
+test("午前・午後を換算し、終点の省略は同じ時間帯で順序が明確な場合だけ補う", () => {
+  const cases = [
+    ["午後2時〜4時", 14, 16, 8],
+    ["午後２時３０分〜午後４時３０分", 14, 16, 8],
+    ["午前9:00から11:00", 9, 11, 8],
+    ["午前11時〜午後1時", 11, 13, 8],
+    ["午後11時〜午前1時", 23, 1, 9],
+    ["午前12時〜午後12時", 0, 12, 8],
+    ["午前0時〜午前1時", 0, 1, 8],
+    ["午後0時〜午後1時", 12, 13, 8],
+    ["午後 2:30 〜 4:30", 14, 16, 8],
+  ];
+  for (const [time, start, end, endDay] of cases) {
+    const [event] = extract(`2026年11月8日 ${time}`);
+    assert.ok(event, time);
+    assert.equal(new Date(event.start).getHours(), start, time);
+    assert.equal(new Date(event.end).getHours(), end, time);
+    assert.equal(new Date(event.end).getDate(), endDay, time);
+    assert.equal(event.assumedEnd, false, time);
+  }
+  const [single] = extract("2026年11月8日 午後2時30分");
+  assert.equal(new Date(single.start).getHours(), 14);
+  assert.equal(new Date(single.start).getMinutes(), 30);
+  assert.equal(single.assumedEnd, true);
+  assert.equal(single.locator.text, "2026年11月8日午後2時30分");
+  for (const time of [
+    "午後11時〜1時",
+    "午前11時〜1時",
+    "2時〜午後4時",
+    "午後13時〜14時",
+    "午前14時",
+    "午後2時〜午後14時",
+    "午後2時 PM〜午後4時 PM",
+    "午後2時〜午後4",
+    "午後2時〜4",
+  ])
+    assert.deepEqual(extract(`2026年11月8日 ${time}`), [], time);
+});
+
+test("本文の明示的なタイムゾーンを端末の時間帯として取り込まない", () => {
+  for (const zone of [
+    "PST",
+    "EST",
+    "JST",
+    "UTC",
+    "GMT",
+    "UTC+09:00",
+    "GMT-0800",
+    "CET",
+    "CEST",
+    "EDT",
+    "PDT",
+    "Asia/Tokyo",
+    "America/Los_Angeles",
+    "日本時間",
+    "日本標準時",
+    "協定世界時",
+  ]) {
+    for (const text of [
+      `Nov 8, 2026 14:00–16:00 ${zone}`,
+      `${zone} Nov 8, 2026 14:00–16:00`,
+      `Nov 8, 2026 (${zone}) 2 PM–4 PM`,
+    ])
+      assert.deepEqual(extract(text), [], text);
+  }
+  for (const text of [
+    "2026-11-08T14:00:00+09:00",
+    "2026-11-08T14:00:00-08:00",
+    "2026-11-08T14:00Z",
+    "2026/11/8 14:00 +0900",
+    "2026/11/8 14:00 -0800",
+    "2026/11/8 14:00〜16:00 -08:00",
+  ])
+    assert.deepEqual(extract(text), [], text);
+  const events = extract(
+    "Nov 8, 2026 14:00–16:00 PST\nNov 9, 2026 14:00–16:00",
+  );
+  assert.equal(events.length, 1);
+  assert.equal(events[0].date, "2026-11-09");
+  assert.equal(extract("2026/11/8 14:00-16:00").length, 1);
+  assert.equal(extract("2026/11/8 23:00-01:00").length, 1);
+  assert.equal(extract("2026/11/8 14:00〜16:00 BESTイベント").length, 1);
+});
