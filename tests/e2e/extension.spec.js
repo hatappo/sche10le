@@ -158,11 +158,7 @@ async function expectPickerActionsOnly(source, step = 0) {
         labels.push(attributes[index + 1]);
         if (attributes.includes("disabled"))
           disabledLabels.push(attributes[index + 1]);
-        if (
-          ["戻る", "スキップ", "一時停止", "閉じる"].includes(
-            attributes[index + 1],
-          )
-        )
+        if (["戻る", "スキップ", "閉じる"].includes(attributes[index + 1]))
           actionNodes.push(node);
         if (!attributes.includes("hidden"))
           visibleLabels.push(attributes[index + 1]);
@@ -184,6 +180,8 @@ async function expectPickerActionsOnly(source, step = 0) {
       ]),
     );
     expect(labels).not.toContain("Googleカレンダーで開く");
+    expect(labels).not.toContain("一時停止");
+    expect(visibleLabels).toContain("閉じる");
     expect(visibleLabels).toEqual(expect.arrayContaining(["戻る", "スキップ"]));
     expect(disabledLabels.includes("戻る")).toBe(step === 0);
     expect(disabledLabels.includes("スキップ")).toBe(step === 3);
@@ -1204,7 +1202,7 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   await source.close();
 });
 
-test("操作バーは手順間で大きさとボタン位置を保ち、一時停止でページ操作へ戻れる", async () => {
+test("操作バーは手順間で大きさとボタン位置を保ち、閉じる操作でページ操作へ戻れる", async () => {
   const { source, panel } = await open();
   await source.emulateMedia({ reducedMotion: "reduce" });
   await select(panel);
@@ -1244,7 +1242,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、一時�
   await clickOverlay(source, "タイトルを選び直す");
   await source.locator("#event-title").click();
   const title = await panel.locator("#picked-title").textContent();
-  await clickOverlay(source, "一時停止");
+  await clickOverlay(source, "閉じる");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#resume")).toBeVisible();
   await source.evaluate(() => {
