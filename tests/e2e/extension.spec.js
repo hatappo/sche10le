@@ -526,11 +526,11 @@ test("設定を独立表示し、3項目を自動保存・失敗時だけ共通�
   await source.close();
 });
 
-test("同日の異なる時刻は残し、重複する終日の選択肢と空になる候補を除く", async () => {
+test("同日の終日カードだけ除き、各時刻の終日パターンを維持する", async () => {
   const { source, panel } = await open();
   await source.evaluate(() => {
     const extra = document.createElement("section");
-    extra.innerHTML = "<p>2026年11月8日 18:00〜20:00</p><p>2026年11月8日</p>";
+    extra.innerHTML = "<p>2026年11月8日</p><p>2026年11月8日 18:00〜20:00</p>";
     document.querySelector("main").append(extra);
   });
   await panel.getByRole("button", { name: "再スキャン" }).click();
@@ -538,18 +538,17 @@ test("同日の異なる時刻は残し、重複する終日の選択肢と空�
   await expect(panel.locator("#count")).toHaveText("4");
   await expect(
     panel.locator(".variant-label").filter({ hasText: "終日で確保" }),
-  ).toHaveCount(3);
+  ).toHaveCount(4);
   const later = panel.locator(".candidate").last();
   await later.hover();
   await expect(later.getByRole("button", { name: /時間どおり/ })).toBeVisible();
   await expect(later.getByRole("button", { name: /移動込み/ })).toBeVisible();
-  await expect(later.getByRole("button", { name: /終日で確保/ })).toHaveCount(
-    0,
-  );
+  await expect(later.getByRole("button", { name: /終日で確保/ })).toBeVisible();
   await later.getByRole("button", { name: /時間どおり/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("18:00–20:00");
   await panel.getByRole("button", { name: "選び直す" }).click();
-  await select(panel, "終日で確保");
+  await later.hover();
+  await later.getByRole("button", { name: /終日で確保/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("終日");
   await panel.close();
   await source.close();
@@ -585,3 +584,105 @@ test("令和・英語の日付を走査し、出典の強調から正しい日�
     await source.close();
   }
 });
+
+test("年と時刻のない単独の月日は一覧に出さず、年付き・期間・時間付きは残す", async () => {
+  const { source, panel } = await open();
+  await source.evaluate(() => {
+    document.querySelector("main").innerHTML =
+      "<p>分数 2/3</p><p>11月8日</p><p>Nov 8</p><p>2026年12月1日</p><p>12/2〜12/3</p><p>12/4 14:00〜16:00</p>";
+    document
+      .querySelectorAll('script[type="application/ld+json"]')
+      .forEach((script) => script.remove());
+  });
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await expect(panel.locator(".candidate")).toHaveCount(3);
+  await expect(panel.locator("#count")).toHaveText("3");
+  await expect(panel.locator(".candidate .day")).toHaveText(["1", "2", "4"]);
+  await expect(panel.locator(".candidate-time")).toHaveText([
+    "終日",
+    "終日",
+    "14:00–16:00",
+  ]);
+  await panel.close();
+  await source.close();
+});
+
+for (const selected of [false, true]) {
+  test(`AI補完で終日カードを整理し、${selected ? "選択中の予定を保つ" : "既存カードのフォーカスを保つ"}`, async () => {
+    const { source, panel } = await open();
+    await panel.evaluate(() => {
+      const checkbox = document.querySelector("#ai-enabled");
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+      Object.defineProperty(window, "LanguageModel", {
+        configurable: true,
+        value: {
+          availability: async () => "available",
+          create: async () => ({
+            prompt: () =>
+              new Promise((resolve) => {
+                window.__finishAI = resolve;
+              }),
+            destroy() {},
+          }),
+        },
+      });
+    });
+    await source.evaluate(() => {
+      const date = document.createElement("p");
+      date.textContent = "2026年12月1日 お昼の集まり";
+      document.querySelector("main").append(date);
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".candidate")).toHaveCount(4);
+    await panel.locator("#settings-toggle").click();
+    await panel.locator("#ai-enabled").check();
+    await panel.locator("#settings-close").click();
+    await expect
+      .poll(() => panel.evaluate(() => typeof window.__finishAI))
+      .toBe("function");
+    if (selected) {
+      const card = panel.locator(".candidate").last();
+      await card.hover();
+      await card.getByRole("button", { name: /終日で確保/ }).click();
+      await source.locator("#event-title").click();
+      await expect(panel.locator("#picked-title")).toContainText(
+        "蔵前の活版印刷ワークショップ",
+      );
+    } else {
+      await panel.locator(".candidate-heading").first().focus();
+    }
+    await panel.evaluate(() =>
+      window.__finishAI(
+        JSON.stringify([
+          {
+            start: "2026-12-01T12:00:00+09:00",
+            end: "2026-12-01T13:00:00+09:00",
+            evidence: "2026年12月1日 お昼の集まり",
+          },
+        ]),
+      ),
+    );
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIの補完が完了しました。",
+    );
+    if (selected) {
+      await expect(
+        panel.locator(".candidate.selected .candidate-time"),
+      ).toHaveText("終日");
+      await expect(panel.locator("#picked-title")).toContainText(
+        "蔵前の活版印刷ワークショップ",
+      );
+      await panel.getByRole("button", { name: "選び直す" }).click();
+    } else {
+      await expect(panel.locator(".candidate-heading").first()).toBeFocused();
+    }
+    await expect(panel.locator(".candidate")).toHaveCount(4);
+    await expect(panel.locator("#count")).toHaveText("4");
+    await expect(panel.locator(".candidate-time").last()).toHaveText(
+      "12:00–13:00",
+    );
+    await panel.close();
+    await source.close();
+  });
+}

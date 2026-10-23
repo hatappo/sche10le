@@ -54,8 +54,8 @@ test("英語月名・省略形・日月の順序・序数・年省略に対応�
       `2026-${String(index + 1).padStart(2, "0")}-08`,
     ),
   );
-  assert.equal(extract("Nov 8")[0].date, "2030-11-08");
-  assert.equal(extract("Nov 8")[0].inferredYear, true);
+  assert.equal(extract("Nov 8 2 PM")[0].date, "2030-11-08");
+  assert.equal(extract("Nov 8 2 PM")[0].inferredYear, true);
   for (const text of [
     "February 30, 2026",
     "Nov 32, 2026",
@@ -101,6 +101,19 @@ test("明示されたAM/PMを24時間に換算し、正午・深夜・日また�
 test("既存の区切り前後の空白を維持し、人数の範囲を時刻にしない", () => {
   assert.equal(extract("2026 / 11 / 8 受付2-4名")[0].date, "2026-11-08");
   assert.equal(extract("2026 / 11 / 8 受付2-4名")[0].start, undefined);
+});
+
+test("年省略の英語月日は次の日付から年を借りない", () => {
+  for (const text of [
+    "Nov 8\n2026年12月1日",
+    "Nov 8 2026 年 12 月 1 日",
+    "8 November\n2026/12/1",
+  ]) {
+    const events = extract(text);
+    assert.equal(events.length, 1, text);
+    assert.equal(events[0].date, "2026-12-01", text);
+    assert.equal(events[0].inferredYear, false, text);
+  }
 });
 
 test("未対応表記の一部分を別の年の日付として拾わない", () => {

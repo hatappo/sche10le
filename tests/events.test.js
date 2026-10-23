@@ -21,9 +21,9 @@ import {
 const now = new Date(2026, 9, 24, 12);
 const extract = (text) => extractTextEvents(text, now);
 
-test("同じ日付範囲の終日は1つにまとめ、別時刻・別範囲は残す", () => {
+test("時刻付きと同じ範囲の終日カードを除き、各カードの終日パターンは残す", () => {
   const events = extract(
-    "11/8 10:00〜12:00\n11/8 14:00〜16:00\n11/8\n11/8〜11/9\n11/9 10:00〜12:00",
+    "11/8 10:00〜12:00\n11/8 14:00〜16:00\n2026/11/8\n11/8〜11/9\n11/9 10:00〜12:00",
   );
   const options = candidateOptions(events, 30);
   assert.equal(options.length, 4);
@@ -31,12 +31,12 @@ test("同じ日付範囲の終日は1つにまとめ、別時刻・別範囲は�
     options.map(({ variants }) => variants.map(({ kind }) => kind)),
     [
       ["exact", "travel", "all-day"],
-      ["exact", "travel"],
+      ["exact", "travel", "all-day"],
       ["all-day"],
       ["exact", "travel", "all-day"],
     ],
   );
-  assert.equal(candidateOptions(events, 0)[1].variants.length, 1);
+  assert.equal(candidateOptions(events, 0)[1].variants.length, 2);
   const overnight = candidateOptions(
     extract("11/8 22:00〜00:00\n11/8 23:00〜01:00\n11/8〜11/9"),
   );
@@ -45,14 +45,48 @@ test("同じ日付範囲の終日は1つにまとめ、別時刻・別範囲は�
     overnight.map(({ variants }) => variants.at(-1).endDate),
     ["2026-11-08", "2026-11-09"],
   );
-  // A date-only entry can also own the shared all-day option when it comes first.
+  // Date-only cards are removed regardless of their original order.
   const dateFirst = candidateOptions([events[2], events[0], events[1]]);
   assert.deepEqual(
     dateFirst.map(({ variants }) => variants.length),
-    [1, 2, 2],
+    [3, 3],
   );
-  // Appending AI candidates does not move options away from existing cards.
+  // Appending timed candidates removes a previously standalone date-only card.
+  assert.equal(candidateOptions([events[2]]).length, 1);
+  assert.equal(
+    candidateOptions([events[2], events[0]])[0].candidate.id,
+    events[0].id,
+  );
   assert.deepEqual(candidateOptions(events.slice(0, 1))[0], options[0]);
+});
+
+test("年も時刻もない単独の月日は除外し、年付き・時間付き・期間は残す", () => {
+  for (const text of [
+    "2/3",
+    "２／３",
+    "11月8日",
+    "11-8",
+    "Nov 8",
+    "8 November",
+    "11/8 受付2-4名",
+    "11/8 25:00",
+    "Nov 8 2–4 PM",
+  ])
+    assert.deepEqual(extract(text), [], text);
+  for (const text of ["2026/2/3", "令和8年11月8日", "November 8, 2026"])
+    assert.equal(extract(text).length, 1, text);
+  for (const text of ["2/3 14:00", "11月8日\n14時", "Nov 8 2 PM"])
+    assert.ok(extract(text)[0].start, text);
+  for (const text of ["11/8〜11/9", "Nov 8 to Nov 9"])
+    assert.equal(extract(text)[0].endDate, "2026-11-09", text);
+  const events = extract("2/3\n11月8日\n2026/11/9\nNov 10 2 PM");
+  assert.deepEqual(
+    events.map(({ date }) => date),
+    ["2026-11-09", "2026-11-10"],
+  );
+  const noisy = extract("2/3\n".repeat(20_000) + "2026/11/8 14:00〜16:00");
+  assert.equal(noisy.length, 1);
+  assert.equal(noisy[0].locator.text, "2026/11/814:00〜16:00");
 });
 
 test("候補の出典は日時の範囲を指し、構造化データとの統合でも残る", () => {
@@ -116,7 +150,7 @@ test("不正な日付・時刻・数値の一部を予定にしない", () => {
 });
 
 test("年省略は走査時の年、単独時刻は仮の1時間、日付またぎは翌日", () => {
-  assert.equal(extract("1月8日")[0].date, "2026-01-08");
+  assert.equal(extract("1月8日 15時")[0].date, "2026-01-08");
   const [single] = extract("11/8 15時");
   assert.equal(single.assumedEnd, true);
   assert.equal(new Date(single.end) - new Date(single.start), 3_600_000);
@@ -177,7 +211,7 @@ test("移動時間は前後に加算し、時刻なしでは終日だけを出�
     createVariants(event, 45)[1].end,
     new Date(new Date(event.end).getTime() + 45 * 60_000).toISOString(),
   );
-  assert.equal(createVariants(extract("11/8")[0]).length, 1);
+  assert.equal(createVariants(extract("2026/11/8")[0]).length, 1);
   assert.throws(() => createVariants(event, -1));
 });
 
@@ -205,7 +239,7 @@ test("URLは詳細の末尾に1回だけ残り、未選択でも引き継ぐ", (
     `説明\n\n${draft.url}`,
   );
   const url = new URL(
-    calendarUrl(createVariants(extract("11/8")[0])[0], draft),
+    calendarUrl(createVariants(extract("2026/11/8")[0])[0], draft),
   );
   assert.equal(url.origin, "https://calendar.google.com");
   assert.equal(url.searchParams.get("text"), "A & B");

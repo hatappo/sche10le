@@ -610,15 +610,29 @@ async function runAI(run) {
       controller.signal,
     );
     if (run !== generation || !aiEnabled || controller.signal.aborted) return;
-    const previousIds = new Set(candidates.map((candidate) => candidate.id));
     candidates = mergeCandidates(candidates, additions);
-    const options = candidateOptions(candidates, travelMinutes);
-    for (const { candidate, variants } of options)
-      if (!previousIds.has(candidate.id))
-        el("candidates").append(candidateCard(candidate, variants));
-    el("count").textContent = String(options.length);
-    el("empty").hidden = candidates.length > 0;
-    el("list-hint").hidden = !candidates.length;
+    // Keep the selected card and draft stable until the user returns to the list.
+    if (!draft) {
+      const options = candidateOptions(candidates, travelMinutes);
+      const visibleIds = new Set(options.map(({ candidate }) => candidate.id));
+      const cards = [...el("candidates").querySelectorAll("article")];
+      const existingIds = new Set(
+        cards.map((card) => card.dataset.candidateId),
+      );
+      for (const { candidate, variants } of options)
+        if (!existingIds.has(candidate.id))
+          el("candidates").append(candidateCard(candidate, variants));
+      for (const card of cards) {
+        if (visibleIds.has(card.dataset.candidateId ?? "")) continue;
+        const hadFocus = card.contains(document.activeElement);
+        if (card.dataset.candidateId === revealedId) clearSource();
+        card.remove();
+        if (hadFocus) el("candidates").querySelector("button")?.focus();
+      }
+      el("count").textContent = String(options.length);
+      el("empty").hidden = options.length > 0;
+      el("list-hint").hidden = !options.length;
+    }
     el("ai-status").textContent = "AIの補完が完了しました。";
   } catch {
     if (run === generation && aiEnabled && aiController === controller) {
