@@ -5,6 +5,7 @@ import {
   mergeCandidates,
 } from "../../lib/extract.js";
 import { calendarUrl, candidateOptions } from "../../lib/calendar.js";
+import { orderCandidates } from "../../lib/candidate-order.js";
 import {
   createDraft,
   FIELD_LABELS,
@@ -41,6 +42,8 @@ function node(tag, className, text = "") {
 
 /** @type {import('../../lib/extract.js').Candidate[]} */
 let candidates = [];
+/** @type {import('../../lib/candidate-order.js').CandidateOrder} */
+let candidateOrder = "page";
 /** @type {import('../../lib/draft.js').Draft | null} */
 let draft = null;
 /** @type {import('../../lib/calendar.js').Variant | null} */
@@ -270,8 +273,15 @@ function receive(message, run) {
   else if (message.type === "pause") pausePicking();
 }
 
+function visibleOptions() {
+  return candidateOptions(
+    orderCandidates(candidates, candidateOrder, pageText),
+    travelMinutes,
+  );
+}
+
 function renderCandidates() {
-  const options = candidateOptions(candidates, travelMinutes);
+  const options = visibleOptions();
   el("count").textContent = String(options.length);
   el("empty").hidden = candidates.length > 0 || scanning;
   el("empty-title").textContent = pageUrl
@@ -285,6 +295,51 @@ function renderCandidates() {
   for (const { candidate, variants } of options)
     fragment.append(candidateCard(candidate, variants));
   el("candidates").replaceChildren(fragment);
+  updateOrderControl(options.length);
+}
+
+/** @param {number} count */
+function updateOrderControl(count) {
+  /** @type {HTMLSelectElement} */ (el("candidate-order")).disabled =
+    scanning || count < 2;
+}
+
+/** Reconcile AI additions in the chosen order, preserving surviving cards and focus.
+ * @param {ReturnType<typeof visibleOptions>} options
+ */
+function reconcileCandidates(options) {
+  const list = el("candidates");
+  const focused = document.activeElement;
+  const hadFocus = list.contains(focused);
+  const cards = new Map(
+    [...list.querySelectorAll("article")].map((card) => [
+      card.dataset.candidateId,
+      card,
+    ]),
+  );
+  const visibleIds = new Set(options.map(({ candidate }) => candidate.id));
+  for (const [id, card] of cards) {
+    if (visibleIds.has(id ?? "")) continue;
+    if (id === revealedId) clearSource();
+    card.remove();
+  }
+  options.forEach(({ candidate, variants }, index) => {
+    const card = cards.get(candidate.id) ?? candidateCard(candidate, variants);
+    const next = list.children[index] ?? null;
+    if (next !== card) list.insertBefore(card, next);
+  });
+  if (
+    hadFocus &&
+    focused instanceof HTMLElement &&
+    document.activeElement !== focused
+  ) {
+    if (focused.isConnected) focused.focus({ preventScroll: true });
+    else list.querySelector("button")?.focus({ preventScroll: true });
+  }
+  el("count").textContent = String(options.length);
+  el("empty").hidden = options.length > 0;
+  el("list-hint").hidden = !options.length;
+  updateOrderControl(options.length);
 }
 
 /** @param {import('../../lib/extract.js').Candidate} candidate */
@@ -612,27 +667,7 @@ async function runAI(run) {
     if (run !== generation || !aiEnabled || controller.signal.aborted) return;
     candidates = mergeCandidates(candidates, additions);
     // Keep the selected card and draft stable until the user returns to the list.
-    if (!draft) {
-      const options = candidateOptions(candidates, travelMinutes);
-      const visibleIds = new Set(options.map(({ candidate }) => candidate.id));
-      const cards = [...el("candidates").querySelectorAll("article")];
-      const existingIds = new Set(
-        cards.map((card) => card.dataset.candidateId),
-      );
-      for (const { candidate, variants } of options)
-        if (!existingIds.has(candidate.id))
-          el("candidates").append(candidateCard(candidate, variants));
-      for (const card of cards) {
-        if (visibleIds.has(card.dataset.candidateId ?? "")) continue;
-        const hadFocus = card.contains(document.activeElement);
-        if (card.dataset.candidateId === revealedId) clearSource();
-        card.remove();
-        if (hadFocus) el("candidates").querySelector("button")?.focus();
-      }
-      el("count").textContent = String(options.length);
-      el("empty").hidden = options.length > 0;
-      el("list-hint").hidden = !options.length;
-    }
+    if (!draft) reconcileCandidates(visibleOptions());
     el("ai-status").textContent = "AIの補完が完了しました。";
   } catch {
     if (run === generation && aiEnabled && aiController === controller) {
@@ -647,6 +682,12 @@ async function runAI(run) {
 }
 
 button("rescan").addEventListener("click", () => void scan());
+el("candidate-order").addEventListener("change", (event) => {
+  const value = /** @type {HTMLSelectElement} */ (event.target).value;
+  candidateOrder = value === "date" ? "date" : "page";
+  clearSource();
+  if (!draft) renderCandidates();
+});
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("skip").addEventListener("click", advance);
 button("previous").addEventListener("click", back);

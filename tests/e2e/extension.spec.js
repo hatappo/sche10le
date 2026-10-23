@@ -686,3 +686,159 @@ for (const selected of [false, true]) {
     await source.close();
   });
 }
+
+test("登場順と日時順を切り替え、構造化データの位置・同日時刻・再走査・選択を保つ", async () => {
+  const { source, panel } = await open();
+  await source.evaluate(() => {
+    document.querySelector("main").innerHTML =
+      "<h1>日程一覧</h1><p>2026年12月8日 18:00〜20:00</p><p>2026年11月8日 16:00〜17:00</p><p>2026年11月8日 10:00〜12:00</p><p>2026年11月7日</p>";
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify([
+      {
+        "@type": "Event",
+        startDate: "2026-11-08T10:00:00+09:00",
+        endDate: "2026-11-08T12:00:00+09:00",
+      },
+      { "@type": "Event", startDate: "2026-10-01" },
+    ]);
+    document.head.append(script);
+  });
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  const order = panel.getByRole("combobox", { name: "日程の並び順" });
+  await expect(order).toHaveValue("page");
+  await expect(panel.locator(".candidate .day")).toHaveText([
+    "8",
+    "8",
+    "8",
+    "7",
+    "1",
+  ]);
+  await expect(panel.locator(".candidate-time")).toHaveText([
+    "18:00–20:00",
+    "16:00–17:00",
+    "10:00–12:00",
+    "終日",
+    "終日",
+  ]);
+  await panel.screenshot({
+    path: "test-results/panel-sort-page.png",
+    animations: "disabled",
+  });
+  await order.selectOption("date");
+  await expect(panel.locator(".candidate .day")).toHaveText([
+    "1",
+    "7",
+    "8",
+    "8",
+    "8",
+  ]);
+  await expect(panel.locator(".candidate-time")).toHaveText([
+    "終日",
+    "終日",
+    "10:00–12:00",
+    "16:00–17:00",
+    "18:00–20:00",
+  ]);
+  await panel.setViewportSize({ width: 280, height: 850 });
+  expect(
+    await panel.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await panel.screenshot({
+    path: "test-results/panel-sort-narrow.png",
+    animations: "disabled",
+  });
+  const card = panel.locator(".candidate").nth(2);
+  await card.hover();
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
+  await card.getByRole("button", { name: /時間どおり/ }).click();
+  await expect(panel.locator("#selected-time")).toContainText("10:00–12:00");
+  await panel.getByRole("button", { name: "選び直す" }).click();
+  await expect(order).toHaveValue("date");
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await expect(order).toBeEnabled();
+  await expect(order).toHaveValue("date");
+  await order.focus();
+  await expect(order).toBeFocused();
+  // Headless Chromium on macOS cannot drive the native select popup with keys.
+  // Use Playwright's selection API and verify the control keeps focus afterward.
+  await order.selectOption("page");
+  await expect(order).toHaveValue("page");
+  await expect(order).toBeFocused();
+  await expect(panel.locator(".candidate-time").first()).toHaveText(
+    "18:00–20:00",
+  );
+  await panel.close();
+  await source.close();
+});
+
+test("日時順のAI追加を正しい位置に挿入し、移動するカードのフォーカスを維持する", async () => {
+  const { source, panel } = await open();
+  await panel
+    .getByRole("combobox", { name: "日程の並び順" })
+    .selectOption("date");
+  await panel.evaluate(() => {
+    const checkbox = document.querySelector("#ai-enabled");
+    checkbox.checked = false;
+    checkbox.dispatchEvent(new Event("change"));
+    Object.defineProperty(window, "LanguageModel", {
+      configurable: true,
+      value: {
+        availability: async () => "available",
+        create: async () => ({
+          prompt: () =>
+            new Promise((resolve) => {
+              window.__finishAI = resolve;
+            }),
+          destroy() {},
+        }),
+      },
+    });
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event("change"));
+  });
+  await expect
+    .poll(() => panel.evaluate(() => typeof window.__finishAI))
+    .toBe("function");
+  const focused = await panel
+    .locator(".candidate-heading")
+    .first()
+    .elementHandle();
+  await focused.focus();
+  await panel.evaluate(() =>
+    window.__finishAI(
+      JSON.stringify([
+        {
+          start: "2026-11-01T12:00:00+09:00",
+          end: "2026-11-01T13:00:00+09:00",
+          evidence: "秋のオープンスタジオ。",
+        },
+      ]),
+    ),
+  );
+  await expect(panel.locator("#ai-status")).toHaveText(
+    "AIの補完が完了しました。",
+  );
+  await expect(panel.locator(".candidate .day")).toHaveText([
+    "1",
+    "8",
+    "15",
+    "21",
+  ]);
+  expect(
+    await focused.evaluate((element) => element === document.activeElement),
+  ).toBe(true);
+  await panel
+    .getByRole("combobox", { name: "日程の並び順" })
+    .selectOption("page");
+  await expect(panel.locator(".candidate .day")).toHaveText([
+    "1",
+    "8",
+    "15",
+    "21",
+  ]);
+  await panel.close();
+  await source.close();
+});

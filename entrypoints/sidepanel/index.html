@@ -121,9 +121,12 @@
       <section class="source-section" aria-label="対象ページ">
         <div class="source-icon" aria-hidden="true">↗</div>
         <div class="source-text">
-          <span class="eyebrow">THIS PAGE</span>
+          <span class="eyebrow">対象ページ</span>
           <p id="source-title">ページを確認しています</p>
-          <span id="source-domain" class="muted"></span>
+          <div class="source-meta">
+            <span id="source-domain" class="muted"></span>
+            <span id="scan-state" class="status-dot" role="status">待機中</span>
+          </div>
         </div>
         <button
           id="rescan"
@@ -150,7 +153,16 @@
       </section>
       <div class="section-heading candidates-heading">
         <h2>見つかった日程 <span id="count" class="count">0</span></h2>
-        <span id="scan-state" class="status-dot">待機中</span>
+        <select
+          id="candidate-order"
+          class="order-select"
+          aria-label="日程の並び順"
+          title="日程の並び順"
+          disabled
+        >
+          <option value="page">登場順</option>
+          <option value="date">日時順</option>
+        </select>
       </div>
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
       <div id="candidates" class="candidates" aria-label="日程候補"></div>

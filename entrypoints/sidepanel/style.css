@@ -17,7 +17,8 @@ body {
   min-width: 280px;
 }
 button,
-input {
+input,
+select {
   font: inherit;
 }
 button,
@@ -34,7 +35,8 @@ button:disabled {
 }
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--ochre);
   outline-offset: 4px;
 }
@@ -143,22 +145,18 @@ main {
   color: var(--muted);
 }
 .source-section {
-  margin-top: 20px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #ffffff60;
 }
 .source-icon {
-  width: 30px;
-  height: 30px;
+  width: 16px;
+  height: 24px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: var(--wash);
   color: var(--green);
   font-size: 18px;
   flex: none;
@@ -177,12 +175,21 @@ main {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.source-text > .muted {
+.source-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.source-meta > .muted {
   display: block;
   font-size: 9px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.source-meta .status-dot {
+  flex: none;
+  font-size: 9px;
 }
 .muted,
 .hint {
@@ -195,7 +202,27 @@ main {
   gap: 8px;
 }
 .candidates-heading {
-  margin: 25px 0 14px;
+  margin: 18px 0 12px;
+}
+.order-select {
+  flex: none;
+  max-width: 90px;
+  min-height: 30px;
+  padding: 3px 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.order-select:hover:not(:disabled) {
+  color: var(--green);
+  background: var(--wash);
+}
+.order-select:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 .count {
   display: inline-grid;
