@@ -30,6 +30,8 @@ Sche10le（スケジュール）は、Webページの日程候補を抽出し、
 
 候補見出しの右に小さなネイティブselectで「登場順／日時順」を置き、切り替え用の行は増やさない。初期値は本文の登場順。引用と出現回数から本文の位置を求め、構造化データを優先して統合した候補も本文の位置へ戻す。位置不明の候補は末尾に抽出順で並べる。日時順は開始日・開始時刻の昇順、同日の終日は先頭、同日時は登場順とする。選択値は`chrome.storage.local`の`candidateOrder`に自動保存し、再スキャン・選び直し・パネルの開閉後も維持する。未保存・不正値・読込失敗時のみ登場順を使う。保存は他の設定と同じキューで直列化し、保存失敗時のみ一覧に赤い案内と再試行を表示する。AI補完では選択した順序に挿入し、既存カードとフォーカスを保つ。候補が2件未満または走査中は切り替えを無効化する。対象ページと再スキャンは下線で区切る情報帯にまとめる。ページ情報はドメインと走査状態のみとし、タイトルはドメインのtitle属性で確認できるようにする。再スキャンはアイコンと文字、枠と薄い背景色を持つ36px以上の高さのボタンで操作を明示する。
 
+未選択時のフッターは既存の配置と小さな点を維持し、同梱した6つのことわざ・格言から起動時に1つをランダムに選ぶ。操作中・再スキャン時は変えず、タイマーや通信、保存処理は追加しない。出典の補足はホバー時、全一覧と参照先はREADME末尾の折りたたみに記載する。候補一覧下の「日程に触れると、登録方法を選べます。」は表示しない。
+
 ### 2.1 登録パターン
 
 | パターン   | 内容                                   |
@@ -123,6 +125,22 @@ https://calendar.google.com/calendar/render?action=TEMPLATE&text=…&dates=…&d
 ```
 
 `URL` / `URLSearchParams`でエンコードする。時刻付きはUTC形式`YYYYMMDDTHHMMSSZ`、終日は`YYYYMMDD`。予定作成画面を開くだけであり、自動保存・保存状態の取得・OAuth認証は行わない。
+
+### 3.5 Outlook対応の検討（2026-10-24・未実装）
+
+既存の候補・登録パターン・取得済み項目・タイトル書式を再利用し、Web版の予定作成画面へURLで渡す方式なら、小〜中規模の追加で対応できる見込み。変更箇所はサービス別URL生成、設定の保存、サイドパネルとページ上の取得バーのボタン／案内文言。追加の実行時ライブラリや拡張側のOAuthは不要な構成を目指せる。Outlook側へのサインインと最終保存はユーザーが行う。現在のGoogleカレンダー連携は変更しない。
+
+UI案は設定に「開くカレンダー」を1つ追加し、`Google カレンダー`（初期値）／`Outlook.com（個人用）`／`Outlook（職場・学校）`から選び、自動保存する。メイン画面・取得バーの実行ボタンは各1つのままとし、選んだサービス名に変える。個人用と職場用の入口を分け、利用アカウントの推測はしない。
+
+調査で確認できたことと未確認の点:
+
+- Microsoft Q&Aには、`outlook.office.com/calendar/0/deeplink/compose`に`subject`・`body`・`startdt`・`enddt`・`allday`を渡してWeb版を開く利用報告がある。[当事者の報告](https://learn.microsoft.com/en-us/answers/questions/1008125/is-it-possible-to-launch-the-outlook-app-calendar)。これは公開API仕様書ではない。個人用`outlook.live.com`の利用報告もあるが、今回ログイン済み実機では確認していない。[個人用の利用報告](https://learn.microsoft.com/en-us/answers/questions/4620253/outlook-calendar-event-link-is-not-working-on-mobi)
+- 今回の調査では、これらのURLパラメータを契約として保証するMicrosoftの公開仕様書は確認できなかった。過去には端末によって時刻が反映されない報告もあるため、現時点の挙動は別途実機確認が必要。[時刻の不具合報告](https://learn.microsoft.com/en-us/answers/questions/1089985/outlook-showing-wrong-time-for-calendar-event-link)
+- 最初の対象はChromeから開くOutlook Web。個人用／職場用、ログイン前後、時間帯、終日と複数日（終了日の包含・排他）、日またぎ、異なるタイムゾーンと夏時間、日本語・特殊文字、詳細の改行と末尾URL、長い詳細の受け渡しを確認する。デスクトップアプリへ直接作成画面を出す機能は別検討とする。
+- 公式に案内される代案は`.ics`ファイルの読み込み。ただし、Web版ではファイル選択などの手順が増えるため、軽快な主導線の代替としては劣る。[Microsoft Support](https://support.microsoft.com/en-us/outlook/import-or-subscribe-to-a-calendar-in-outlook-com-or-outlook-on-the-web)
+- Graph APIで直接予定を作る方法は正式に公開されているが、認証トークンと`Calendars.ReadWrite`権限が必要。現状の「作成画面を開き、ユーザーが保存する」用途には実装と権限が増えるため、今回の推奨案には含めない。[Microsoft Graph: Create event](https://learn.microsoft.com/en-us/graph/api/user-post-events?view=graph-rest-1.0)
+
+結論: 設定でサービスを切り替えるUIは既存の構成と相性がよい。実装量より、URL連携の互換性確認が主な作業。実装に進む場合は、まず個人用と職場用の実アカウントで、時間付きと終日の作成画面への受け渡しを確認する。
 
 ## 4. 軽快さ・安全性・検証
 
