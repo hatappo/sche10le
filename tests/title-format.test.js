@@ -28,10 +28,10 @@ test("初期値はそのままのタイトル、日時書式は24時間表記", 
   );
 });
 
-test("書式は選んだ予定の時刻を使い、終日では時刻を空にする", () => {
+test("開始・終了は移動前の開催時刻を使い、終日では時刻を空にする", () => {
   assert.equal(
-    formatTitle("{from:HHmm} {title}", "勉強会", travel),
-    "1700 勉強会",
+    formatTitle("{from:HHmm} {title} {to:HHmm}", "勉強会", travel),
+    "1730 勉強会 1900",
   );
   assert.equal(
     formatTitle("{from:HHmm} {title} {to:HHmm}", "展示", allDay),
@@ -45,9 +45,29 @@ test("書式は選んだ予定の時刻を使い、終日では時刻を空に�
     extractTextEvents("2026/11/8 00:15〜01:00")[0],
   )[1];
   assert.equal(
-    formatTitle("{date} {from} {title}", "夜", overnight),
-    "2026-11-07 23:45 夜",
+    formatTitle("{date} {from}–{to} {title}", "夜", overnight),
+    "2026-11-07 00:15–01:00 夜",
   );
+});
+
+test("移動時間を変えても書式の開催時刻は変わらず、確保する時間帯だけ広がる", () => {
+  for (const minutes of [5, 30, 180]) {
+    const variant = createVariants(event, minutes)[1];
+    let draft = createDraft("ページ", "https://example.com");
+    draft = pickField(draft, "選んだタイトル");
+    const url = new URL(calendarUrl(variant, draft, "{from} {title} {to}"));
+    assert.equal(url.searchParams.get("text"), "17:30 選んだタイトル 19:00");
+    const utc = (value) =>
+      new Date(value)
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, "");
+    assert.equal(
+      url.searchParams.get("dates"),
+      `${utc(Date.parse(event.start) - minutes * 60_000)}/${utc(Date.parse(event.end) + minutes * 60_000)}`,
+    );
+    assert.ok(url.searchParams.get("details").includes("17:30–19:00"));
+  }
 });
 
 test("タイトルを選び直しても装飾を重複させず、カレンダーに同じ表示を渡す", () => {

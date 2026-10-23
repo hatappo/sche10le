@@ -1008,3 +1008,34 @@ test("フッターのことばを起動時に選び、再走査や選び直し�
     await source.close();
   }
 });
+
+test("移動込みの書式は元の開催時刻を保ち、カレンダーは移動時間を確保する", async () => {
+  const { source, panel } = await open();
+  await panel.getByRole("button", { name: "設定", exact: true }).click();
+  await panel.locator("#travel").fill("30");
+  await panel.locator("#title-format").fill("{from:HHmm} {title} {to:HHmm}");
+  await expect(panel.locator("#settings-status")).toContainText("保存しました");
+  await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+  await select(panel, "移動込み");
+  await expect(panel.locator("#selected-time")).toContainText("13:30–16:30");
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "1400 週末のデザイン散歩 | TOKYO FIELD NOTES 1600",
+  );
+  await source.locator("#event-title").click();
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "1400 蔵前の活版印刷ワークショップ 1600",
+  );
+  const opened = context.waitForEvent("page");
+  await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
+  const calendar = await opened;
+  const url = new URL(await panel.evaluate(() => window.__calendarRequest));
+  expect(url.searchParams.get("text")).toBe(
+    "1400 蔵前の活版印刷ワークショップ 1600",
+  );
+  expect(url.searchParams.get("dates")).toBe(
+    "20261108T043000Z/20261108T073000Z",
+  );
+  await calendar.close();
+  await panel.close();
+  await source.close();
+});
