@@ -474,11 +474,11 @@ main {
 }
 .steps button {
   width: 100%;
-  border: 0;
+  border: 1px solid var(--line);
   font: inherit;
   border-radius: 8px;
   padding: 7px 4px;
-  background: var(--wash);
+  background: transparent;
   justify-content: center;
   flex: 1;
   font-size: 10px;
@@ -502,15 +502,20 @@ main {
   place-items: center;
 }
 .steps li.active button {
-  color: white;
-  background: var(--green);
-  box-shadow: 0 3px 8px #2c604520;
+  color: #785825;
+  background: #fbf1dc;
+  border-color: #b18a46;
+  box-shadow: inset 0 -2px 0 #b18a46;
   font-weight: bold;
 }
 .steps li.active button:before {
-  background: var(--green);
-  color: #fff;
-  border-color: var(--green);
+  background: #f5e4bc;
+  border-color: #b18a46;
+}
+.steps li.done button {
+  color: var(--green);
+  background: #eef3e9;
+  border-color: #cbd8c4;
 }
 .steps li.done button:before {
   content: "✓";

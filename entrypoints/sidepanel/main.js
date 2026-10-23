@@ -290,7 +290,8 @@ function visibleOptions() {
   );
 }
 
-function renderCandidates() {
+/** @param {boolean} [neutral] */
+function renderCandidates(neutral = false) {
   const options = visibleOptions();
   el("count").textContent = String(options.length);
   el("empty").hidden = candidates.length > 0 || scanning;
@@ -302,7 +303,7 @@ function renderCandidates() {
     : "日程のあるページを開いて、拡張アイコンを押してください。";
   const fragment = document.createDocumentFragment();
   for (const { candidate, variants } of options)
-    fragment.append(candidateCard(candidate, variants));
+    fragment.append(candidateCard(candidate, variants, neutral));
   el("candidates").replaceChildren(fragment);
   updateOrderControl(options.length);
 }
@@ -368,8 +369,8 @@ function clearSource() {
   send({ type: "clear-source" });
 }
 
-/** @param {import('../../lib/extract.js').Candidate} candidate @param {import('../../lib/calendar.js').Variant[]} variants */
-function candidateCard(candidate, variants) {
+/** @param {import('../../lib/extract.js').Candidate} candidate @param {import('../../lib/calendar.js').Variant[]} variants @param {boolean} [waitForMovement] */
+function candidateCard(candidate, variants, waitForMovement = false) {
   const card = node(
     "article",
     `candidate${candidate.id === selectedId ? " selected" : ""}`,
@@ -447,6 +448,15 @@ function candidateCard(candidate, variants) {
     region.inert = !expanded;
   };
   card.addEventListener("pointerenter", () => {
+    if (waitForMovement) return;
+    expand(true);
+    revealSource(candidate);
+  });
+  card.addEventListener("pointermove", (event) => {
+    // A rebuilt list can appear beneath a stationary pointer. Resume only on
+    // actual movement, while focus/click remains available immediately.
+    if (!waitForMovement || (!event.movementX && !event.movementY)) return;
+    waitForMovement = false;
     expand(true);
     revealSource(candidate);
   });
@@ -533,7 +543,8 @@ function renderDraft() {
       : `ページ上の${FIELD_LABELS[draft.step]}をクリック`;
   el("pick-help").textContent = complete
     ? "内容の調整・保存はGoogleカレンダーで。"
-    : "選ばずに、下のボタンから進んでもOK。";
+    : "";
+  el("pick-help").hidden = !complete;
   button("previous").disabled = draft.step === 0;
   button("skip").hidden = complete || paused;
   button("resume").hidden = !paused || complete;
@@ -710,8 +721,8 @@ el("steps")
   });
 button("deselect").addEventListener("click", () => {
   resetSelection();
-  renderCandidates();
-  el("candidates").querySelector("button")?.focus();
+  renderCandidates(true);
+  el("candidates-title").focus();
 });
 document.querySelector(".brand")?.addEventListener("click", (event) => {
   event.preventDefault();

@@ -148,6 +148,14 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   });
   await select(panel, "移動込み");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await expect(panel.locator("#pick-help")).toBeHidden();
+  const primaryColor = await panel
+    .locator("#open-calendar")
+    .evaluate((button) => getComputedStyle(button).backgroundColor);
+  const activeColor = await panel
+    .locator("#steps .active button")
+    .evaluate((button) => getComputedStyle(button).backgroundColor);
+  expect(activeColor).not.toBe(primaryColor);
   await source.screenshot({
     path: "test-results/page-picker.png",
     animations: "disabled",
@@ -163,6 +171,14 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#pick-title")).toHaveText(
     "ページ上の場所をクリック",
   );
+  await expect(panel.locator("#steps .done button")).toHaveCSS(
+    "background-color",
+    "rgb(238, 243, 233)",
+  );
+  expect("rgb(238, 243, 233)").not.toBe(primaryColor);
+  expect("rgb(238, 243, 233)").not.toBe(activeColor);
+  await panel.screenshot({ path: "test-results/panel-picking.png" });
+  await source.screenshot({ path: "test-results/page-picker-progress.png" });
   await source.locator("#venue").click();
   await expect(panel.locator("#pick-title")).toHaveText(
     "ページ上の詳細をクリック",
@@ -231,6 +247,23 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   );
   await panel.getByRole("button", { name: "選び直す" }).click();
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await expect(panel.locator("#candidates-title")).toBeFocused();
+  await expect(
+    panel.locator(".candidate.selected, .candidate.expanded"),
+  ).toHaveCount(0);
+  await expect(panel.locator('.candidate [aria-expanded="true"]')).toHaveCount(
+    0,
+  );
+  // Wait beyond source reveal's delay; reset must not re-highlight a candidate.
+  await panel.waitForTimeout(250);
+  await expect(
+    panel.locator(".candidate.selected, .candidate.expanded"),
+  ).toHaveCount(0);
+  await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
+  await panel.keyboard.press("Tab");
+  await expect(panel.locator("#candidate-order")).toBeFocused();
+  await panel.keyboard.press("Tab");
+  await expect(panel.locator(".candidate").first()).toHaveClass(/expanded/);
   await select(panel, "終日で確保");
   const opened = context.waitForEvent("page");
   await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
@@ -438,7 +471,14 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await first.hover();
   await panel.waitForTimeout(250);
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
-  await panel.locator(".candidate").last().hover();
+  // Reset no longer pins the first card via focus. Leave it before targeting
+  // another card so its collapsing region cannot move that target mid-hover.
+  await panel.locator(".header").hover();
+  await panel
+    .locator(".candidate")
+    .last()
+    .locator(".candidate-heading")
+    .hover();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await panel.close();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
