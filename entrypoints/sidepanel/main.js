@@ -4,7 +4,7 @@ import {
   extractTextEvents,
   mergeCandidates,
 } from "../../lib/extract.js";
-import { calendarUrl, createVariants } from "../../lib/calendar.js";
+import { calendarUrl, candidateOptions } from "../../lib/calendar.js";
 import {
   createDraft,
   FIELD_LABELS,
@@ -271,7 +271,8 @@ function receive(message, run) {
 }
 
 function renderCandidates() {
-  el("count").textContent = String(candidates.length);
+  const options = candidateOptions(candidates, travelMinutes);
+  el("count").textContent = String(options.length);
   el("empty").hidden = candidates.length > 0 || scanning;
   el("empty-title").textContent = pageUrl
     ? "日程が見つかりませんでした"
@@ -281,7 +282,8 @@ function renderCandidates() {
     : "日程のあるページを開いて、拡張アイコンを押してください。";
   el("list-hint").hidden = !candidates.length;
   const fragment = document.createDocumentFragment();
-  for (const candidate of candidates) fragment.append(candidateCard(candidate));
+  for (const { candidate, variants } of options)
+    fragment.append(candidateCard(candidate, variants));
   el("candidates").replaceChildren(fragment);
 }
 
@@ -303,8 +305,8 @@ function clearSource() {
   send({ type: "clear-source" });
 }
 
-/** @param {import('../../lib/extract.js').Candidate} candidate */
-function candidateCard(candidate) {
+/** @param {import('../../lib/extract.js').Candidate} candidate @param {import('../../lib/calendar.js').Variant[]} variants */
+function candidateCard(candidate, variants) {
   const card = node(
     "article",
     `candidate${candidate.id === selectedId ? " selected" : ""}`,
@@ -346,7 +348,7 @@ function candidateCard(candidate) {
   region.inert = true;
   const inner = node("div", "variant-inner");
   const list = node("div", "variant-list");
-  for (const variant of createVariants(candidate, travelMinutes)) {
+  for (const variant of variants) {
     const option = document.createElement("button");
     option.type = "button";
     option.className = "variant";
@@ -610,10 +612,11 @@ async function runAI(run) {
     if (run !== generation || !aiEnabled || controller.signal.aborted) return;
     const previousIds = new Set(candidates.map((candidate) => candidate.id));
     candidates = mergeCandidates(candidates, additions);
-    for (const candidate of candidates)
+    const options = candidateOptions(candidates, travelMinutes);
+    for (const { candidate, variants } of options)
       if (!previousIds.has(candidate.id))
-        el("candidates").append(candidateCard(candidate));
-    el("count").textContent = String(candidates.length);
+        el("candidates").append(candidateCard(candidate, variants));
+    el("count").textContent = String(options.length);
     el("empty").hidden = candidates.length > 0;
     el("list-hint").hidden = !candidates.length;
     el("ai-status").textContent = "AIの補完が完了しました。";

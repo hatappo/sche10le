@@ -246,6 +246,11 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
 test("移動時間を保存でき、ページ遷移・パネル終了で選択を解除する", async () => {
   const { source, panel } = await open();
   await panel.getByRole("button", { name: "設定", exact: true }).click();
+  await panel.locator("#travel").fill("30");
+  await panel.locator("#travel").press("ArrowUp");
+  await expect(panel.locator("#travel")).toHaveValue("35");
+  await panel.locator("#travel").press("ArrowDown");
+  await expect(panel.locator("#travel")).toHaveValue("30");
   await panel.locator("#travel").fill("45");
   await expect(panel.locator("#settings-status")).toContainText("保存しました");
   await panel.getByRole("button", { name: "閉じる", exact: true }).click();
@@ -381,6 +386,8 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
     document.querySelector("main").style.paddingTop = "1600px";
     document.querySelector(".date").innerHTML =
       "<span>２０２６年１１月８日</span>（日）<strong>１４：００〜１６：００</strong>";
+    document.querySelector(".date").style.fontSize = "10px";
+    document.querySelector(".date").style.width = "120px";
   });
   await panel.getByRole("button", { name: "再スキャン" }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
@@ -390,6 +397,22 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await first.hover();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await expect(target).toBeInViewport({ ratio: 1 });
+  await expect
+    .poll(() =>
+      target.locator("span").evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return Math.abs(rect.top + rect.height / 2 - innerHeight / 2);
+      }),
+    )
+    .toBeLessThan(2);
+  expect(
+    await target.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return element.contains(
+        document.elementFromPoint(rect.left + 5, rect.top + 5),
+      );
+    }),
+  ).toBe(true);
   await source.screenshot({ path: "test-results/page-source-highlight.png" });
   // The page's original text and inline markup remain intact.
   await expect(target.locator("strong")).toHaveText("１４：００〜１６：００");
@@ -499,6 +522,35 @@ test("設定を独立表示し、3項目を自動保存・失敗時だけ共通�
     "蔵前の活版印刷ワークショップ テスト",
   );
   await expect(panel.locator("#footer")).toBeVisible();
+  await panel.close();
+  await source.close();
+});
+
+test("同日の異なる時刻は残し、重複する終日の選択肢と空になる候補を除く", async () => {
+  const { source, panel } = await open();
+  await source.evaluate(() => {
+    const extra = document.createElement("section");
+    extra.innerHTML = "<p>2026年11月8日 18:00〜20:00</p><p>2026年11月8日</p>";
+    document.querySelector("main").append(extra);
+  });
+  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await expect(panel.locator(".candidate")).toHaveCount(4);
+  await expect(panel.locator("#count")).toHaveText("4");
+  await expect(
+    panel.locator(".variant-label").filter({ hasText: "終日で確保" }),
+  ).toHaveCount(3);
+  const later = panel.locator(".candidate").last();
+  await later.hover();
+  await expect(later.getByRole("button", { name: /時間どおり/ })).toBeVisible();
+  await expect(later.getByRole("button", { name: /移動込み/ })).toBeVisible();
+  await expect(later.getByRole("button", { name: /終日で確保/ })).toHaveCount(
+    0,
+  );
+  await later.getByRole("button", { name: /時間どおり/ }).click();
+  await expect(panel.locator("#selected-time")).toContainText("18:00–20:00");
+  await panel.getByRole("button", { name: "選び直す" }).click();
+  await select(panel, "終日で確保");
+  await expect(panel.locator("#selected-time")).toContainText("終日");
   await panel.close();
   await source.close();
 });

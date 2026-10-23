@@ -8,6 +8,7 @@ import {
 import {
   calendarUrl,
   createVariants,
+  candidateOptions,
   composeDetails,
 } from "../lib/calendar.js";
 import {
@@ -19,6 +20,40 @@ import {
 
 const now = new Date(2026, 9, 24, 12);
 const extract = (text) => extractTextEvents(text, now);
+
+test("同じ日付範囲の終日は1つにまとめ、別時刻・別範囲は残す", () => {
+  const events = extract(
+    "11/8 10:00〜12:00\n11/8 14:00〜16:00\n11/8\n11/8〜11/9\n11/9 10:00〜12:00",
+  );
+  const options = candidateOptions(events, 30);
+  assert.equal(options.length, 4);
+  assert.deepEqual(
+    options.map(({ variants }) => variants.map(({ kind }) => kind)),
+    [
+      ["exact", "travel", "all-day"],
+      ["exact", "travel"],
+      ["all-day"],
+      ["exact", "travel", "all-day"],
+    ],
+  );
+  assert.equal(candidateOptions(events, 0)[1].variants.length, 1);
+  const overnight = candidateOptions(
+    extract("11/8 22:00〜00:00\n11/8 23:00〜01:00\n11/8〜11/9"),
+  );
+  assert.equal(overnight.length, 2);
+  assert.deepEqual(
+    overnight.map(({ variants }) => variants.at(-1).endDate),
+    ["2026-11-08", "2026-11-09"],
+  );
+  // A date-only entry can also own the shared all-day option when it comes first.
+  const dateFirst = candidateOptions([events[2], events[0], events[1]]);
+  assert.deepEqual(
+    dateFirst.map(({ variants }) => variants.length),
+    [1, 2, 2],
+  );
+  // Appending AI candidates does not move options away from existing cards.
+  assert.deepEqual(candidateOptions(events.slice(0, 1))[0], options[0]);
+});
 
 test("候補の出典は日時の範囲を指し、構造化データとの統合でも残る", () => {
   const [event] = extract(
