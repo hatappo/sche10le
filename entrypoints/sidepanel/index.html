@@ -52,6 +52,43 @@
       <p id="settings-status" class="hint" role="status">
         次に選ぶ「移動込み」に適用されます。
       </p>
+      <div class="title-format-settings">
+        <label for="title-format">タイトルの書式</label>
+        <input
+          id="title-format"
+          class="format-input"
+          type="text"
+          value="{title}"
+          maxlength="200"
+          spellcheck="false"
+          autocomplete="off"
+          aria-describedby="format-help format-status"
+        />
+        <p id="format-help" class="hint">
+          例: <code>{from:HHmm} {title}</code
+          ><br />開始・終了は選んだ予定の時刻。終日では空欄になります。
+        </p>
+        <div id="format-tokens" class="format-tokens" aria-label="変数を挿入">
+          <button type="button" data-token="{title}">タイトル</button>
+          <button type="button" data-token="{from:HHmm}">開始時刻</button>
+          <button type="button" data-token="{to:HHmm}">終了時刻</button>
+          <button type="button" data-token="{date:YYYY-MM-DD}">日付</button>
+        </div>
+        <div class="format-preview">
+          <span id="format-preview-label">プレビュー</span
+          ><output id="format-preview"></output>
+        </div>
+        <div class="format-actions">
+          <button id="reset-title-format" class="text-button" type="button">
+            初期値に戻す</button
+          ><button id="save-title-format" class="small-button" type="button">
+            書式を保存
+          </button>
+        </div>
+        <p id="format-status" class="hint" role="status">
+          ページでタイトルを選び直しても書式は維持されます。
+        </p>
+      </div>
       <label class="checkbox-label"
         ><input id="ai-enabled" type="checkbox" />
         利用できる場合はローカルAIで補完</label
@@ -61,11 +98,6 @@
       </p>
     </section>
     <main>
-      <section class="intro">
-        <p class="eyebrow">A LITTLE LESS FRICTION</p>
-        <h1>気になる日を、<br />予定にしよう。</h1>
-        <p class="intro-description">日程を選んで、カレンダーへ。</p>
-      </section>
       <section class="source-section" aria-label="対象ページ">
         <div class="source-icon" aria-hidden="true">↗</div>
         <div class="source-text">
@@ -75,12 +107,25 @@
         </div>
         <button
           id="rescan"
-          class="icon-button"
+          class="reload-button"
           type="button"
           aria-label="再スキャン"
           title="再スキャン"
         >
-          ↻
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 7v5h-5" />
+            <path d="M20 12a8 8 0 1 0-2.3 5.7M20 12l-3-4" />
+          </svg>
         </button>
       </section>
       <div class="section-heading candidates-heading">
@@ -120,9 +165,9 @@
         <h2 id="selected-date"></h2>
         <p id="selected-time" class="selected-time"></p>
         <ol id="steps" class="steps" aria-label="ページから取得する項目">
-          <li>タイトル</li>
-          <li>場所</li>
-          <li>詳細</li>
+          <li><button type="button" data-step="0">タイトル</button></li>
+          <li><button type="button" data-step="1">場所</button></li>
+          <li><button type="button" data-step="2">詳細</button></li>
         </ol>
         <div class="pick-instruction" aria-live="polite">
           <span class="pick-cursor" aria-hidden="true">↖</span>
@@ -140,15 +185,15 @@
           </button>
         </div>
         <dl class="picked-values">
-          <div>
+          <div id="field-title">
             <dt>タイトル</dt>
             <dd id="picked-title"></dd>
           </div>
-          <div>
+          <div id="field-location">
             <dt>場所</dt>
             <dd id="picked-location"></dd>
           </div>
-          <div>
+          <div id="field-details">
             <dt>詳細</dt>
             <dd id="picked-details"></dd>
           </div>

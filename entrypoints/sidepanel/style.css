@@ -133,9 +133,6 @@ a {
 main {
   padding: 0 24px 125px;
 }
-.intro {
-  padding: 30px 0 27px;
-}
 .eyebrow {
   font:
     10px/1.5 "Avenir Next",
@@ -145,19 +142,8 @@ main {
   letter-spacing: 1.8px;
   color: var(--muted);
 }
-.intro h1 {
-  font-family: "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
-  font-size: 30px;
-  line-height: 1.55;
-  font-weight: 500;
-  letter-spacing: -0.7px;
-  margin: 12px 0 10px;
-}
-.intro-description {
-  color: var(--muted);
-  font-size: 12px;
-}
 .source-section {
+  margin-top: 20px;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px;
@@ -467,12 +453,16 @@ main {
 .steps {
   list-style: none;
   display: flex;
-  gap: 0;
+  gap: 5px;
   padding: 0;
-  margin: 22px 0 18px;
+  margin: 20px 0 16px;
   counter-reset: step;
 }
 .steps li {
+  border-radius: 8px;
+  padding: 7px 4px;
+  background: var(--wash);
+  justify-content: center;
   flex: 1;
   font-size: 10px;
   display: flex;
@@ -495,7 +485,9 @@ main {
   place-items: center;
 }
 .steps li.active {
-  color: var(--green);
+  color: white;
+  background: var(--green);
+  box-shadow: 0 3px 8px #2c604520;
   font-weight: bold;
 }
 .steps li.active:before {
@@ -522,8 +514,9 @@ main {
   color: var(--green);
 }
 .pick-instruction strong {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
 }
 .pick-instruction p {
   font-size: 10px;
@@ -552,6 +545,9 @@ main {
   margin: 0;
 }
 .picked-values > div {
+  position: relative;
+  border-radius: 5px;
+  scroll-margin-bottom: 125px;
   display: grid;
   grid-template-columns: 55px minmax(0, 1fr);
   gap: 8px;
@@ -685,12 +681,6 @@ main {
   display: block;
   margin-top: 4px;
 }
-.is-selected .intro {
-  display: none;
-}
-.is-selected .source-section {
-  margin-top: 20px;
-}
 .is-selected .candidates-heading {
   margin-top: 18px;
 }
@@ -735,10 +725,111 @@ main {
     padding-left: 16px;
     padding-right: 16px;
   }
-  .intro h1 {
-    font-size: 27px;
-  }
   .variant-time {
     font-size: 10px;
   }
+}
+
+.reload-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+.reload-button:hover {
+  color: var(--green);
+}
+.steps button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.steps li {
+  position: relative;
+}
+.steps button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+}
+.picked-confirmation {
+  position: absolute;
+  right: 0;
+  top: -8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
+  font-size: 12px;
+  pointer-events: none;
+}
+.title-format-settings {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 2px;
+}
+.format-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 9px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #bccab5;
+  border-radius: 6px;
+  font: 12px/1.6 monospace;
+}
+.format-input[aria-invalid="true"] {
+  border-color: #984d37;
+}
+.format-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+.format-tokens button {
+  font-size: 10px;
+  padding: 4px 7px;
+  border: 1px solid #c7d2be;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--green);
+}
+.format-tokens button:hover {
+  background: white;
+}
+.format-preview {
+  background: #ffffff80;
+  border-radius: 6px;
+  padding: 10px;
+}
+.format-preview span {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+}
+.format-preview output {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.format-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
 }

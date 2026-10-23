@@ -8,12 +8,18 @@ import { calendarUrl, createVariants } from "../../lib/calendar.js";
 import {
   createDraft,
   FIELD_LABELS,
+  PICK_FIELDS,
   pickField,
   previousField,
   skipField,
 } from "../../lib/draft.js";
 import { dateRangeLabel, timeRange } from "../../lib/dates.js";
 import { aiAvailability, enhanceDates } from "../../lib/ai.js";
+import {
+  DEFAULT_TITLE_FORMAT,
+  formatTitle,
+  validateTitleFormat,
+} from "../../lib/title-format.js";
 
 /** @param {string} id @returns {HTMLElement} */
 function el(id) {
@@ -57,6 +63,7 @@ let opening = false;
 let scanTimer = 0;
 let travelMinutes = 30;
 let aiEnabled = false;
+let titleFormat = DEFAULT_TITLE_FORMAT;
 /** @type {AbortController | undefined} */
 let aiController;
 
@@ -226,9 +233,12 @@ function receive(message, run) {
   if (!draft || message.token !== selectionToken || message.step !== draft.step)
     return;
   if (message.type === "picked" && typeof message.text === "string") {
+    const pickedStep = draft.step;
     draft = pickField(draft, message.text);
     syncPicker();
+    if (draft.step !== pickedStep) flashPickedField(pickedStep);
   } else if (message.type === "skip") advance();
+  else if (message.type === "choose-field") chooseField(message.fieldIndex);
   else if (message.type === "back") back();
   else if (message.type === "open") void openCalendar();
   else if (message.type === "pause") pausePicking();
@@ -387,6 +397,10 @@ function renderDraft() {
   [...el("steps").children].forEach((item, i) => {
     item.classList.toggle("active", !paused && i === draft?.step);
     item.classList.toggle("done", i < (draft?.step ?? 0));
+    const control = item.querySelector("button");
+    if (!paused && i === draft?.step)
+      control?.setAttribute("aria-current", "step");
+    else control?.removeAttribute("aria-current");
   });
   el("pick-title").textContent = complete
     ? "カレンダーへ進めます"
@@ -399,12 +413,60 @@ function renderDraft() {
   button("previous").disabled = draft.step === 0;
   button("skip").hidden = complete || paused;
   button("resume").hidden = !paused || complete;
-  el("picked-title").textContent = draft.title || "未設定";
+  el("picked-title").textContent =
+    (selectedVariant
+      ? formatTitle(titleFormat, draft.title, selectedVariant)
+      : draft.title) || "未設定";
   el("picked-location").textContent = draft.location || "未設定";
   el("picked-location").classList.toggle("is-empty", !draft.location);
   el("picked-details").textContent = draft.details
     ? `${draft.details}\n\n${draft.url}`
     : draft.url;
+  updateFormatPreview();
+}
+
+/** @param {number} index */
+function chooseField(index) {
+  if (!draft || !Number.isInteger(index) || index < 0 || index > 2) return;
+  draft = { ...draft, step: index };
+  syncPicker();
+}
+
+/** @param {number} index */
+function flashPickedField(index) {
+  const row = el(`field-${PICK_FIELDS[index]}`);
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  row.getAnimations().forEach((animation) => animation.cancel());
+  row.querySelector(".picked-confirmation")?.remove();
+  const check = node("span", "picked-confirmation", "✓");
+  check.setAttribute("aria-hidden", "true");
+  row.append(check);
+  row.scrollIntoView({
+    block: "nearest",
+    behavior: reduced ? "instant" : "smooth",
+  });
+  row.animate(
+    [
+      { backgroundColor: "#d6ead1", boxShadow: "0 0 0 3px #b9d9b4" },
+      { backgroundColor: "transparent", boxShadow: "0 0 0 0 #b9d9b400" },
+    ],
+    { duration: reduced ? 0 : 800, easing: "ease-out" },
+  );
+  const animation = check.animate(
+    reduced
+      ? [{ opacity: 1 }, { opacity: 1 }]
+      : [
+          { opacity: 0, transform: "translateY(5px) scale(.75)" },
+          { opacity: 1, transform: "translateY(0) scale(1.1)", offset: 0.25 },
+          { opacity: 1, transform: "translateY(0) scale(1)", offset: 0.75 },
+          { opacity: 0, transform: "translateY(-5px) scale(1)" },
+        ],
+    { duration: 900, easing: "ease-out" },
+  );
+  void animation.finished.then(
+    () => check.remove(),
+    () => check.remove(),
+  );
 }
 
 function syncPicker() {
@@ -412,11 +474,7 @@ function syncPicker() {
   paused = false;
   // Rotate the token after every step so delayed clicks cannot advance twice.
   selectionToken = crypto.randomUUID();
-  send(
-    draft.step < 3
-      ? { type: "pick", step: draft.step, token: selectionToken }
-      : { type: "stop" },
-  );
+  send({ type: "pick", step: draft.step, token: selectionToken });
   renderDraft();
 }
 function advance() {
@@ -441,7 +499,7 @@ async function openCalendar() {
   if (!draft || !selectedVariant || opening) return;
   opening = true;
   button("open-calendar").disabled = true;
-  const url = calendarUrl(selectedVariant, draft);
+  const url = calendarUrl(selectedVariant, draft, titleFormat);
   send({ type: "stop" });
   try {
     await chrome.tabs.create({ url });
@@ -517,6 +575,13 @@ button("open-calendar").addEventListener("click", () => void openCalendar());
 button("skip").addEventListener("click", advance);
 button("previous").addEventListener("click", back);
 button("resume").addEventListener("click", syncPicker);
+el("steps")
+  .querySelectorAll("button")
+  .forEach((control) => {
+    control.addEventListener("click", () =>
+      chooseField(Number(control.dataset.step)),
+    );
+  });
 button("deselect").addEventListener("click", () => {
   resetSelection();
   renderCandidates();
@@ -538,7 +603,75 @@ function toggleSettings() {
   );
   if (!settings.hidden) input("travel").focus();
   else button("settings-toggle").focus();
+  updateFormatPreview();
 }
+
+function updateFormatPreview() {
+  const template = input("title-format").value;
+  const error = validateTitleFormat(template);
+  input("title-format").setAttribute("aria-invalid", String(Boolean(error)));
+  button("save-title-format").disabled = Boolean(error);
+  if (error) {
+    el("format-preview").textContent = error;
+    return;
+  }
+  const sample = selectedVariant ?? {
+    kind: /** @type {const} */ ("exact"),
+    label: "例",
+    date: "2026-11-08",
+    endDate: "2026-11-08",
+    start: new Date(2026, 10, 8, 17, 30).toISOString(),
+    end: new Date(2026, 10, 8, 19).toISOString(),
+  };
+  el("format-preview-label").textContent = selectedVariant
+    ? "選択中の予定"
+    : "プレビュー（例）";
+  el("format-preview").textContent = formatTitle(
+    template,
+    draft?.title || "勉強会",
+    sample,
+  );
+}
+input("title-format").addEventListener("input", updateFormatPreview);
+el("format-tokens")
+  .querySelectorAll("button")
+  .forEach((control) => {
+    control.addEventListener("click", () => {
+      const field = input("title-format");
+      const position = field.selectionStart ?? field.value.length;
+      field.setRangeText(
+        control.dataset.token ?? "",
+        position,
+        field.selectionEnd ?? position,
+        "end",
+      );
+      field.focus();
+      updateFormatPreview();
+    });
+  });
+button("reset-title-format").addEventListener("click", () => {
+  input("title-format").value = DEFAULT_TITLE_FORMAT;
+  el("format-status").textContent = "「書式を保存」で初期値を適用します。";
+  updateFormatPreview();
+});
+button("save-title-format").addEventListener("click", async () => {
+  const template = input("title-format").value.trim();
+  const error = validateTitleFormat(template);
+  if (error) {
+    el("format-status").textContent = error;
+    return;
+  }
+  try {
+    await chrome.storage.local.set({ titleFormat: template });
+    titleFormat = template;
+    el("format-status").textContent =
+      "書式を保存しました。選択中のタイトルにも適用されます。";
+    renderDraft();
+  } catch {
+    el("format-status").textContent =
+      "書式を保存できませんでした。もう一度お試しください。";
+  }
+});
 button("settings-toggle").addEventListener("click", toggleSettings);
 button("settings-close").addEventListener("click", toggleSettings);
 button("save-settings").addEventListener("click", async () => {
@@ -594,6 +727,7 @@ async function initialize() {
     const saved = await chrome.storage.local.get([
       "travelMinutes",
       "aiEnabled",
+      "titleFormat",
     ]);
     if (
       typeof saved.travelMinutes === "number" &&
@@ -603,11 +737,18 @@ async function initialize() {
     )
       travelMinutes = saved.travelMinutes;
     aiEnabled = saved.aiEnabled === true;
+    if (
+      typeof saved.titleFormat === "string" &&
+      !validateTitleFormat(saved.titleFormat)
+    )
+      titleFormat = saved.titleFormat;
   } catch {
     /* Safe defaults also work if storage is temporarily unavailable. */
   }
   input("travel").value = String(travelMinutes);
   input("ai-enabled").checked = aiEnabled;
+  input("title-format").value = titleFormat;
+  updateFormatPreview();
   await scan();
 }
 void initialize();

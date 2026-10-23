@@ -88,9 +88,49 @@ async function select(panel, label = "時間どおり") {
   await expect(panel.locator("#selection")).toBeVisible();
 }
 
+// Resolve a real button inside the closed shadow root, then click its screen position.
+async function clickOverlay(source, name) {
+  const session = await context.newCDPSession(source);
+  try {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    function find(node) {
+      const attributes = node.attributes ?? [];
+      const index = attributes.indexOf("aria-label");
+      if (
+        node.nodeName === "BUTTON" &&
+        index >= 0 &&
+        attributes[index + 1] === name
+      )
+        return node;
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ]) {
+        const found = find(child);
+        if (found) return found;
+      }
+    }
+    const target = find(root);
+    expect(target, `overlay button: ${name}`).toBeTruthy();
+    const { model } = await session.send("DOM.getBoxModel", {
+      nodeId: target.nodeId,
+    });
+    await source.mouse.click(
+      (model.content[0] + model.content[4]) / 2,
+      (model.content[1] + model.content[5]) / 2,
+    );
+  } finally {
+    await session.detach();
+  }
+}
+
 test("候補→パターン→ページから順次取得→カレンダーへのURL", async () => {
   const { source, panel } = await open();
   const errors = [];
+  await expect(panel.locator(".intro")).toHaveCount(0);
   panel.on("pageerror", (error) => errors.push(error.message));
   await panel.screenshot({
     path: "test-results/panel-candidates.png",
@@ -112,6 +152,9 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await expect(panel.locator("#picked-details")).toHaveText(`${baseUrl}/`);
   await source.locator("#event-title").click();
+  await expect(panel.locator("#field-title .picked-confirmation")).toHaveText(
+    "✓",
+  );
   await expect(panel.locator("#pick-title")).toHaveText(
     "ページ上の場所をクリック",
   );
@@ -120,11 +163,32 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     "ページ上の詳細をクリック",
   );
   await source.locator("#description").click();
-  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
+  await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
   await panel.screenshot({ path: "test-results/panel-picked.png" });
+  await source.screenshot({ path: "test-results/page-picker-complete.png" });
+  // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
+  await source.locator("#event-title").click();
+  await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
+  await clickOverlay(source, "戻る");
+  await expect(panel.locator("#pick-title")).toContainText("詳細");
+  await source.locator("#venue").click();
+  await expect(panel.locator("#picked-details")).toHaveText(
+    `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
+  );
+  await clickOverlay(source, "詳細を選び直す");
+  await source.locator("#description").click();
+  await expect(panel.locator("#picked-details")).toHaveText(
+    `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
+  );
+  await clickOverlay(source, "タイトルを選び直す");
+  await expect(panel.locator('#steps button[aria-current="step"]')).toHaveText(
+    "タイトル",
+  );
+  await source.locator("#event-title").click();
   const opened = context.waitForEvent("page");
   await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
   const calendar = await opened;
@@ -191,12 +255,60 @@ test("移動時間を保存でき、ページ遷移・パネル終了で選択�
   await source.locator("#spa").click();
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#selection")).toBeHidden();
+  await expect(panel.locator(".candidate")).toHaveCount(0);
   await panel.getByRole("button", { name: "再スキャン" }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
   await select(panel);
   await panel.close();
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await source.close();
+});
+
+test("タイトル書式をプレビュー・保存し、選び直しと再表示でも維持する", async () => {
+  const { source, panel } = await open();
+  await panel.getByRole("button", { name: "設定", exact: true }).click();
+  await panel.locator("#title-format").fill("{unknown}");
+  await expect(
+    panel.getByRole("button", { name: "書式を保存" }),
+  ).toBeDisabled();
+  await panel.locator("#title-format").fill("{from:hhmm} {title} あいうえお");
+  await expect(panel.locator("#format-preview")).toHaveText(
+    "1730 勉強会 あいうえお",
+  );
+  await panel.getByRole("button", { name: "書式を保存" }).click();
+  await expect(panel.locator("#format-status")).toContainText("保存しました");
+  await panel.screenshot({
+    path: "test-results/panel-title-settings.png",
+    animations: "disabled",
+  });
+  await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+  await select(panel);
+  await source.locator("#event-title").click();
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "1400 蔵前の活版印刷ワークショップ あいうえお",
+  );
+  await panel.locator('#steps button[data-step="0"]').click();
+  await source.locator("#event-link").click();
+  await expect(panel.locator("#picked-title")).toHaveText(
+    "1400 活版印刷について詳しく あいうえお",
+  );
+  const opened = context.waitForEvent("page");
+  await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
+  const calendar = await opened;
+  const url = new URL(await panel.evaluate(() => window.__calendarRequest));
+  expect(url.searchParams.get("text")).toBe(
+    "1400 活版印刷について詳しく あいうえお",
+  );
+  await calendar.close();
+  await panel.close();
+  await source.close();
+  const next = await open();
+  await select(next.panel, "終日で確保");
+  await expect(next.panel.locator("#picked-title")).toHaveText(
+    "週末のデザイン散歩 | TOKYO FIELD NOTES あいうえお",
+  );
+  await next.panel.close();
+  await next.source.close();
 });
 
 test("狭い幅・キーボード操作・再走査時のリスナー重複を確認する", async () => {
