@@ -177,7 +177,7 @@ async function scan() {
   el("empty").hidden = true;
   el("ai-area").hidden = true;
   notice("このページの日程を探しています…");
-  el("scan-state").textContent = "走査中";
+  el("scan-state").textContent = "スキャン中";
   el("scan-state").classList.add("busy");
   try {
     const [tab] = await chrome.tabs.query({
@@ -258,7 +258,7 @@ function receive(message, run) {
       extractTextEvents(pageText),
     );
     showSource(new URL(pageUrl).hostname, pageTitle || "タイトルのないページ");
-    el("scan-state").textContent = "走査完了";
+    el("scan-state").textContent = "スキャン完了";
     el("scan-state").classList.remove("busy");
     notice("");
     renderCandidates();

@@ -149,7 +149,7 @@ test("不正な日付・時刻・数値の一部を予定にしない", () => {
   assert.equal(extract("2028/2/29").length, 1);
 });
 
-test("年省略は走査時の年、単独時刻は仮の1時間、日付またぎは翌日", () => {
+test("年省略はスキャン時の年、単独時刻は仮の1時間、日付またぎは翌日", () => {
   assert.equal(extract("1月8日 15時")[0].date, "2026-01-08");
   const [single] = extract("11/8 15時");
   assert.equal(single.assumedEnd, true);

@@ -74,6 +74,7 @@ async function open(footerRandom) {
   await source.bringToFront();
   await panel.getByRole("button", { name: "再スキャン" }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
+  await expect(panel.locator("#scan-state")).toHaveText("スキャン完了");
   // Browser-initiated tabs.create navigation can bypass Playwright's first-request
   // interception. Capture the real handoff URL at the API boundary and open a blank tab.
   await panel.evaluate(() => {
@@ -464,7 +465,7 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   await next.source.close();
 });
 
-test("狭い幅・キーボード操作・再走査時のリスナー重複を確認する", async () => {
+test("狭い幅・キーボード操作・再スキャン時のリスナー重複を確認する", async () => {
   const { source, panel } = await open();
   await panel.setViewportSize({ width: 300, height: 700 });
   await panel.emulateMedia({ reducedMotion: "reduce" });
@@ -676,7 +677,7 @@ test("同日の終日カードだけ除き、各時刻の終日パターンを�
   await source.close();
 });
 
-test("令和・英語の日付を走査し、出典の強調から正しい日時をカレンダーへ渡す", async () => {
+test("令和・英語の日付をスキャンし、出典の強調から正しい日時をカレンダーへ渡す", async () => {
   for (const text of [
     "令和８年１１月８日 14:00〜16:00",
     "November 8, 2026 2 PM–4 PM",
@@ -811,7 +812,7 @@ for (const selected of [false, true]) {
   });
 }
 
-test("登場順と日時順を切り替え、構造化データの位置・同日時刻・再走査・選択を保つ", async () => {
+test("登場順と日時順を切り替え、構造化データの位置・同日時刻・再スキャン・選択を保つ", async () => {
   const { source, panel } = await open();
   await source.evaluate(() => {
     document.querySelector("main").innerHTML =
@@ -1092,7 +1093,7 @@ test("並び順の保存失敗は再試行でき、連続変更でも最後の�
   await source.close();
 });
 
-test("フッターのことばを起動時に選び、再走査や選び直しでは変えない", async () => {
+test("フッターのことばを起動時に選び、再スキャンや選び直しでは変えない", async () => {
   for (const [random, quote] of [
     [0, FOOTER_QUOTES[0]],
     [0.999, FOOTER_QUOTES.at(-1)],
