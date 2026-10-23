@@ -1099,7 +1099,10 @@ test("フッターのことばを起動時に選び、再スキャンや選び�
     const { source, panel } = await open(random);
     const footer = panel.locator("#footer-quote");
     await expect(footer).toHaveText(quote.text);
-    await expect(footer).toHaveAttribute("title", quote.attribution);
+    await expect(footer).toHaveAttribute(
+      "title",
+      `${quote.original}\n— ${quote.attribution}`,
+    );
     await expect(panel.locator("#list-hint")).toHaveCount(0);
     await panel.getByRole("button", { name: "再スキャン" }).click();
     await expect(panel.locator(".candidate")).toHaveCount(3);

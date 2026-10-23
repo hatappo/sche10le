@@ -155,19 +155,19 @@ AI APIの成功・失敗・セッション破棄はモックで検証してい�
 設計の詳細は [製品・技術設計書](docs/dev/product_technical_design.md) を参照してください。
 
 <details>
-<summary>フッターのことば（全6種・出典）</summary>
+<summary>フッターのことば（海外の言葉・全6種・英語原文と出典）</summary>
 
-パネルを開くたびに1つをランダムに表示します。再スキャンや選び直しでは変えず、時間経過による切り替えもしません。同じことばが続く場合もあります。文言は拡張に同梱し、外部へ取得しに行きません。フッターにホバーすると出典の補足を表示します。
+パネルを開くたびに1つをランダムに表示します。再スキャンや選び直しでは変えず、時間経過による切り替えもしません。同じことばが続く場合もあります。表示は日本語の独自訳、ホバーすると英語原文と出典を表示します。文言は拡張に同梱し、外部へ取得しに行きません。
 
-| 表示することば | 出典・確認先 |
-| --- | --- |
-| 思い立ったが吉日 | ことわざ：[漢字ペディア](https://www.kanjipedia.jp/kotoba/0002766600) |
-| 一日の計は朝にあり | ことわざ：[漢字ペディア](https://www.kanjipedia.jp/kotoba/0000217100) |
-| 急がば回れ | ことわざ：[滋賀県立図書館の回答（レファレンス協同データベース）](https://crd.ndl.go.jp/reference/entry/index.php?id=1000132194&page=ref_view) |
-| 光陰矢の如し | ことわざ：[堺市立中央図書館の回答（レファレンス協同データベース）](https://crd.ndl.go.jp/reference/entry/index.php?id=1000302206&page=ref_view) |
-| 明日は明日の風が吹く | ことわざ：[ことわざ辞典オンライン](https://kotowaza.jitenon.jp/kotowaza/1149.php) |
-| 失った時間は二度と戻らない。 | フランクリン編『Poor Richard Improved』（1748年）より、独自訳。[Founders Online（米国国立公文書館）](https://founders.archives.gov/documents/Franklin/01-03-02-0103) |
+| 日本語表示（独自訳） | 英語原文・定型表現 | 出典・確認先 |
+| --- | --- | --- |
+| 失った時間は二度と戻らない。 | Lost Time is never found again. | [フランクリン編『Poor Richard Improved』（1748年）](https://founders.archives.gov/documents/Franklin/01-03-02-0103) |
+| 1分遅れるより、3時間早いほうがいい。 | Better three hours too soon than a minute too late. | [シェイクスピア『ウィンザーの陽気な女房たち』第2幕第2場、フォードの台詞](https://www.folger.edu/explore/shakespeares-works/the-merry-wives-of-windsor/read/2/2/) |
+| 時を殺せば、永遠も傷つく。 | As if you could kill time without injuring eternity. | [ヘンリー・デイヴィッド・ソロー『Walden』「Economy」](https://www.gutenberg.org/files/205/205-h/205-h.htm) |
+| 動け、いま生きているこの時に。 | Act,--act in the living Present! | [ヘンリー・ワズワース・ロングフェロー「A Psalm of Life」](https://poets.org/poem/psalm-life) |
+| 時も潮も、人を待たない。 | Time and tide wait for no man. | [英語のことわざ（Cambridge Dictionary）](https://dictionary.cambridge.org/dictionary/english/time-and-tide-wait-for-no-man) |
+| 日が照るうちに、干し草を作れ。 | Make hay while the sun shines. | [英語のことわざ（Cambridge Dictionary）](https://dictionary.cambridge.org/dictionary/english/make-hay-while-the-sun-shines) |
 
-最後の原文は “Lost Time is never found again.”。既存の日本語訳は転載していません。その他は伝承されてきたことわざとして掲載し、特定の人物の発言とは扱っていません。辞書の解説文は転載していません。
+日本語由来のことわざは含めていません。英語のことわざは作者を特定せず、辞書で定型表現を確認しています。「日が照るうちに、干し草を作れ」は、好機が続くうちに生かすという意味です。文学作品の引用は作品名・箇所を記し、登場人物の台詞を作者本人の発言とは扱いません。日本語訳は既存の翻訳から転載していません。
 
 </details>

@@ -909,7 +909,7 @@ window.addEventListener("pagehide", stopConnection);
 async function initialize() {
   const quote = pickFooterQuote();
   el("footer-quote").textContent = quote.text;
-  el("footer-quote").title = quote.attribution;
+  el("footer-quote").title = `${quote.original}\n— ${quote.attribution}`;
   try {
     const saved = await chrome.storage.local.get([
       "travelMinutes",

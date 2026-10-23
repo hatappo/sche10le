@@ -20,6 +20,15 @@ test("全てのフッター文言が抽選でき、READMEにも一覧されて�
     pickFooterQuote(() => 1 - Number.EPSILON),
     FOOTER_QUOTES.at(-1),
   );
-  for (const quote of FOOTER_QUOTES)
+  assert.equal(
+    new Set(FOOTER_QUOTES.map((quote) => quote.original)).size,
+    FOOTER_QUOTES.length,
+  );
+  for (const quote of FOOTER_QUOTES) {
     assert.ok(readme.includes(quote.text), quote.text);
+    assert.ok(quote.original.trim());
+    assert.ok(readme.includes(quote.original), quote.original);
+    assert.ok(readme.includes(quote.source), quote.source);
+    assert.equal(new URL(quote.source).protocol, "https:");
+  }
 });
