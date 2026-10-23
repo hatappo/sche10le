@@ -550,6 +550,10 @@ main {
   justify-content: space-between;
   margin: 6px 0 14px;
 }
+#skip,
+#resume {
+  margin-left: auto;
+}
 .text-button {
   border: 0;
   background: none;

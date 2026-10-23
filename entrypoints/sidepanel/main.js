@@ -545,7 +545,7 @@ function renderDraft() {
     ? "内容の調整・保存はGoogleカレンダーで。"
     : "";
   el("pick-help").hidden = !complete;
-  button("previous").disabled = draft.step === 0;
+  button("previous").hidden = draft.step === 0;
   button("skip").hidden = complete || paused;
   button("resume").hidden = !paused || complete;
   el("picked-title").textContent =

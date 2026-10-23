@@ -132,7 +132,7 @@ async function clickOverlay(source, name) {
   }
 }
 
-async function expectPickerActionsOnly(source) {
+async function expectPickerActionsOnly(source, step = 0) {
   const session = await context.newCDPSession(source);
   try {
     const { root } = await session.send("DOM.getDocument", {
@@ -140,11 +140,15 @@ async function expectPickerActionsOnly(source) {
       pierce: true,
     });
     const labels = [];
+    const visibleLabels = [];
     function visit(node) {
       const attributes = node.attributes ?? [];
       const index = attributes.indexOf("aria-label");
-      if (node.nodeName === "BUTTON" && index >= 0)
+      if (node.nodeName === "BUTTON" && index >= 0) {
         labels.push(attributes[index + 1]);
+        if (!attributes.includes("hidden"))
+          visibleLabels.push(attributes[index + 1]);
+      }
       for (const child of [
         ...(node.children ?? []),
         ...(node.shadowRoots ?? []),
@@ -162,6 +166,8 @@ async function expectPickerActionsOnly(source) {
       ]),
     );
     expect(labels).not.toContain("Googleカレンダーで開く");
+    expect(visibleLabels.includes("戻る")).toBe(step > 0);
+    expect(visibleLabels.includes("スキップ")).toBe(step < 3);
   } finally {
     await session.detach();
   }
@@ -184,6 +190,8 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await select(panel, "移動込み");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
+  await expect(panel.locator("#previous")).toBeHidden();
+  await expect(panel.locator("#skip")).toBeVisible();
   await expect(panel.locator("#pick-help")).toBeHidden();
   const primaryColor = await panel
     .locator("#open-calendar")
@@ -219,10 +227,15 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#pick-title")).toHaveText(
     "ページ上の詳細をクリック",
   );
+  await expectPickerActionsOnly(source, 2);
+  await expect(panel.locator("#previous")).toBeVisible();
+  await expect(panel.locator("#skip")).toBeVisible();
   await source.locator("#description").click();
   await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
-  await expectPickerActionsOnly(source);
+  await expectPickerActionsOnly(source, 3);
+  await expect(panel.locator("#previous")).toBeVisible();
+  await expect(panel.locator("#skip")).toBeHidden();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
@@ -271,6 +284,8 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   await expect(panel.locator("#pick-title")).toContainText("場所");
   await panel.getByRole("button", { name: "← 戻る" }).click();
   await expect(panel.locator("#pick-title")).toContainText("タイトル");
+  await expect(panel.locator("#previous")).toBeHidden();
+  await expectPickerActionsOnly(source);
   await source.keyboard.press("Escape");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(
