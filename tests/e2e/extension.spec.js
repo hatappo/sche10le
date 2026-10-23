@@ -141,11 +141,28 @@ async function expectPickerActionsOnly(source, step = 0) {
     });
     const labels = [];
     const visibleLabels = [];
+    const disabledLabels = [];
+    const actionNodes = [];
+    let guide;
     function visit(node) {
       const attributes = node.attributes ?? [];
       const index = attributes.indexOf("aria-label");
+      if (
+        attributes[attributes.indexOf("class") + 1]
+          ?.split(" ")
+          .includes("guide")
+      )
+        guide = node;
       if (node.nodeName === "BUTTON" && index >= 0) {
         labels.push(attributes[index + 1]);
+        if (attributes.includes("disabled"))
+          disabledLabels.push(attributes[index + 1]);
+        if (
+          ["戻る", "スキップ", "一時停止", "閉じる"].includes(
+            attributes[index + 1],
+          )
+        )
+          actionNodes.push(node);
         if (!attributes.includes("hidden"))
           visibleLabels.push(attributes[index + 1]);
       }
@@ -166,8 +183,20 @@ async function expectPickerActionsOnly(source, step = 0) {
       ]),
     );
     expect(labels).not.toContain("Googleカレンダーで開く");
-    expect(visibleLabels.includes("戻る")).toBe(step > 0);
-    expect(visibleLabels.includes("スキップ")).toBe(step < 3);
+    expect(visibleLabels).toEqual(expect.arrayContaining(["戻る", "スキップ"]));
+    expect(disabledLabels.includes("戻る")).toBe(step === 0);
+    expect(disabledLabels.includes("スキップ")).toBe(step === 3);
+    const { model } = await session.send("DOM.getBoxModel", {
+      nodeId: guide.nodeId,
+    });
+    const positions = [];
+    for (const node of actionNodes) {
+      const { model: button } = await session.send("DOM.getBoxModel", {
+        nodeId: node.nodeId,
+      });
+      positions.push(button.border);
+    }
+    return { width: model.width, height: model.height, positions };
   } finally {
     await session.detach();
   }
@@ -1170,6 +1199,72 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await source.locator("#venue").click();
   await expect(panel.locator("#field-details .field-status")).toBeVisible();
+  await panel.close();
+  await source.close();
+});
+
+test("操作バーは手順間で大きさとボタン位置を保ち、一時停止でページ操作へ戻れる", async () => {
+  const { source, panel } = await open();
+  await source.emulateMedia({ reducedMotion: "reduce" });
+  await select(panel);
+  for (const width of [1000, 390, 320]) {
+    await source.setViewportSize({ width, height: 850 });
+    await clickOverlay(source, "タイトルを選び直す");
+    await expect(panel.locator("#field-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    const initial = await expectPickerActionsOnly(source, 0);
+    // Disabled controls remain present and cannot change the current step.
+    await clickOverlay(source, "戻る");
+    await expect(panel.locator("#field-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    for (let step = 1; step <= 3; step++) {
+      await clickOverlay(source, "スキップ");
+      await expect(panel.locator("#pick-status")).toHaveText(
+        step === 3
+          ? "カレンダーへ進めます"
+          : `ページ上の${step === 1 ? "場所" : "詳細"}をクリック`,
+      );
+      expect(await expectPickerActionsOnly(source, step)).toEqual(initial);
+    }
+    await clickOverlay(source, "スキップ");
+    await expect(panel.locator("#pick-status")).toHaveText(
+      "カレンダーへ進めます",
+    );
+    await source.screenshot({
+      path: `test-results/picker-stable-${width}.png`,
+      animations: "disabled",
+    });
+  }
+  await source.setViewportSize({ width: 1000, height: 850 });
+  await clickOverlay(source, "タイトルを選び直す");
+  await source.locator("#event-title").click();
+  const title = await panel.locator("#picked-title").textContent();
+  await clickOverlay(source, "一時停止");
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await expect(panel.locator("#resume")).toBeVisible();
+  await source.evaluate(() => {
+    document.querySelector("#event-link").addEventListener(
+      "click",
+      (event) => {
+        event.preventDefault();
+        window.__ordinaryLinkClicked = true;
+      },
+      { once: true },
+    );
+  });
+  await source.locator("#event-link").click();
+  expect(await source.evaluate(() => window.__ordinaryLinkClicked)).toBe(true);
+  await expect(panel.locator("#picked-title")).toHaveText(title);
+  await panel.locator("#resume").click();
+  await expect(panel.locator("#field-location")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await panel.close();
   await source.close();
 });
