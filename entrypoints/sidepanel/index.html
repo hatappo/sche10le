@@ -197,40 +197,101 @@
         </div>
         <h2 id="selected-date"></h2>
         <p id="selected-time" class="selected-time"></p>
-        <ol id="steps" class="steps" aria-label="ページから取得する項目">
-          <li><button type="button" data-step="0">タイトル</button></li>
-          <li><button type="button" data-step="1">場所</button></li>
-          <li><button type="button" data-step="2">詳細</button></li>
-        </ol>
-        <div class="pick-instruction" aria-live="polite">
-          <span class="pick-cursor" aria-hidden="true">↖</span>
-          <div>
-            <strong id="pick-title"></strong>
-            <p id="pick-help"></p>
-          </div>
-        </div>
-        <div class="pick-controls">
-          <button id="previous" class="text-button" type="button">← 戻る</button
-          ><button id="skip" class="text-button" type="button">
-            スキップ →</button
-          ><button id="resume" class="text-button" type="button" hidden>
-            ページから取得を再開 →
+        <p id="pick-status" class="sr-only" role="status"></p>
+        <div class="picked-values" role="group" aria-label="取得した内容">
+          <button
+            id="field-title"
+            class="field-row"
+            type="button"
+            data-step="0"
+            aria-label="タイトルを選び直す"
+            aria-describedby="picked-title"
+          >
+            <span class="field-heading">
+              <span>タイトル</span>
+              <span class="field-status" aria-hidden="true" hidden>選択中</span>
+              <svg
+                class="field-edit"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15Z" />
+              </svg>
+            </span>
+            <span id="picked-title" class="field-value"></span>
+          </button>
+          <button
+            id="field-location"
+            class="field-row"
+            type="button"
+            data-step="1"
+            aria-label="場所を選び直す"
+            aria-describedby="picked-location"
+          >
+            <span class="field-heading">
+              <span>場所</span>
+              <span class="field-status" aria-hidden="true" hidden>選択中</span>
+              <svg
+                class="field-edit"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15Z" />
+              </svg>
+            </span>
+            <span id="picked-location" class="field-value"></span>
+          </button>
+          <button
+            id="field-details"
+            class="field-row"
+            type="button"
+            data-step="2"
+            aria-label="詳細を選び直す"
+            aria-describedby="picked-details"
+          >
+            <span class="field-heading">
+              <span>詳細</span>
+              <span class="field-status" aria-hidden="true" hidden>選択中</span>
+              <svg
+                class="field-edit"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15Z" />
+              </svg>
+            </span>
+            <span id="picked-details" class="field-value"></span>
           </button>
         </div>
-        <dl class="picked-values">
-          <div id="field-title">
-            <dt>タイトル</dt>
-            <dd id="picked-title"></dd>
-          </div>
-          <div id="field-location">
-            <dt>場所</dt>
-            <dd id="picked-location"></dd>
-          </div>
-          <div id="field-details">
-            <dt>詳細</dt>
-            <dd id="picked-details"></dd>
-          </div>
-        </dl>
+        <button
+          id="resume"
+          class="text-button resume-button"
+          type="button"
+          hidden
+        >
+          ページから取得を再開 →
+        </button>
         <div class="source-note">
           <span aria-hidden="true">↗</span
           ><span>元ページのURLは詳細の末尾に残ります</span>

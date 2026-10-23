@@ -459,100 +459,20 @@ main {
   color: var(--green);
   margin-top: 3px;
 }
-.steps {
-  list-style: none;
-  display: flex;
-  gap: 5px;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  margin: 20px 0 16px;
-  counter-reset: step;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
-.steps li {
-  flex: 1;
-  display: flex;
-  min-width: 0;
-}
-.steps button {
-  width: 100%;
-  border: 1px solid var(--line);
-  font: inherit;
-  border-radius: 8px;
-  padding: 7px 4px;
-  background: transparent;
-  justify-content: center;
-  flex: 1;
-  font-size: 10px;
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  color: var(--muted);
-  position: relative;
-}
-.steps button:before {
-  counter-increment: step;
-  content: counter(step);
-  font:
-    10px "Avenir Next",
-    sans-serif;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  width: 19px;
-  height: 19px;
-  display: grid;
-  place-items: center;
-}
-.steps li.active button {
-  color: #785825;
-  background: #fbf1dc;
-  border-color: #b18a46;
-  box-shadow: inset 0 -2px 0 #b18a46;
-  font-weight: bold;
-}
-.steps li.active button:before {
-  background: #f5e4bc;
-  border-color: #b18a46;
-}
-.steps li.done button {
-  color: var(--green);
-  background: #eef3e9;
-  border-color: #cbd8c4;
-}
-.steps li.done button:before {
-  content: "✓";
-  color: var(--green);
-  background: var(--wash);
-  border-color: var(--wash);
-}
-.pick-instruction {
-  display: flex;
-  gap: 11px;
-  padding: 13px;
-  background: var(--wash);
-  border-radius: 10px;
-}
-.pick-cursor {
-  font-size: 25px;
-  line-height: 1;
-  color: var(--green);
-}
-.pick-instruction strong {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--green);
-}
-.pick-instruction p {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 3px;
-}
-.pick-controls {
-  display: flex;
-  justify-content: space-between;
-  margin: 6px 0 14px;
-}
-#skip,
-#resume {
-  margin-left: auto;
+.resume-button {
+  display: block;
+  margin: 10px 0 0 auto;
 }
 .text-button {
   border: 0;
@@ -568,32 +488,65 @@ main {
   text-underline-offset: 4px;
 }
 .picked-values {
-  margin: 0;
-}
-.picked-values > div {
-  position: relative;
-  border-radius: 5px;
-  scroll-margin-bottom: 125px;
   display: grid;
-  grid-template-columns: 55px minmax(0, 1fr);
+  gap: 4px;
+  margin-top: 20px;
+}
+.field-row {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-bottom-color: var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  scroll-margin-top: 16px;
+  scroll-margin-bottom: 125px;
+}
+.field-row:hover {
+  background: var(--wash);
+}
+.field-row[aria-current="step"] {
+  background: #fbf1dc;
+  border-color: #d9bd87;
+}
+.field-heading {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-}
-.picked-values dt {
-  font-size: 10px;
+  min-height: 18px;
+  margin-bottom: 5px;
   color: var(--muted);
-  padding-top: 2px;
+  font-size: 10px;
 }
-.picked-values dd {
-  font-size: 11px;
-  margin: 0;
+.field-status {
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #785825;
+  background: #f5e4bc;
+  font-size: 9px;
+}
+.field-edit {
+  margin-left: auto;
+  opacity: 0;
+}
+.field-row:hover .field-edit,
+.field-row:focus-visible .field-edit {
+  opacity: 1;
+}
+.field-value {
+  display: block;
+  font-size: 12px;
+  line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   max-height: 140px;
   overflow: auto;
 }
-.picked-values dd.is-empty {
+.field-value.is-empty {
   color: #949a8e;
 }
 .source-note {

@@ -190,14 +190,14 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await select(panel, "移動込み");
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
-  await expect(panel.locator("#previous")).toBeHidden();
-  await expect(panel.locator("#skip")).toBeVisible();
-  await expect(panel.locator("#pick-help")).toBeHidden();
+  await expect(
+    panel.locator("#steps, #previous, #skip, .pick-instruction"),
+  ).toHaveCount(0);
   const primaryColor = await panel
     .locator("#open-calendar")
     .evaluate((button) => getComputedStyle(button).backgroundColor);
   const activeColor = await panel
-    .locator("#steps .active button")
+    .locator('.field-row[aria-current="step"]')
     .evaluate((button) => getComputedStyle(button).backgroundColor);
   expect(activeColor).not.toBe(primaryColor);
   await source.screenshot({
@@ -212,30 +212,24 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#field-title .picked-confirmation")).toHaveText(
     "✓",
   );
-  await expect(panel.locator("#pick-title")).toHaveText(
+  await expect(panel.locator("#pick-status")).toHaveText(
     "ページ上の場所をクリック",
   );
-  await expect(panel.locator("#steps .done button")).toHaveCSS(
-    "background-color",
-    "rgb(238, 243, 233)",
-  );
-  expect("rgb(238, 243, 233)").not.toBe(primaryColor);
-  expect("rgb(238, 243, 233)").not.toBe(activeColor);
+  await expect(panel.locator("#field-title .field-status")).toBeHidden();
+  await expect(panel.locator("#field-location .field-status")).toBeVisible();
   await panel.screenshot({ path: "test-results/panel-picking.png" });
   await source.screenshot({ path: "test-results/page-picker-progress.png" });
   await source.locator("#venue").click();
-  await expect(panel.locator("#pick-title")).toHaveText(
+  await expect(panel.locator("#pick-status")).toHaveText(
     "ページ上の詳細をクリック",
   );
   await expectPickerActionsOnly(source, 2);
-  await expect(panel.locator("#previous")).toBeVisible();
-  await expect(panel.locator("#skip")).toBeVisible();
   await source.locator("#description").click();
-  await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
+  await expect(panel.locator("#pick-status")).toHaveText(
+    "カレンダーへ進めます",
+  );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source, 3);
-  await expect(panel.locator("#previous")).toBeVisible();
-  await expect(panel.locator("#skip")).toBeHidden();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
@@ -243,9 +237,11 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await source.screenshot({ path: "test-results/page-picker-complete.png" });
   // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
   await source.locator("#event-title").click();
-  await expect(panel.locator("#pick-title")).toHaveText("カレンダーへ進めます");
+  await expect(panel.locator("#pick-status")).toHaveText(
+    "カレンダーへ進めます",
+  );
   await clickOverlay(source, "戻る");
-  await expect(panel.locator("#pick-title")).toContainText("詳細");
+  await expect(panel.locator("#pick-status")).toContainText("詳細");
   await source.locator("#venue").click();
   await expect(panel.locator("#picked-details")).toHaveText(
     `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
@@ -256,8 +252,9 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
   await clickOverlay(source, "タイトルを選び直す");
-  await expect(panel.locator('#steps button[aria-current="step"]')).toHaveText(
-    "タイトル",
+  await expect(panel.locator("#field-title")).toHaveAttribute(
+    "aria-current",
+    "step",
   );
   await source.locator("#event-title").click();
   const opened = context.waitForEvent("page");
@@ -280,11 +277,10 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
 test("未取得で開く・スキップ・戻る・選び直しとEscape", async () => {
   const { source, panel } = await open();
   await select(panel, "終日で確保");
-  await panel.getByRole("button", { name: "スキップ" }).click();
-  await expect(panel.locator("#pick-title")).toContainText("場所");
-  await panel.getByRole("button", { name: "← 戻る" }).click();
-  await expect(panel.locator("#pick-title")).toContainText("タイトル");
-  await expect(panel.locator("#previous")).toBeHidden();
+  await clickOverlay(source, "スキップ");
+  await expect(panel.locator("#pick-status")).toContainText("場所");
+  await clickOverlay(source, "戻る");
+  await expect(panel.locator("#pick-status")).toContainText("タイトル");
   await expectPickerActionsOnly(source);
   await source.keyboard.press("Escape");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
@@ -297,7 +293,7 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   await expect(panel.locator("#picked-title")).toHaveText(
     "活版印刷について詳しく",
   );
-  await panel.getByRole("button", { name: "選び直す" }).click();
+  await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#candidates-title")).toBeFocused();
   await expect(
@@ -391,11 +387,11 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   await expect(panel.locator("#picked-title")).toHaveText(
     "1400 蔵前の活版印刷ワークショップ あいうえお",
   );
-  const titleStep = panel.locator("#steps li").first();
+  const titleStep = panel.locator("#field-title");
   const bounds = await titleStep.boundingBox();
-  // Click the actual pill's edge, outside the label and number.
+  // The whole summary row is clickable, including its padding.
   await panel.mouse.click(bounds.x + 3, bounds.y + 3);
-  await expect(panel.locator('#steps button[data-step="0"]')).toHaveAttribute(
+  await expect(panel.locator("#field-title")).toHaveAttribute(
     "aria-current",
     "step",
   );
@@ -454,7 +450,7 @@ test("狭い幅・キーボード操作・再走査時のリスナー重複を�
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await source.locator("#event-title").focus();
   await source.keyboard.press("Enter");
-  await expect(panel.locator("#pick-title")).toContainText("場所");
+  await expect(panel.locator("#pick-status")).toContainText("場所");
   await expect(panel.locator("#picked-location")).toHaveText("未設定");
   await expect(panel.locator(".variant-region").first()).toBeHidden();
   expect(
@@ -515,7 +511,7 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await first.getByRole("button", { name: /時間どおり/ }).click();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
-  await panel.getByRole("button", { name: "選び直す" }).click();
+  await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   // Changed text after the scan must not be highlighted using stale offsets.
   await target.evaluate((element) => {
     element.textContent = "開催日調整中";
@@ -643,7 +639,7 @@ test("同日の終日カードだけ除き、各時刻の終日パターンを�
   await expect(later.getByRole("button", { name: /終日で確保/ })).toBeVisible();
   await later.getByRole("button", { name: /時間どおり/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("18:00–20:00");
-  await panel.getByRole("button", { name: "選び直す" }).click();
+  await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await later.hover();
   await later.getByRole("button", { name: /終日で確保/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("終日");
@@ -770,7 +766,9 @@ for (const selected of [false, true]) {
       await expect(panel.locator("#picked-title")).toContainText(
         "蔵前の活版印刷ワークショップ",
       );
-      await panel.getByRole("button", { name: "選び直す" }).click();
+      await panel
+        .getByRole("button", { name: "選び直す", exact: true })
+        .click();
     } else {
       await expect(panel.locator(".candidate-heading").first()).toBeFocused();
     }
@@ -852,7 +850,7 @@ test("登場順と日時順を切り替え、構造化データの位置・同�
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await card.getByRole("button", { name: /時間どおり/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("10:00–12:00");
-  await panel.getByRole("button", { name: "選び直す" }).click();
+  await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(order).toHaveValue("date");
   await panel.getByRole("button", { name: "再スキャン" }).click();
   await expect(order).toBeEnabled();
@@ -1083,7 +1081,7 @@ test("フッターのことばを起動時に選び、再走査や選び直し�
     await expect(
       panel.getByRole("button", { name: "Googleカレンダーで開く" }),
     ).toBeVisible();
-    await panel.getByRole("button", { name: "選び直す" }).click();
+    await panel.getByRole("button", { name: "選び直す", exact: true }).click();
     await expect(footer).toBeVisible();
     await expect(footer).toHaveText(quote.text);
     await panel.setViewportSize({ width: 280, height: 700 });
@@ -1128,6 +1126,50 @@ test("移動込みの書式は元の開催時刻を保ち、カレンダーは�
     "20261108T043000Z/20261108T073000Z",
   );
   await calendar.close();
+  await panel.close();
+  await source.close();
+});
+
+test("取得結果の行からクリック・キーボードで選び直し、中断からも再開できる", async () => {
+  const { source, panel } = await open();
+  await select(panel);
+  await source.locator("#event-title").click();
+  await source.locator("#venue").click();
+  await source.locator("#description").click();
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
+  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await panel.locator("#field-location").focus();
+  await panel.keyboard.press("Tab");
+  await expect(panel.locator("#field-details")).toBeFocused();
+  await expect(panel.locator("#field-details .field-edit")).toHaveCSS(
+    "opacity",
+    "1",
+  );
+  await panel.keyboard.press("Enter");
+  await expect(panel.locator("#field-details")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expectPickerActionsOnly(source, 2);
+  await source.locator("#venue").click();
+  await expect(panel.locator("#picked-details")).toHaveText(
+    `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
+  );
+  await panel.locator("#field-location").click();
+  await expect(panel.locator("#field-location")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await source.keyboard.press("Escape");
+  await expect(panel.locator("#resume")).toBeVisible();
+  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await panel.locator("#field-location").focus();
+  await panel.keyboard.press("Space");
+  await expect(panel.locator("#resume")).toBeHidden();
+  await expect(panel.locator("#field-location .field-status")).toBeVisible();
+  await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await source.locator("#venue").click();
+  await expect(panel.locator("#field-details .field-status")).toBeVisible();
   await panel.close();
   await source.close();
 });

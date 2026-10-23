@@ -528,25 +528,18 @@ function selectCandidate(candidate, variant) {
 function renderDraft() {
   if (!draft) return;
   const complete = draft.step >= 3;
-  [...el("steps").children].forEach((item, i) => {
-    item.classList.toggle("active", !paused && i === draft?.step);
-    item.classList.toggle("done", i < (draft?.step ?? 0));
-    const control = item.querySelector("button");
-    if (!paused && i === draft?.step)
-      control?.setAttribute("aria-current", "step");
-    else control?.removeAttribute("aria-current");
+  PICK_FIELDS.forEach((field, index) => {
+    const row = el(`field-${field}`);
+    const active = !paused && index === draft?.step;
+    row.querySelector(".field-status")?.toggleAttribute("hidden", !active);
+    if (active) row.setAttribute("aria-current", "step");
+    else row.removeAttribute("aria-current");
   });
-  el("pick-title").textContent = complete
+  el("pick-status").textContent = complete
     ? "カレンダーへ進めます"
     : paused
       ? "ページからの取得を中断しました"
       : `ページ上の${FIELD_LABELS[draft.step]}をクリック`;
-  el("pick-help").textContent = complete
-    ? "内容の調整・保存はGoogleカレンダーで。"
-    : "";
-  el("pick-help").hidden = !complete;
-  button("previous").hidden = draft.step === 0;
-  button("skip").hidden = complete || paused;
   button("resume").hidden = !paused || complete;
   el("picked-title").textContent =
     (selectedVariant
@@ -709,11 +702,10 @@ el("candidate-order").addEventListener("change", (event) => {
   saveSetting("order", candidateOrder);
 });
 button("open-calendar").addEventListener("click", () => void openCalendar());
-button("skip").addEventListener("click", advance);
-button("previous").addEventListener("click", back);
 button("resume").addEventListener("click", syncPicker);
-el("steps")
-  .querySelectorAll("button")
+document
+  .querySelector(".picked-values")
+  ?.querySelectorAll("button")
   .forEach((control) => {
     control.addEventListener("click", () =>
       chooseField(Number(control.dataset.step)),
