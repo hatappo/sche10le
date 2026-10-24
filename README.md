@@ -62,9 +62,12 @@ npm run check      # lint / JSDoc型検査 / 単体テスト / 本番ビルド
 npx playwright install chromium  # 初回のみ
 npm run test:e2e   # 本番ビルド後に実行
 npm run zip       # 配布用ZIPを生成
+npm run icons     # ヘッダーと同じデザインで各サイズのPNGを再生成（macOS）
 ```
 
 開発中は `.output/chrome-mv3-dev` をChromeに読み込みます。ブラウザの自動起動は無効にしています。ランナー用の追加依存を増やさず、既存のChromeで確認できます。
+
+配布用アイコンは `public/icons/` にあります。ストアには `128.png`（128×128px）を使用します。再生成はGeorgiaを使用できるmacOSとPlaywrightのChromiumで行い、サイドパネルの `.brand-mark` のCSS・色をそのまま描画します。生成済みPNGを同梱するため、利用者の端末にGeorgiaがなくても配布用アイコンの見た目は変わりません。
 
 ブラウザテストは一時プロファイルとローカルのfixtureを使用します。ツールバーのクリックによる `activeTab` の付与を自動化できないため、**テスト用コピーだけ**に `127.0.0.1` のホスト権限を追加します。本番manifestにホスト権限や自動実行Content Scriptがないことも検査します。サイドパネルのHTMLを拡張ページとして開き、実際のContent Scriptとの通信・DOM取得・ページ遷移・設定保存を確認します。
 
