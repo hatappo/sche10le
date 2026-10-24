@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sche10le — Promotional tiles</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        background: #214b37;
+        color: #f8f8f1;
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+        font-synthesis: none;
+      }
+      .tile {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .brand {
+        position: absolute;
+        left: 76px;
+        top: 62px;
+        margin: 0;
+        font:
+          600 64px/1 Georgia,
+          "Times New Roman",
+          serif;
+        letter-spacing: -3.5px;
+      }
+      .brand em {
+        font-style: italic;
+      }
+      .brand .period {
+        color: #d2b477;
+      }
+      .headline {
+        position: absolute;
+        left: 78px;
+        top: 221px;
+        margin: 0;
+        font-size: 43px;
+        line-height: 1.65;
+        font-weight: 500;
+        letter-spacing: 0.015em;
+      }
+      .caption {
+        position: absolute;
+        left: 80px;
+        bottom: 66px;
+        margin: 0;
+        color: #d1dfcb;
+        font-size: 16px;
+        letter-spacing: 0.05em;
+      }
+      .caption::before {
+        content: "";
+        display: inline-block;
+        width: 24px;
+        height: 1px;
+        background: #d2b477;
+        vertical-align: middle;
+        margin-right: 13px;
+      }
+      .art {
+        position: absolute;
+        width: 660px;
+        height: 460px;
+        right: 43px;
+        top: 51px;
+      }
+      .orbit {
+        position: absolute;
+        width: 760px;
+        height: 760px;
+        border: 1px solid #ffffff0d;
+        border-radius: 50%;
+        right: -70px;
+        top: -100px;
+      }
+      .orbit::before {
+        content: "";
+        position: absolute;
+        inset: 49px;
+        border: 1px solid #ffffff0a;
+        border-radius: 50%;
+      }
+      @media (max-width: 600px) {
+        .brand {
+          left: 28px;
+          top: 29px;
+          font-size: 36px;
+          letter-spacing: -2px;
+        }
+        .headline {
+          left: 29px;
+          top: 110px;
+          font-size: 20px;
+          line-height: 1.75;
+          letter-spacing: 0;
+        }
+        .caption {
+          left: 30px;
+          bottom: 27px;
+          font-size: 10px;
+          letter-spacing: 0;
+        }
+        .caption::before {
+          width: 14px;
+          margin-right: 8px;
+        }
+        .art {
+          width: 255px;
+          height: 178px;
+          right: -3px;
+          top: 74px;
+        }
+        .orbit {
+          width: 330px;
+          height: 330px;
+          right: -50px;
+          top: -12px;
+        }
+        .orbit::before {
+          inset: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="tile">
+      <div class="orbit" aria-hidden="true"></div>
+      <p class="brand">sche<em>10</em>le<span class="period">.</span></p>
+      <h1 class="headline">ページの日程を、<br />カレンダーへ。</h1>
+      <p class="caption">Googleカレンダー対応</p>
+      <svg
+        class="art"
+        viewBox="0 0 660 460"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="Webページの日程からカレンダーへ"
+      >
+        <!-- A page excerpt, illustrated rather than an invented product screen. -->
+        <g transform="translate(57 55) rotate(-7 134 170)">
+          <rect
+            x="3"
+            y="13"
+            width="270"
+            height="335"
+            rx="16"
+            fill="#143c2a"
+            opacity=".65"
+          />
+          <rect width="270" height="335" rx="16" fill="#f8f8f1" />
+          <path d="M0 43H270" stroke="#dfe4d6" />
+          <circle cx="23" cy="23" r="4" fill="#b4c2ad" />
+          <circle cx="38" cy="23" r="4" fill="#d1d9c9" />
+          <circle cx="53" cy="23" r="4" fill="#d1d9c9" />
+          <rect x="28" y="73" width="150" height="10" rx="3" fill="#859b82" />
+          <rect x="28" y="98" width="211" height="6" rx="3" fill="#d9dfd2" />
+          <rect x="28" y="115" width="178" height="6" rx="3" fill="#d9dfd2" />
+          <rect x="22" y="149" width="226" height="104" rx="9" fill="#e6eddd" />
+          <path
+            d="M35 150H23V163 M235 150H247V163 M23 239V252H35 M235 252H247V239"
+            fill="none"
+            stroke="#a67d3a"
+            stroke-width="2"
+          />
+          <text
+            x="42"
+            y="194"
+            font-family="Georgia, 'Hiragino Kaku Gothic ProN', serif"
+            font-size="32"
+            fill="#2c6045"
+          >
+            11月10日
+          </text>
+          <text
+            x="43"
+            y="227"
+            font-family="Georgia, serif"
+            font-size="22"
+            fill="#536f50"
+          >
+            14:00 – 16:00
+          </text>
+          <rect x="28" y="280" width="180" height="6" rx="3" fill="#d9dfd2" />
+          <rect x="28" y="297" width="125" height="6" rx="3" fill="#d9dfd2" />
+        </g>
+        <!-- The same 30:32 calendar mark and Georgia numerals as the sidebar. -->
+        <g transform="translate(377 146) rotate(7 116 124)">
+          <rect
+            x="3"
+            y="13"
+            width="234"
+            height="248"
+            rx="32"
+            fill="#143c2a"
+            opacity=".65"
+          />
+          <rect width="234" height="248" rx="32" fill="#e8efde" />
+          <foreignObject x="12" y="12" width="210" height="224">
+            <div
+              xmlns="http://www.w3.org/1999/xhtml"
+              style="
+                position: relative;
+                display: grid;
+                place-items: center;
+                box-sizing: border-box;
+                width: 210px;
+                height: 224px;
+                padding-top: 42px;
+                border-radius: 49px;
+                background: #2c6045;
+                color: #f8f8f1;
+                font:
+                  112px/1 Georgia,
+                  serif;
+                letter-spacing: -7px;
+              "
+            >
+              <span
+                style="
+                  position: absolute;
+                  top: 49px;
+                  left: 42px;
+                  right: 42px;
+                  border-top: 7px solid #ffffff45;
+                "
+              ></span
+              >10
+            </div>
+          </foreignObject>
+        </g>
+        <path
+          d="M291 127C345 68 434 64 475 115"
+          fill="none"
+          stroke="#d2b477"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-dasharray="2 11"
+        />
+        <path
+          d="M459 110L478 121L479 98"
+          fill="none"
+          stroke="#d2b477"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </main>
+  </body>
+</html>
