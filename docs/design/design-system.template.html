@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sche10le — デザインシステム</title>
+    <style>
+      :root {
+        --paper: #f8f8f1;
+        --ink: #293d31;
+        --green: #2c6045;
+        --muted: #788171;
+        --line: #dfe4d6;
+        --wash: #eaf0e3;
+        --ochre: #a67d3a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: 28px;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          14px/1.8 "Hiragino Kaku Gothic ProN",
+          "Yu Gothic",
+          Meiryo,
+          sans-serif;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 4px;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--ochre);
+        outline-offset: 4px;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      code,
+      pre,
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+      code {
+        font-size: 0.87em;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+      .skip {
+        position: fixed;
+        left: 12px;
+        top: -100px;
+        z-index: 20;
+        background: var(--paper);
+        padding: 12px;
+      }
+      .skip:focus {
+        top: 12px;
+      }
+      .rail {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 236px;
+        padding: 38px 27px 24px;
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        background: var(--paper);
+        z-index: 10;
+      }
+      .wordmark {
+        font:
+          600 31px/1 Georgia,
+          "Times New Roman",
+          serif;
+        letter-spacing: -1.7px;
+        white-space: nowrap;
+      }
+      .wordmark em {
+        font-style: italic;
+      }
+      .wordmark span {
+        color: var(--ochre);
+      }
+      .rail-sub {
+        margin-top: 13px;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        color: #5e715b;
+      }
+      .rail nav {
+        display: grid;
+        gap: 3px;
+      }
+      .rail nav a {
+        text-decoration: none;
+        padding: 8px 0;
+        font-size: 12px;
+        display: flex;
+        gap: 14px;
+      }
+      .rail nav a small {
+        color: #71836a;
+        font:
+          11px/2 ui-monospace,
+          monospace;
+      }
+      .rail nav a:hover {
+        color: var(--green);
+        text-decoration: underline;
+      }
+      .rail-bottom {
+        margin-top: auto;
+        font-size: 11px;
+        color: #5e715b;
+      }
+      .rail-bottom .download {
+        margin-bottom: 12px;
+      }
+      .download {
+        background: var(--green);
+        color: white;
+        border: 1px solid var(--green);
+        border-radius: 8px;
+        padding: 11px 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        justify-content: space-between;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .download:hover {
+        background: #1c4934;
+      }
+      .document {
+        max-width: 1550px;
+        margin-left: 236px;
+        padding: 0 64px 60px;
+      }
+      .hero {
+        padding: 64px 0 50px;
+        border-bottom: 1px solid var(--line);
+      }
+      .kicker {
+        font-size: 10px;
+        letter-spacing: 1.8px;
+        color: #60705a;
+        text-transform: uppercase;
+      }
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: center;
+      }
+      .edition {
+        font:
+          11px/1.5 ui-monospace,
+          monospace;
+        color: #60705a;
+      }
+      .hero-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        margin: 36px 0 23px;
+      }
+      .hero-title h1 {
+        font-size: clamp(24px, 2.6vw, 38px);
+        line-height: 1.4;
+        font-weight: 500;
+        letter-spacing: -1px;
+      }
+      .hero-title h1 .large-brand {
+        display: block;
+        font:
+          600 clamp(50px, 5.5vw, 76px)/1 Georgia,
+          serif;
+        letter-spacing: -3px;
+        margin-bottom: 22px;
+      }
+      .hero-title img {
+        width: 126px;
+        flex: none;
+      }
+      .lead {
+        max-width: 660px;
+        font-size: 15px;
+        line-height: 1.95;
+        color: #50644c;
+      }
+      .hero-meta {
+        margin-top: 28px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: #5b6e54;
+      }
+      .hero-meta span {
+        border: 1px solid #ccd7c5;
+        border-radius: 30px;
+        padding: 4px 10px;
+      }
+      section.chapter {
+        padding: 48px 0 50px;
+        border-bottom: 1px solid var(--line);
+        scroll-margin-top: 16px;
+      }
+      .section-title {
+        display: flex;
+        align-items: baseline;
+        gap: 18px;
+        margin-bottom: 14px;
+      }
+      .section-title .number {
+        font:
+          italic 28px/1 Georgia,
+          serif;
+        color: #8c9d7f;
+      }
+      h2 {
+        font-size: 23px;
+        line-height: 1.5;
+        font-weight: 500;
+        letter-spacing: -0.5px;
+      }
+      h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .intro {
+        max-width: 740px;
+        color: #55684e;
+        margin-bottom: 28px;
+      }
+      .principles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-top: 32px;
+      }
+      .principles article {
+        padding-top: 14px;
+        border-top: 2px solid #cad7be;
+      }
+      .principles p {
+        font-size: 12px;
+        color: #596d52;
+      }
+      .brand-stage {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        background: #edf0e6;
+        border: 1px solid #d7dfcf;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .brand-stage > div {
+        min-height: 205px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+      .brand-stage .dark {
+        background: #214b37;
+        color: var(--paper);
+      }
+      .brand-stage .wordmark {
+        font-size: clamp(27px, 3vw, 44px);
+        letter-spacing: -2px;
+      }
+      .brand-stage img {
+        width: 72px;
+      }
+      .dark .wordmark span {
+        color: #d2b477;
+      }
+      .spec-line {
+        display: flex;
+        gap: 18px;
+        justify-content: space-between;
+        align-items: end;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      .icon-sizes {
+        display: flex;
+        gap: 27px;
+        align-items: end;
+      }
+      .icon-sizes figure {
+        margin: 0;
+        text-align: center;
+      }
+      .icon-sizes figcaption {
+        font:
+          10px/1.8 ui-monospace,
+          monospace;
+        color: #5b6c54;
+        margin-top: 8px;
+      }
+      .small-note {
+        font-size: 11px;
+        color: #5e7056;
+        max-width: 420px;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .swatch {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .swatch-color {
+        height: 73px;
+        background: var(--swatch);
+        border-bottom: 1px solid var(--line);
+      }
+      .swatch-info {
+        padding: 12px;
+      }
+      .swatch-info strong {
+        font:
+          12px ui-monospace,
+          monospace;
+      }
+      .swatch-info span {
+        display: block;
+        font:
+          11px ui-monospace,
+          monospace;
+        margin-top: 6px;
+        color: #5c6c56;
+      }
+      .swatch-info p {
+        font-size: 11px;
+        margin-top: 7px;
+        color: #52654b;
+      }
+      .state-strips {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 24px;
+      }
+      .state-strip {
+        border: 1px solid;
+        border-radius: 8px;
+        padding: 17px;
+        font-size: 12px;
+      }
+      .state-strip small {
+        display: block;
+        font:
+          10px/1.6 ui-monospace,
+          monospace;
+        margin-top: 5px;
+      }
+      .callout {
+        border-left: 2px solid var(--ochre);
+        padding: 8px 0 8px 17px;
+        font-size: 12px;
+        margin-top: 24px;
+        color: #52654b;
+      }
+      .type-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid var(--line);
+        margin-top: 24px;
+      }
+      .type-sample {
+        padding: 24px 20px 24px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .type-sample .label {
+        font:
+          10px/1.6 ui-monospace,
+          monospace;
+        color: #60705a;
+        display: block;
+        margin-bottom: 18px;
+      }
+      .type-sample .serif {
+        font:
+          48px/1 Georgia,
+          serif;
+        letter-spacing: -1px;
+      }
+      .type-sample .sans {
+        font-size: 24px;
+        line-height: 1.5;
+      }
+      .type-sample .time {
+        font:
+          32px/1.5 "Avenir Next",
+          Avenir,
+          sans-serif;
+        letter-spacing: 0.4px;
+      }
+      .type-sample .format {
+        font:
+          17px/1.5 ui-monospace,
+          monospace;
+        overflow-wrap: anywhere;
+      }
+      .type-sample p {
+        font-size: 11px;
+        color: #5c6c56;
+        margin-top: 15px;
+      }
+      .metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 22px 0;
+      }
+      .metric {
+        padding: 16px 20px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        flex: 1;
+        min-width: 128px;
+      }
+      .metric b {
+        display: block;
+        font:
+          32px/1.2 Georgia,
+          serif;
+      }
+      .metric span {
+        font-size: 11px;
+        color: #5d6f55;
+      }
+      .demo-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 390px) minmax(180px, 1fr);
+        gap: 30px;
+        align-items: start;
+      }
+      .panel-frame {
+        width: 100%;
+        height: 565px;
+        border: 1px solid #c8d4c1;
+        border-radius: 14px;
+        box-shadow: 0 8px 28px #293d310b;
+        background: var(--paper);
+      }
+      .demo-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 20px;
+      }
+      .control {
+        border: 1px solid #c2d0ba;
+        border-radius: 6px;
+        padding: 7px 11px;
+        background: transparent;
+        color: var(--green);
+        font-size: 12px;
+      }
+      .control:hover {
+        background: var(--wash);
+      }
+      .control[aria-pressed="true"] {
+        background: var(--green);
+        color: white;
+        border-color: var(--green);
+      }
+      .annotations {
+        display: grid;
+        gap: 23px;
+      }
+      .annotations article {
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 18px;
+      }
+      .annotations p {
+        font-size: 12px;
+        color: #56694e;
+      }
+      .annotations .key {
+        display: block;
+        color: #92713b;
+        font:
+          11px/1.5 ui-monospace,
+          monospace;
+        margin-bottom: 7px;
+      }
+      .demo-notice {
+        font-size: 11px;
+        color: #5c6d55;
+        min-height: 2em;
+        margin-top: 10px;
+      }
+      .overlay-frame {
+        width: 100%;
+        height: 220px;
+        border: 1px solid #d2dbca;
+        border-radius: 14px;
+        background: #e9ede4;
+        margin-top: 20px;
+      }
+      .motion-grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) 1fr;
+        gap: 24px;
+        margin-top: 28px;
+      }
+      .motion-sample {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 25px;
+      }
+      .motion-field {
+        position: relative;
+        border-bottom: 1px solid var(--line);
+        padding: 15px 8px;
+        margin: 16px 0 22px;
+        font-size: 13px;
+      }
+      .motion-field small {
+        display: block;
+        color: #5b6f52;
+        font-size: 10px;
+        margin-bottom: 5px;
+      }
+      .motion-check {
+        position: absolute;
+        right: 0;
+        top: -6px;
+        width: 22px;
+        height: 22px;
+        background: var(--green);
+        color: white;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+      }
+      .timing {
+        display: grid;
+        grid-template-columns: 70px 1fr;
+        gap: 8px;
+        font-size: 12px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .timing b {
+        font-family: Georgia, serif;
+        font-size: 17px;
+        font-weight: 400;
+        color: var(--green);
+      }
+      .promo-large {
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .promo-small-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 440px) 1fr;
+        gap: 28px;
+        margin-top: 24px;
+        align-items: center;
+      }
+      .promo-small-row img {
+        border-radius: 10px;
+      }
+      .asset-label {
+        font-size: 11px;
+        margin-top: 10px;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+      }
+      .asset-label a {
+        color: var(--green);
+      }
+      .promo-spec {
+        font-size: 12px;
+        color: #53674b;
+      }
+      .promo-spec h3 {
+        color: var(--ink);
+      }
+      .rules {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+      }
+      .rule {
+        padding: 20px 0;
+        border-top: 1px solid var(--line);
+      }
+      .rule strong {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .rule p {
+        color: #596b51;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin: 24px 0 10px;
+        flex-wrap: wrap;
+      }
+      .code-label {
+        font:
+          11px ui-monospace,
+          monospace;
+        color: #62725a;
+      }
+      .code-actions {
+        display: flex;
+        gap: 8px;
+      }
+      pre {
+        margin: 0;
+        background: #203e2e;
+        color: #e9efdf;
+        border-radius: 12px;
+        padding: 25px;
+        max-height: 560px;
+        overflow: auto;
+        font-size: 12px;
+        line-height: 1.8;
+        tab-size: 2;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      pre code {
+        font-size: inherit;
+      }
+      .document-footer {
+        padding-top: 25px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        color: #5b6d52;
+        font-size: 11px;
+      }
+      #action-status {
+        min-height: 22px;
+        font-size: 11px;
+        color: var(--green);
+        margin-top: 10px;
+      }
+      @media (max-width: 1100px) {
+        .rail {
+          width: 200px;
+          padding-left: 22px;
+          padding-right: 20px;
+        }
+        .document {
+          margin-left: 200px;
+          padding-left: 34px;
+          padding-right: 34px;
+        }
+        .demo-layout {
+          grid-template-columns: minmax(280px, 360px) 1fr;
+          gap: 20px;
+        }
+        .swatches {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 850px) {
+        .rail {
+          position: relative;
+          width: auto;
+          padding: 22px 24px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          gap: 18px;
+        }
+        .rail nav {
+          display: flex;
+          gap: 18px;
+          overflow: auto;
+        }
+        .rail nav a {
+          flex: none;
+        }
+        .rail nav small {
+          display: none;
+        }
+        .rail-sub,
+        .rail-bottom {
+          display: none;
+        }
+        .document {
+          margin-left: 0;
+          padding: 0 24px 35px;
+        }
+        .hero {
+          padding-top: 36px;
+        }
+        .hero-title h1 .large-brand {
+          font-size: 56px;
+        }
+        .hero-title img {
+          width: 96px;
+        }
+        .demo-layout {
+          grid-template-columns: minmax(280px, 390px) 1fr;
+        }
+        .principles {
+          gap: 20px;
+        }
+        .brand-stage > div {
+          padding: 22px;
+        }
+        .brand-stage .wordmark {
+          font-size: 31px;
+        }
+        .brand-stage img {
+          width: 50px;
+        }
+        .state-strips {
+          grid-template-columns: 1fr;
+        }
+        .promo-small-row {
+          grid-template-columns: 1fr;
+        }
+        .promo-spec {
+          max-width: 500px;
+        }
+      }
+      @media (max-width: 620px) {
+        .document {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+        .hero-top {
+          align-items: start;
+        }
+        .hero-title {
+          gap: 12px;
+        }
+        .hero-title h1 {
+          font-size: 23px;
+        }
+        .hero-title h1 .large-brand {
+          font-size: 42px;
+          letter-spacing: -2px;
+        }
+        .hero-title img {
+          width: 72px;
+        }
+        .edition {
+          font-size: 9px;
+        }
+        .kicker {
+          font-size: 9px;
+        }
+        .lead {
+          font-size: 13px;
+        }
+        .principles,
+        .brand-stage,
+        .type-grid,
+        .demo-layout,
+        .motion-grid,
+        .rules {
+          grid-template-columns: 1fr;
+        }
+        .brand-stage > div {
+          min-height: 155px;
+        }
+        .swatches {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .panel-frame {
+          max-width: 390px;
+          justify-self: center;
+        }
+        .demo-layout .annotations {
+          margin-top: 8px;
+        }
+        .icon-sizes {
+          gap: 18px;
+        }
+        .overlay-frame {
+          height: 242px;
+        }
+        .document-footer {
+          display: block;
+        }
+        .document-footer span {
+          display: block;
+          margin-bottom: 10px;
+        }
+        section.chapter {
+          padding: 35px 0;
+        }
+        .type-sample {
+          padding-right: 0;
+        }
+        .code-actions {
+          flex-wrap: wrap;
+        }
+        pre {
+          padding: 17px;
+          font-size: 11px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+      @media print {
+        .rail,
+        .download,
+        .code-actions,
+        .demo-controls,
+        .control,
+        #action-status {
+          display: none;
+        }
+        .document {
+          margin: 0;
+          padding: 0;
+        }
+        .hero {
+          padding-top: 0;
+        }
+        section.chapter {
+          break-inside: avoid;
+        }
+        .document-footer {
+          display: block;
+        }
+        pre {
+          max-height: none;
+          overflow: visible;
+        }
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#document" class="skip">本文へ移動</a>
+    <aside class="rail">
+      <div>
+        <div class="wordmark">sche<em>10</em>le<span>.</span></div>
+        <p class="rail-sub">DESIGN SYSTEM / 2026</p>
+      </div>
+      <nav aria-label="資料の目次">
+        <a href="#principles"><small>00</small>設計の軸</a
+        ><a href="#identity"><small>01</small>ブランドとアイコン</a
+        ><a href="#color"><small>02</small>色と状態</a
+        ><a href="#type"><small>03</small>文字と余白</a
+        ><a href="#components"><small>04</small>UIの部品</a
+        ><a href="#motion"><small>05</small>動きと操作</a
+        ><a href="#promotion"><small>06</small>プロモーション</a
+        ><a href="#rules"><small>07</small>継承するルール</a
+        ><a href="#markdown"><small>08</small>Markdown原稿</a>
+      </nav>
+      <div class="rail-bottom">
+        <button class="download" data-download>
+          Markdownを保存 <span aria-hidden="true">↓</span>
+        </button>
+        <p>実装 v{{VERSION}}<br />画像を含むオフライン資料</p>
+      </div>
+    </aside>
+    <main class="document" id="document">
+      <header class="hero" id="principles">
+        <div class="hero-top">
+          <p class="kicker">PRODUCT / IDENTITY / COMMUNICATION</p>
+          <span class="edition">v{{VERSION}} · 2026.10.24</span>
+        </div>
+        <div class="hero-title">
+          <h1><span class="large-brand">Sche10le</span>デザインシステム</h1>
+          <img
+            src="{{ICON128}}"
+            alt="横線と数字10のカレンダーマーク"
+            width="128"
+            height="128"
+          />
+        </div>
+        <p class="lead">
+          ページの日程から、カレンダーへ。<br />その短い流れを支える、色・文字・状態・動きの記録。<br />拡張機能、アイコン、ストア素材をひとつの視覚言語でつなぐ。
+        </p>
+        <div class="hero-meta">
+          <span>実装に基づく仕様</span><span>外部フォントなし</span
+          ><span>Markdownダウンロード対応</span>
+        </div>
+        <div class="principles">
+          <article>
+            <h3>静かな道具</h3>
+            <p>
+              紙色と深緑、細い罫線。飾りや説明を重ねず、日程と次の操作を中心に。
+            </p>
+          </article>
+          <article>
+            <h3>操作をつなぐ</h3>
+            <p>
+              元の文字、選択中の項目、取得結果。動きと色で「どこから、どこへ」を伝える。
+            </p>
+          </article>
+          <article>
+            <h3>役割を分ける</h3>
+            <p>
+              主操作は濃い緑。選択中は黄土系。完了はチェック。色の意味を混ぜない。
+            </p>
+          </article>
+        </div>
+      </header>
+      <section class="chapter" id="identity">
+        <div class="section-title">
+          <span class="number">01</span>
+          <h2>ブランドとアイコン</h2>
+        </div>
+        <p class="intro">
+          セリフ体の「10」が日付と名前をつなぐ。ワードマークの数字はイタリック、最後の点には黄土色を添える。
+        </p>
+        <div class="brand-stage">
+          <div>
+            <img src="{{ICON128}}" alt="Sche10leアイコン" />
+            <p class="wordmark">sche<em>10</em>le<span>.</span></p>
+          </div>
+          <div class="dark">
+            <p class="wordmark">sche<em>10</em>le<span>.</span></p>
+          </div>
+        </div>
+        <div class="spec-line">
+          <div class="icon-sizes">
+            <figure>
+              <img src="{{ICON16}}" width="16" height="16" alt="16pxアイコン" />
+              <figcaption>16px</figcaption>
+            </figure>
+            <figure>
+              <img src="{{ICON32}}" width="32" height="32" alt="32pxアイコン" />
+              <figcaption>32px</figcaption>
+            </figure>
+            <figure>
+              <img src="{{ICON48}}" width="48" height="48" alt="48pxアイコン" />
+              <figcaption>48px</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="{{ICON128}}"
+                width="96"
+                height="96"
+                alt="128pxアイコンを96pxで表示"
+              />
+              <figcaption>128px / 表示96px</figcaption>
+            </figure>
+          </div>
+          <p class="small-note">
+            実際の配布用PNGを埋め込み。<br />ヘッダーのマークは30×32px、角丸7px。<br />上下のリングを加えず、横線と数字で表す。
+          </p>
+        </div>
+      </section>
+      <section class="chapter" id="color">
+        <div class="section-title">
+          <span class="number">02</span>
+          <h2>色と状態</h2>
+        </div>
+        <p class="intro">
+          基礎になる7色は実装のCSS変数から取得。暖かな背景と落ち着いた緑を基調に、操作の状態を別の色とラベルで区別する。
+        </p>
+        <div class="swatches">{{SWATCHES}}</div>
+        <div class="state-strips">
+          <div
+            class="state-strip"
+            style="background: #fbf1dc; border-color: #d9bd87; color: #785825"
+          >
+            選択中 — いま取得する項目<small>#fbf1dc / #d9bd87</small>
+          </div>
+          <div
+            class="state-strip"
+            style="background: #eef3e9; border-color: #cbd8c4; color: #285b43"
+          >
+            ✓ 取得済み — 淡い緑とチェック<small>#eef3e9 / #285b43</small>
+          </div>
+          <div
+            class="state-strip"
+            style="background: #fff0ed; border-color: #c3635b; color: #972d28"
+          >
+            書式を確認してください<small>#fff0ed / #972d28</small>
+          </div>
+        </div>
+        <p class="callout">
+          コントラスト（紙色に対して）：主文 {{INK_CONTRAST}}:1 ／ 補助色
+          {{MUTED_CONTRAST}}:1。補助色は通常サイズの文字の4.5:1を満たさない。重要な説明は主文色を優先する。状態色とオーバーレイ色には、共通変数とは別の実装値がある。
+        </p>
+      </section>
+      <section class="chapter" id="type">
+        <div class="section-title">
+          <span class="number">03</span>
+          <h2>文字と余白</h2>
+        </div>
+        <p class="intro">
+          ブランドと日付はセリフ体。操作の説明は読みやすい日本語サンセリフ。精密さが必要な書式には等幅を使う。
+        </p>
+        <div class="type-grid">
+          <div class="type-sample">
+            <span class="label">GEORGIA / BRAND & DATE</span>
+            <div class="serif">Sche10le · 10</div>
+            <p>ロゴ 25px・600 ／ 日付 28px。表示例は拡大。</p>
+          </div>
+          <div class="type-sample">
+            <span class="label">HIRAGINO / YU GOTHIC / MEIRYO</span>
+            <div class="sans">ページ上の文字をクリック</div>
+            <p>本文 13px / 1.65 ／ 取得内容 12px / 1.7。</p>
+          </div>
+          <div class="type-sample">
+            <span class="label">AVENIR NEXT / AVENIR</span>
+            <div class="time">14:00–16:00</div>
+            <p>候補の時刻は14px / 1.7、字間0.4px。</p>
+          </div>
+          <div class="type-sample">
+            <span class="label">MONOSPACE / FORMAT</span>
+            <div class="format">{from:HHmm} {title}</div>
+            <p>書式入力 12px / 1.6。OS標準のフォントを利用。</p>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><b>24</b><span>px · 本文の左右余白</span></div>
+          <div class="metric"><b>12</b><span>px · 候補カードの角丸</span></div>
+          <div class="metric"><b>56</b><span>px · 主操作の最小高さ</span></div>
+          <div class="metric"><b>280</b><span>px · パネル最小幅</span></div>
+        </div>
+        <p class="small-note">
+          4・6・8・10・12・16・18・20・24・32pxを用途に合わせる。厳密な8pxグリッドではない。320px以下では本文の左右を16pxに縮める。
+        </p>
+      </section>
+      <section class="chapter" id="components">
+        <div class="section-title">
+          <span class="number">04</span>
+          <h2>UIの部品</h2>
+        </div>
+        <p class="intro">
+          現在のサイドパネルCSSを使った操作見本。候補に触れて展開し、登録方法や取得結果の行を選べる。実ページの読み取りや保存は行わない。
+        </p>
+        <div class="demo-controls" role="group" aria-label="UIの状態を切り替え">
+          <button class="control" data-view="list" aria-pressed="true">
+            候補一覧</button
+          ><button class="control" data-view="pick" aria-pressed="false">
+            取得中</button
+          ><button class="control" data-view="settings" aria-pressed="false">
+            設定</button
+          ><button class="control" data-error>書式エラー</button>
+        </div>
+        <div class="demo-layout">
+          <iframe
+            class="panel-frame"
+            id="panel-demo"
+            title="サイドパネルの操作見本"
+            sandbox="allow-scripts"
+            srcdoc="{{COMPONENTS}}"
+          ></iframe>
+          <div class="annotations">
+            <article>
+              <span class="key">01 / CHOOSE</span>
+              <h3>候補と補助操作を分ける</h3>
+              <p>
+                日程はカード、再スキャンは小さな枠付きボタン。登場順／日時順は見出しの隣に控えめに置く。
+              </p>
+            </article>
+            <article>
+              <span class="key">02 / PICK</span>
+              <h3>取得結果そのものが入口</h3>
+              <p>
+                タイトル・場所・詳細の行全体がクリック対象。現在の項目は「選択中」と黄土系の面で示す。
+              </p>
+            </article>
+            <article>
+              <span class="key">03 / OPEN</span>
+              <h3>主操作は一か所に</h3>
+              <p>
+                「Googleカレンダーで開く」を下部に固定。途中でも進める。保存自体はカレンダー側で行う。
+              </p>
+            </article>
+            <article>
+              <span class="key">04 / SETTINGS</span>
+              <h3>設定では面ごと切り替える</h3>
+              <p>
+                一覧とフッターが退き、専用の淡い背景に。自動保存を統一し、エラーは赤い枠と理由で伝える。
+              </p>
+            </article>
+          </div>
+        </div>
+        <p class="demo-notice" id="demo-status" role="status">
+          資料内の見本です。設定値は保存されません。
+        </p>
+      </section>
+      <section class="chapter" id="motion">
+        <div class="section-title">
+          <span class="number">05</span>
+          <h2>動きと操作</h2>
+        </div>
+        <p class="intro">
+          動きは、対象がどこにあり、何が終わったかを伝えるために使う。ページ上の操作バーは手順を進めても大きさとボタン位置を保つ。
+        </p>
+        <iframe
+          class="overlay-frame"
+          id="overlay-demo"
+          title="ページ下部の取得操作バーの見本"
+          sandbox=""
+          srcdoc="{{OVERLAY}}"
+        ></iframe>
+        <p class="small-note" style="margin-top: 12px">
+          実装の操作バーCSSを使用した静的見本。幅640px、下24px。560px以下では操作列を2行にする。
+        </p>
+        <div class="motion-grid">
+          <div class="motion-sample">
+            <h3>取得できた欄を、一瞬だけ照らす</h3>
+            <div class="motion-field" id="motion-field">
+              <small>タイトル</small>活版印刷のワークショップ
+            </div>
+            <button class="control" id="play-motion">取得完了を再生</button>
+            <p class="small-note" style="margin-top: 14px">
+              動きを減らす設定では、静的なチェックだけで伝える。
+            </p>
+          </div>
+          <div>
+            <div class="timing"><b>140ms</b><span>ボタンの色と押下</span></div>
+            <div class="timing">
+              <b>180ms</b><span>登録パターンの開閉</span>
+            </div>
+            <div class="timing"><b>220ms</b><span>候補カードの出現</span></div>
+            <div class="timing">
+              <b>800ms</b><span>取得先欄のフラッシュ</span>
+            </div>
+            <div class="timing">
+              <b>850ms</b><span>取得モード開始の強調</span>
+            </div>
+            <div class="timing">
+              <b>900ms</b><span>完了チェックの表示</span>
+            </div>
+          </div>
+        </div>
+        <p class="callout">
+          元の日時はスクロールと波紋（1.1秒×3回）で示す。対象以外を48%で暗くし、小さな文字も見つけやすくする。取得バーの「閉じる」は全段階で同じ名前にし、取得済みの内容を残す。
+        </p>
+      </section>
+      <section class="chapter" id="promotion">
+        <div class="section-title">
+          <span class="number">06</span>
+          <h2>プロモーション</h2>
+        </div>
+        <p class="intro">
+          UIの静けさを保ちつつ、ストアでは深い緑を大きく使う。紙の抜粋からカレンダーへ向かう図で用途を伝える。
+        </p>
+        <img
+          class="promo-large"
+          src="{{MARQUEE}}"
+          width="1400"
+          height="560"
+          alt="ページの日程を、カレンダーへ。と書かれた横長プロモーション画像"
+        />
+        <div class="asset-label">
+          <span>マーキー · 1400×560px · RGB PNG</span
+          ><a href="{{MARQUEE}}" download="sche10le-marquee-1400x560.png"
+            >PNGを保存 ↓</a
+          >
+        </div>
+        <div class="promo-small-row">
+          <div>
+            <img
+              src="{{SMALL}}"
+              width="440"
+              height="280"
+              alt="ロゴ・コピー・カレンダーの図をまとめた小タイル"
+            />
+            <div class="asset-label">
+              <span>小タイル · 440×280px</span
+              ><a href="{{SMALL}}" download="sche10le-small-440x280.png"
+                >PNGを保存 ↓</a
+              >
+            </div>
+          </div>
+          <div class="promo-spec">
+            <h3>同じデザインを、違う密度で</h3>
+            <p>
+              小タイル：ロゴ36px、コピー20px。<br />マーキー：ロゴ64px、コピー43px。
+            </p>
+            <p style="margin-top: 14px">
+              単純に縮小せず、各キャンバスに合わせて再配置。背景は#214b37、アクセントは#d2b477。
+            </p>
+            <p style="margin-top: 14px">
+              両方とも24ビットRGB・アルファなし。図は機能説明のイラストであり、製品画面のスクリーンショットではない。
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="chapter" id="rules">
+        <div class="section-title">
+          <span class="number">07</span>
+          <h2>継承するルール</h2>
+        </div>
+        <p class="intro">
+          何かを足すときも、ユーザーの判断と移動を増やさない。見た目だけでなく、振る舞いと言葉まで揃える。
+        </p>
+        <div class="rules">
+          <div class="rule">
+            <strong>選択中と、押せるものを混同しない</strong>
+            <p>
+              濃い緑の主操作に対し、選択中は黄土色、完了は淡い緑やチェック。色だけで説明しない。
+            </p>
+          </div>
+          <div class="rule">
+            <strong>ボタンは全体を押せるようにする</strong>
+            <p>
+              文字だけをリンクにしない。ホバーだけでなく、キーボードフォーカスでも同じ情報に到達できるようにする。
+            </p>
+          </div>
+          <div class="rule">
+            <strong>説明を足す前に、操作を整える</strong>
+            <p>
+              狭いパネルにヒーローコピーや自明な案内を置かない。エラーやモード変更など、必要な瞬間に説明する。
+            </p>
+          </div>
+          <div class="rule">
+            <strong>確認できる事実をラベルにする</strong>
+            <p>
+              「スキャン」「再スキャン」「閉じる」を統一。カレンダーを開いただけで「保存完了」と伝えない。
+            </p>
+          </div>
+          <div class="rule">
+            <strong>動きを減らしても、意味を残す</strong>
+            <p>
+              移動や波紋を止めても対象・選択状態・完了が分かること。資料の再生デモもOS設定に従う。
+            </p>
+          </div>
+          <div class="rule">
+            <strong>素材と実装を一緒に見直す</strong>
+            <p>
+              フォント・色・ロゴ比率の変更はアイコンとストア素材へも反映。実装値と設計上の推奨を区別して記録する。
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="chapter" id="markdown">
+        <div class="section-title">
+          <span class="number">08</span>
+          <h2>Markdown原稿</h2>
+        </div>
+        <p class="intro">
+          実装値・状態・動き・素材の仕様・参照ファイルをまとめた全文。以下のコードブロックと、保存される.mdファイルは同一内容です。
+        </p>
+        <div class="code-top">
+          <span class="code-label"
+            >sche10le-design-system.md · {{MD_LINES}}行 · UTF-8</span
+          >
+          <div class="code-actions">
+            <button class="control" id="copy-markdown">コピー</button
+            ><button class="download" data-download>
+              .mdをダウンロード <span aria-hidden="true">↓</span>
+            </button>
+          </div>
+        </div>
+        <pre
+          tabindex="0"
+          aria-label="Markdown形式のデザインシステム全文"
+        ><code id="markdown-source" class="language-markdown">{{MARKDOWN}}</code></pre>
+        <p id="action-status" role="status" aria-live="polite"></p>
+      </section>
+      <footer class="document-footer">
+        <span>Sche10le · デザインシステム / 実装 v{{VERSION}}</span
+        ><span
+          >参照コミット {{COMMIT}} · 生成元 docs/design/design-system.md</span
+        >
+      </footer>
+    </main>
+    <script id="markdown-data" type="application/json">
+      {{MD_JSON}}
+    </script>
+    <script>
+      const markdown = JSON.parse(
+        document.getElementById("markdown-data").textContent,
+      );
+      const status = document.getElementById("action-status");
+      document.querySelectorAll("[data-download]").forEach((button) =>
+        button.addEventListener("click", () => {
+          const blob = new Blob([markdown], {
+            type: "text/markdown;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "sche10le-design-system.md";
+          document.body.append(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          status.textContent = "Markdownファイルのダウンロードを開始しました。";
+        }),
+      );
+      document
+        .getElementById("copy-markdown")
+        .addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(markdown);
+            status.textContent = "Markdown全文をコピーしました。";
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents(
+              document.getElementById("markdown-source"),
+            );
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            status.textContent =
+              "自動コピーを利用できないため全文を選択しました。コピー操作で保存してください。";
+          }
+        });
+      const frame = document.getElementById("panel-demo");
+      document.querySelectorAll("[data-view]").forEach((button) =>
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll("[data-view]")
+            .forEach((other) =>
+              other.setAttribute("aria-pressed", String(other === button)),
+            );
+          frame.contentWindow.postMessage({ view: button.dataset.view }, "*");
+        }),
+      );
+      document.querySelector("[data-error]").addEventListener("click", () => {
+        document
+          .querySelectorAll("[data-view]")
+          .forEach((button) =>
+            button.setAttribute(
+              "aria-pressed",
+              String(button.dataset.view === "settings"),
+            ),
+          );
+        frame.contentWindow.postMessage({ action: "error" }, "*");
+      });
+      window.addEventListener("message", (e) => {
+        if (e.source !== frame.contentWindow) return;
+        if (e.data?.type === "demo-notice")
+          document.getElementById("demo-status").textContent = e.data.text;
+        if (e.data?.type === "demo-view")
+          document
+            .querySelectorAll("[data-view]")
+            .forEach((button) =>
+              button.setAttribute(
+                "aria-pressed",
+                String(button.dataset.view === e.data.view),
+              ),
+            );
+      });
+      document.getElementById("play-motion").addEventListener("click", () => {
+        const field = document.getElementById("motion-field");
+        field.getAnimations().forEach((animation) => animation.cancel());
+        field.querySelector(".motion-check")?.remove();
+        const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const check = document.createElement("span");
+        check.className = "motion-check";
+        check.textContent = "✓";
+        check.setAttribute("aria-label", "取得完了");
+        field.append(check);
+        if (!reduced)
+          field.animate(
+            [
+              { backgroundColor: "#d6ead1", boxShadow: "0 0 0 3px #b9d9b4" },
+              {
+                backgroundColor: "transparent",
+                boxShadow: "0 0 0 0 #b9d9b400",
+              },
+            ],
+            { duration: 800, easing: "ease-out" },
+          );
+        const animation = check.animate(
+          reduced
+            ? [{ opacity: 1 }, { opacity: 1 }]
+            : [
+                { opacity: 0, transform: "translateY(5px) scale(.75)" },
+                {
+                  opacity: 1,
+                  transform: "translateY(0) scale(1.1)",
+                  offset: 0.25,
+                },
+                {
+                  opacity: 1,
+                  transform: "translateY(0) scale(1)",
+                  offset: 0.75,
+                },
+                { opacity: 0, transform: "translateY(-5px) scale(1)" },
+              ],
+          { duration: 900, easing: "ease-out" },
+        );
+        animation.finished.then(
+          () => check.remove(),
+          () => check.remove(),
+        );
+      });
+    </script>
+  </body>
+</html>

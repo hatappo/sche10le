@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      {{THEME}}
+      {{PANEL_CSS}}
+      body { min-width: 0; }
+      [data-view] { display: none; }
+      body[data-demo="list"] [data-view="list"], body[data-demo="pick"] [data-view="pick"], body[data-demo="settings"] [data-view="settings"] { display: block; }
+      body[data-demo="settings"] .footer { display: none; }
+      .candidate .variant-region { visibility: hidden; }
+      .candidate.expanded .variant-region { visibility: visible; }
+    </style>
+  </head>
+  <body data-demo="list">
+    <header class="header">
+      <a class="brand" href="#" aria-label="Sche10le ホーム"
+        ><span class="brand-mark" aria-hidden="true">10</span
+        ><span
+          >sche<span class="brand-ten">10</span>le<span class="brand-period"
+            >.</span
+          ></span
+        ></a
+      ><button class="icon-button" id="gear" aria-label="設定">⚙</button>
+    </header>
+    <main data-view="list">
+      <div class="source-section">
+        <div class="source-text">
+          <span class="muted">example.com</span
+          ><span class="status-dot">スキャン完了</span>
+        </div>
+        <button class="reload-button">↻ 再スキャン</button>
+      </div>
+      <div class="section-heading candidates-heading">
+        <h2>見つかった日程 <span class="count">1</span></h2>
+        <select class="order-select" aria-label="候補の並び順">
+          <option>登場順</option>
+          <option>日時順</option>
+        </select>
+      </div>
+      <div class="candidate">
+        <button
+          class="candidate-heading"
+          aria-expanded="false"
+          aria-controls="variants"
+        >
+          <span class="date-badge"
+            ><span class="month">NOV</span><span class="day">10</span></span
+          ><span class="date-content"
+            ><strong>11月10日（火）</strong
+            ><span class="candidate-time">14:00–16:00</span
+            ><span class="candidate-source"
+              >2026年11月10日 14:00〜16:00</span
+            ></span
+          ><span class="candidate-arrow">›</span>
+        </button>
+        <div class="variant-region" id="variants" inert>
+          <div class="variant-inner">
+            <div class="variant-list">
+              <button class="variant">
+                <span class="variant-label">時間どおり</span
+                ><span class="variant-time">14:00–16:00</span
+                ><span class="variant-arrow">→</span></button
+              ><button class="variant">
+                <span class="variant-label">移動込み</span
+                ><span class="variant-time">13:30–16:30</span
+                ><span class="variant-arrow">→</span></button
+              ><button class="variant">
+                <span class="variant-label">終日で確保</span
+                ><span class="variant-time">11/10</span
+                ><span class="variant-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <main data-view="pick">
+      <section class="selection">
+        <div class="section-heading">
+          <span class="eyebrow">選んだ日程</span
+          ><button class="text-button" id="reset">選び直す</button>
+        </div>
+        <h2>11月10日（火）</h2>
+        <p class="selected-time" id="variant-label">時間どおり · 14:00–16:00</p>
+        <div class="picked-values">
+          <button class="field-row" aria-current="step">
+            <span class="field-heading"
+              >タイトル <span class="field-status">選択中</span
+              ><span class="field-edit">✎</span></span
+            ><span class="field-value">活版印刷のワークショップ</span>
+          </button>
+          <button class="field-row">
+            <span class="field-heading"
+              >場所 <span class="field-status" hidden>選択中</span
+              ><span class="field-edit">✎</span></span
+            ><span class="field-value is-empty">未設定</span>
+          </button>
+          <button class="field-row">
+            <span class="field-heading"
+              >詳細 <span class="field-status" hidden>選択中</span
+              ><span class="field-edit">✎</span></span
+            ><span class="field-value">https://example.com/workshop</span>
+          </button>
+        </div>
+      </section>
+    </main>
+    <section data-view="settings" class="settings">
+      <div class="section-heading">
+        <h2>設定</h2>
+        <button class="text-button" id="close-settings">閉じる</button>
+      </div>
+      <p class="settings-note">変更は自動保存されます</p>
+      <div class="setting-group">
+        <label for="travel"
+          >前後の移動時間 <span class="muted">片道あたり</span></label
+        >
+        <div class="number-control">
+          <input
+            id="travel"
+            type="number"
+            value="30"
+            step="5"
+            min="0"
+            max="180"
+          /><span>分ずつ</span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label for="format">タイトルの書式</label
+        ><input id="format" class="format-input" value="{from:HHmm} {title}" />
+        <div class="format-preview" style="margin-top: 10px">
+          <span>プレビュー</span><output>1400 活版印刷のワークショップ</output>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label"
+          ><input type="checkbox" />利用できる場合はローカルAIで補完</label
+        >
+      </div>
+    </section>
+    <footer class="footer">
+      <div class="idle-footer" data-view="list">
+        <span class="tiny-dot"></span> 失った時間は二度と戻らない。
+      </div>
+      <div data-view="pick">
+        <button class="primary-button" id="calendar">
+          Googleカレンダーで開く <span>↗</span>
+        </button>
+      </div>
+    </footer>
+    <script>
+      const card = document.querySelector(".candidate");
+      const toggle = document.querySelector(".candidate-heading");
+      function expand(on) {
+        card.classList.toggle("expanded", on);
+        toggle.setAttribute("aria-expanded", String(on));
+        document.querySelector(".variant-region").inert = !on;
+      }
+      function view(name) {
+        document.body.dataset.demo = name;
+        expand(false);
+        const input = document.getElementById("format");
+        input.value = "{from:HHmm} {title}";
+        input.removeAttribute("aria-invalid");
+        const preview = document.querySelector(".format-preview");
+        preview.classList.remove("error");
+        preview.querySelector("span").textContent = "プレビュー";
+        preview.querySelector("output").textContent =
+          "1400 活版印刷のワークショップ";
+        parent.postMessage({ type: "demo-view", view: name }, "*");
+      }
+      card.addEventListener("mouseenter", () => expand(true));
+      card.addEventListener("mouseleave", () => {
+        if (!card.contains(document.activeElement)) expand(false);
+      });
+      card.addEventListener("focusin", () => expand(true));
+      card.addEventListener("focusout", (e) => {
+        if (!card.contains(e.relatedTarget) && !card.matches(":hover"))
+          expand(false);
+      });
+      toggle.addEventListener("click", () =>
+        expand(!card.classList.contains("expanded")),
+      );
+      document.querySelectorAll(".variant").forEach((button) =>
+        button.addEventListener("click", () => {
+          document.getElementById("variant-label").textContent =
+            button.querySelector(".variant-label").textContent +
+            " · " +
+            button.querySelector(".variant-time").textContent;
+          view("pick");
+        }),
+      );
+      document.getElementById("reset").onclick = () => {
+        view("list");
+        toggle.focus();
+        expand(false);
+      };
+      document.querySelector(".brand").onclick = (e) => {
+        e.preventDefault();
+        view("list");
+      };
+      document.getElementById("gear").onclick = () => view("settings");
+      document.getElementById("close-settings").onclick = () => view("list");
+      document.querySelectorAll(".field-row").forEach(
+        (row) =>
+          (row.onclick = () => {
+            document.querySelectorAll(".field-row").forEach((other) => {
+              other.removeAttribute("aria-current");
+              other.querySelector(".field-status").hidden = true;
+            });
+            row.setAttribute("aria-current", "step");
+            row.querySelector(".field-status").hidden = false;
+          }),
+      );
+      document.getElementById("calendar").onclick = () =>
+        parent.postMessage(
+          {
+            type: "demo-notice",
+            text: "資料用の見本です。実際のカレンダーは開きません。",
+          },
+          "*",
+        );
+      window.addEventListener("message", (e) => {
+        if (e.source !== parent) return;
+        if (["list", "pick", "settings"].includes(e.data?.view))
+          view(e.data.view);
+        if (e.data?.action === "error") {
+          view("settings");
+          const input = document.getElementById("format");
+          input.value = "{unknown}";
+          input.setAttribute("aria-invalid", "true");
+          const preview = document.querySelector(".format-preview");
+          preview.classList.add("error");
+          preview.querySelector("span").textContent = "書式を確認してください";
+          preview.querySelector("output").textContent =
+            "未対応の指定です: {unknown}";
+        }
+      });
+    </script>
+  </body>
+</html>

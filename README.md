@@ -56,6 +56,8 @@ npm run build
 
 ## 開発と検証
 
+配色・書体・UIの状態と動き・アイコン・ストア素材は、[デザインシステム資料（HTML）](docs/design/design-system.html)にまとめています。HTML内にMarkdown全文とダウンロードボタンがあります。[更新手順](docs/design/README.md)も参照してください。
+
 ```sh
 npm run dev        # 開発用ビルドと変更監視
 npm run check      # lint / JSDoc型検査 / 単体テスト / 本番ビルド
