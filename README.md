@@ -81,7 +81,7 @@ npm run icons     # ブランドのCSS原稿から各サイズのPNGを再生成
 
 connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetupの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
 
-GitHub Actionsの **Live event sites → Run workflow → main** から手動実行します。ストア更新のアップロード前に、`sites: all` での実行を推奨します。現在は定期実行・push・PRでの起動はなく、main以外の実行はスキップします。週次実行は運用が安定してから検討します。
+PRが **mainにマージされたとき** に、登録した全サイトを自動検証します。PRの作成・更新中、マージせずに閉じた場合、mainへの直接pushでは検証しません。必要なときはGitHub Actionsの **Live event sites → Run workflow → main** から手動実行でき、対象サイトも絞れます。ストア更新前にはアップロード対象コミットの結果を確認してください。週次実行は運用が安定してから検討します。
 
 ローカルでは `npm run build` の後に `npm run test:live`。対象を絞る場合は `LIVE_SITES=connpass,meetup npm run test:live` を使います。開始・終了日時の両方を検証し、結果は `test-results/live/report.json` と `summary.md` に出力します。CIでは実行サマリーと14日間保存するArtifactから確認できます。アクセス制限やページ消失も未検証として失敗させ、抽出日時の不一致と区別します。
 

@@ -1,7 +1,10 @@
 name: Live event sites
 
-# Deliberately manual-only. Add a schedule only after the initial operation is stable.
+# Run after merging into main, never while a PR is being developed.
 on:
+  pull_request:
+    types: [closed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       sites:
@@ -19,11 +22,14 @@ concurrency:
 
 jobs:
   live:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      LIVE_SITES: ${{ inputs.sites }}
+      LIVE_SITES: ${{ inputs.sites || 'all' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6

@@ -4,9 +4,11 @@
 
 ## 実行するタイミング
 
-原則としてChrome Web Storeへの更新アップロード前に1回実行する。GitHub Actionsの「Live event sites」から「Run workflow」を選び、ブランチは `main`、`sites` は `all` にする。main以外ではジョブを実行しない。
+main宛てのPRがマージされたときに、登録済みの全サイトを1回ずつ自動検証する。PRの作成・更新中には起動しない。マージせずに閉じた場合はジョブをスキップし、mainへの直接pushや他のブランチへのマージでも検証しない。
 
-`workflow_dispatch` のみで、push・PR・scheduleのトリガーは設けない。週次実行を導入する場合も、手動運用でアクセス制限や不安定な対象を整理してから、明示的にscheduleを追加する。テスト側は定期実行にも再利用できる。
+手動実行も残す。GitHub Actionsの「Live event sites」から「Run workflow」を選び、ブランチは `main`、通常は `sites: all` にする。ストア更新前にはアップロード対象コミットでの検証結果を確認し、必要な場合だけ再実行する。main以外の手動実行はスキップする。
+
+トリガーは `pull_request` の `closed`（対象main）と `workflow_dispatch`。ジョブの条件でもマージ済みかを確認する。マージ時は入力欄がないため `sites` を `all` に補う。scheduleは未設定で、週次実行は運用が安定してから明示的に追加する。
 
 このワークフローはmainにマージ後に利用できる。テスト開始時のコミットSHAをCIのレポートに記録する。テスト後にコードを変更した場合、その結果を変更後の配布物の検証結果として扱わない。
 
