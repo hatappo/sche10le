@@ -203,18 +203,37 @@
           "1400 活版印刷のワークショップ";
         parent.postMessage({ type: "demo-view", view: name }, "*");
       }
-      card.addEventListener("mouseenter", () => expand(true));
-      card.addEventListener("mouseleave", () => {
-        if (!card.contains(document.activeElement)) expand(false);
+      let expandedBeforePointer;
+      card.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") expand(true);
+      });
+      card.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "touch") return;
+        if (!(
+          card.contains(document.activeElement) &&
+          document.activeElement?.matches(":focus-visible")
+        ))
+          expand(false);
       });
       card.addEventListener("focusin", () => expand(true));
       card.addEventListener("focusout", (e) => {
         if (!card.contains(e.relatedTarget) && !card.matches(":hover"))
           expand(false);
       });
-      toggle.addEventListener("click", () =>
-        expand(!card.classList.contains("expanded")),
-      );
+      toggle.addEventListener("pointerdown", () => {
+        expandedBeforePointer = card.classList.contains("expanded");
+      });
+      toggle.addEventListener("pointercancel", () => {
+        expandedBeforePointer = undefined;
+      });
+      toggle.addEventListener("click", (event) => {
+        const expanded = !(event.detail > 0 &&
+        expandedBeforePointer !== undefined
+          ? expandedBeforePointer
+          : card.classList.contains("expanded"));
+        expandedBeforePointer = undefined;
+        expand(expanded);
+      });
       document.querySelectorAll(".variant").forEach((button) =>
         button.addEventListener("click", () => {
           document.getElementById("variant-label").textContent =

@@ -521,7 +521,11 @@ function candidateCard(candidate, variants, waitForMovement = false) {
   inner.append(list);
   region.append(inner);
   card.append(heading, region);
-  let pinned = false;
+  /** @type {boolean | undefined} */
+  let expandedBeforePointer;
+  const hasKeyboardFocus = () =>
+    card.contains(document.activeElement) &&
+    document.activeElement?.matches(":focus-visible");
   const expand = (/** @type {boolean} */ expanded) => {
     // Picking fields has its own screen; pointer movement must not reopen variants.
     expanded = expanded && !draft;
@@ -529,23 +533,28 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     heading.setAttribute("aria-expanded", String(expanded));
     region.inert = !expanded;
   };
-  card.addEventListener("pointerenter", () => {
-    if (waitForMovement) return;
+  card.addEventListener("pointerenter", (event) => {
+    if (waitForMovement || event.pointerType === "touch") return;
     expand(true);
     revealSource(candidate);
   });
   card.addEventListener("pointermove", (event) => {
     // A rebuilt list can appear beneath a stationary pointer. Resume only on
     // actual movement, while focus/click remains available immediately.
-    if (!waitForMovement || (!event.movementX && !event.movementY)) return;
+    if (
+      event.pointerType === "touch" ||
+      !waitForMovement ||
+      (!event.movementX && !event.movementY)
+    )
+      return;
     waitForMovement = false;
     expand(true);
     revealSource(candidate);
   });
-  card.addEventListener("pointerleave", () => {
-    if (!pinned && !card.contains(document.activeElement)) expand(false);
-    if (!card.contains(document.activeElement) && revealedId === candidate.id)
-      clearSource();
+  card.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "touch" || hasKeyboardFocus()) return;
+    expand(false);
+    if (revealedId === candidate.id) clearSource();
   });
   card.addEventListener("focusin", () => {
     expand(true);
@@ -556,8 +565,7 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     // destination so options never become inert while Tab is entering them.
     const next =
       event.relatedTarget instanceof Node ? event.relatedTarget : null;
-    if (!pinned && !card.contains(next) && !card.matches(":hover"))
-      expand(false);
+    if (!card.contains(next) && !card.matches(":hover")) expand(false);
     if (
       !card.contains(next) &&
       !card.matches(":hover") &&
@@ -565,9 +573,22 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     )
       clearSource();
   });
-  heading.addEventListener("click", () => {
-    pinned = !pinned;
-    expand(pinned);
+  // Focus can expand the card between pointerdown and click. Remember its
+  // visible state beforehand so a first touch still opens a collapsed card.
+  heading.addEventListener("pointerdown", () => {
+    expandedBeforePointer = card.classList.contains("expanded");
+  });
+  heading.addEventListener("pointercancel", () => {
+    expandedBeforePointer = undefined;
+  });
+  heading.addEventListener("click", (event) => {
+    const expanded = !(event.detail > 0 && expandedBeforePointer !== undefined
+      ? expandedBeforePointer
+      : card.classList.contains("expanded"));
+    expandedBeforePointer = undefined;
+    expand(expanded);
+    if (expanded) revealSource(candidate);
+    else if (revealedId === candidate.id) clearSource();
   });
   return card;
 }
