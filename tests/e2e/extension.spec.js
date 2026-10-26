@@ -70,9 +70,9 @@ async function open(footerRandom) {
       Math.random = () => value;
     }, footerRandom);
   await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
-  await expect(panel.getByRole("button", { name: "再スキャン" })).toBeEnabled();
+  await expect(panel.locator("#scan-state")).toHaveText("対象外");
   await source.bringToFront();
-  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await panel.getByRole("button", { name: "スキャン", exact: true }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
   await expect(panel.locator("#scan-state")).toHaveText("スキャン完了");
   // Browser-initiated tabs.create navigation can bypass Playwright's first-request
@@ -374,7 +374,7 @@ test("移動時間を保存でき、ページ遷移・パネル終了で選択�
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#selection")).toBeHidden();
   await expect(panel.locator(".candidate")).toHaveCount(0);
-  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await panel.getByRole("button", { name: "スキャン", exact: true }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
   await select(panel);
   await panel.close();
@@ -1287,4 +1287,149 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await panel.close();
   await source.close();
+});
+
+test("未許可ページでは案内だけを出し、対象外・未スキャン・0件を区別する", async () => {
+  const { source, panel } = await open();
+  await context.route("https://ungranted.example/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<h1>2026年11月8日 14:00</h1>",
+    }),
+  );
+  try {
+    await source.goto("https://ungranted.example/events");
+    await expect(panel.locator("#access-guide")).toBeVisible();
+    await expect(panel.locator("#rescan")).toBeHidden();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(0);
+    await expect(panel.locator("#notice")).not.toHaveClass(/error/);
+    await expect(panel.locator("#scan-state")).toHaveText("待機中");
+    await panel.screenshot({ path: "test-results/scan-access-guidance.png" });
+    await panel.setViewportSize({ width: 300, height: 700 });
+    expect(
+      await panel.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await panel.screenshot({
+      path: "test-results/scan-access-guidance-narrow.png",
+    });
+
+    await source.goto("chrome://settings");
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await expect(panel.locator("#rescan")).toBeHidden();
+    await expect(panel.locator("#access-guide")).toBeHidden();
+    await expect(panel.locator("#notice")).toContainText(
+      "このページではスキャンできません",
+    );
+
+    await source.goto(baseUrl);
+    await expect(
+      panel.getByRole("button", { name: "スキャン", exact: true }),
+    ).toBeEnabled();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(0);
+    // The access probe must not inject the content script or extract candidates.
+    // Simulate only the notification from an icon click: fixture access is already granted.
+    await context.serviceWorkers()[0].evaluate(async () => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await chrome.runtime.sendMessage({
+        type: "scan-request",
+        windowId: tab.windowId,
+      });
+    });
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(
+      panel.getByRole("button", { name: "再スキャン" }),
+    ).toBeEnabled();
+    await source.evaluate(() => {
+      document.body.replaceChildren(
+        document.createTextNode("日程のないページ"),
+      );
+      document
+        .querySelectorAll('script[type="application/ld+json"]')
+        .forEach((script) => script.remove());
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator("#empty-title")).toBeVisible();
+    await expect(panel.locator("#empty-title")).toHaveText(
+      "日程が見つかりませんでした",
+    );
+    await expect(panel.locator("#access-guide")).toBeHidden();
+  } finally {
+    await context.unroute("https://ungranted.example/**");
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("一時的な接続失敗は再試行でき、遅れた権限判定は別タブの状態を上書きしない", async () => {
+  const { source, panel } = await open();
+  let other;
+  try {
+    await panel.evaluate(() => {
+      const execute = chrome.scripting.executeScript.bind(chrome.scripting);
+      window.__execute = execute;
+      chrome.scripting.executeScript = async (details) => {
+        if (details.files) {
+          chrome.scripting.executeScript = execute;
+          await new Promise((resolve) => {
+            window.__resumeInjection = resolve;
+          });
+          throw new Error("Frame with ID 0 was removed.");
+        }
+        return execute(details);
+      };
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(
+      panel.getByRole("button", { name: "スキャン中…", exact: true }),
+    ).toBeDisabled();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__resumeInjection)))
+      .toBe(true);
+    await panel.evaluate(() => window.__resumeInjection());
+    await expect(
+      panel.getByRole("button", { name: "再試行", exact: true }),
+    ).toBeEnabled();
+    await expect(panel.locator("#notice")).toHaveClass(/error/);
+    await expect(panel.locator("#access-guide")).toBeHidden();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await panel.getByRole("button", { name: "再試行", exact: true }).click();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+
+    await panel.evaluate(() => {
+      chrome.scripting.executeScript = (details) => {
+        if (details.func) {
+          chrome.scripting.executeScript = window.__execute;
+          return new Promise((_resolve, reject) => {
+            window.__rejectAccess = reject;
+          });
+        }
+        return window.__execute(details);
+      };
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__rejectAccess)))
+      .toBe(true);
+    other = await context.newPage();
+    await other.goto("chrome://settings");
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await panel.evaluate(() =>
+      window.__rejectAccess(new Error("Cannot access contents of url")),
+    );
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await expect(panel.locator("#access-guide")).toBeHidden();
+  } finally {
+    await panel.close();
+    await other?.close();
+    await source.close();
+  }
 });

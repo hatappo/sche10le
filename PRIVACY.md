@@ -4,7 +4,7 @@
 
 ## 日本語
 
-最終更新日：2026年10月24日
+最終更新日：2026年10月26日
 
 ### 取り扱う情報と目的
 
@@ -12,7 +12,7 @@ Sche10leは、ユーザーが操作したWebページの本文・構造化デー
 
 ### 読み取るタイミング
 
-拡張機能のアイコン操作で一時的なアクセスを許可したタブを対象に、表示中のページを読み取ります。日程のスキャンは、アイコンを押したとき、サイドパネルの初回読み込み時、または「再スキャン」を押したときに行います。その後、ユーザーがページ上で選択した文字を予定に取り込みます。通常のページ閲覧やタブ切り替えだけで、自動的に日程をスキャンすることはありません。
+拡張機能のアイコン操作で一時的なアクセスを許可したタブを対象に、表示中のページを読み取ります。日程のスキャンは、アイコンを押したとき、サイドパネルの初回読み込み時、または「スキャン」「再スキャン」「再試行」を押したときに行います。その後、ユーザーがページ上で選択した文字を予定に取り込みます。通常のページ閲覧やタブ切り替えだけで、自動的に日程をスキャンすることはありません。サイドパネルを表示中にタブやページが切り替わった場合は、ページ本文やDOMを読み取らずにアクセス可否だけを確認し、適切な操作案内を表示します。
 
 ### 保存と削除
 
@@ -42,7 +42,7 @@ AI補完は初期状態では無効です。有効にした場合、対応する
 
 ## English
 
-Last updated: October 24, 2026
+Last updated: October 26, 2026
 
 This English version is a translation. If there is any discrepancy, the Japanese version prevails.
 
@@ -52,7 +52,7 @@ Sche10le reads the text, structured data, title, and URL of a web page the user 
 
 ### When we read a page
 
-Sche10le reads the current page in a tab for which the user has granted temporary access by clicking the extension icon. Date scanning runs when the icon is clicked, when the side panel first loads, or when the user clicks the “再スキャン” (Rescan) button. The user can then select text on the page to include in the event. Ordinary browsing or switching tabs alone does not trigger automatic date scanning.
+Sche10le reads the current page in a tab for which the user has granted temporary access by clicking the extension icon. Date scanning runs when the icon is clicked, when the side panel first loads, or when the user clicks the “スキャン” (Scan), “再スキャン” (Rescan), or “再試行” (Retry) button. The user can then select text on the page to include in the event. Ordinary browsing or switching tabs alone does not trigger automatic date scanning. When the tab or page changes while the side panel is open, the extension checks whether access is available without reading the page text or DOM, so it can display the appropriate guidance.
 
 ### Storage and deletion
 

@@ -121,14 +121,16 @@
       <section class="source-section" aria-label="対象ページ">
         <div class="source-text">
           <span id="source-domain" class="muted">ページを確認中</span>
-          <span id="scan-state" class="status-dot" role="status">待機中</span>
+          <span id="scan-state" class="status-dot" role="status">確認中</span>
         </div>
         <button
           id="rescan"
           class="reload-button"
           type="button"
-          aria-label="再スキャン"
-          title="再スキャン"
+          aria-label="スキャン"
+          title="スキャン"
+          hidden
+          disabled
         >
           <svg
             width="16"
@@ -144,9 +146,19 @@
             <path d="M20 7v5h-5" />
             <path d="M20 12a8 8 0 1 0-2.3 5.7M20 12l-3-4" />
           </svg>
-          <span>再スキャン</span>
+          <span id="rescan-label">スキャン</span>
         </button>
       </section>
+      <div id="access-guide" class="access-guide" role="status" hidden>
+        <img src="/icons/32.png" width="32" height="32" alt="" />
+        <div>
+          <strong>このページの日程を探すには</strong>
+          <p>Chromeのツールバーにある Sche10le のアイコンを押してください。</p>
+          <small
+            >見当たらない場合は、拡張機能メニュー（パズルのアイコン）から選べます。</small
+          >
+        </div>
+      </div>
       <div class="section-heading candidates-heading">
         <h2 id="candidates-title" tabindex="-1">
           見つかった日程 <span id="count" class="count">0</span>
@@ -172,9 +184,9 @@
       <div id="candidates" class="candidates" aria-label="日程候補"></div>
       <div id="empty" class="empty" hidden>
         <div class="empty-calendar" aria-hidden="true"><span>—</span></div>
-        <h2 id="empty-title">日程はまだ見つかっていません</h2>
+        <h2 id="empty-title">日程が見つかりませんでした</h2>
         <p id="empty-description">
-          日程のあるページを開いて、拡張アイコンを押してください。
+          画像内の文字は対象外です。日付がテキストで書かれたページをお試しください。
         </p>
       </div>
       <div id="ai-area" class="ai-area" hidden>
