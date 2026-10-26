@@ -172,3 +172,9 @@ UI案は設定に「開くカレンダー」を1つ追加し、`Google カレン
 - [Chrome: Side Panel](https://developer.chrome.com/docs/extensions/reference/api/sidePanel)
 - [Chrome: Prompt API](https://developer.chrome.com/docs/ai/prompt-api)
 - [Google Calendar: 事前入力された予定リンク](https://developers.google.com/workspace/calendar/api/concepts/inviting-attendees-to-events)
+
+### .icsエクスポート
+
+選択中の主操作ボタン横に40pxの補助アイコンボタンを配置する。title/aria-labelは「予定をダウンロード（.ics）」。GoogleへのURL生成と共通の予定データを使い、移動込みの実時刻・元の開催時刻によるタイトル書式・場所・詳細・URLを保持する。Blobとdownload属性でローカル生成し、追加権限・外部通信・パッケージは使わない。生成失敗時は再試行でき、成功・失敗どちらでも取得中の選択を保持する。
+
+RFC 5545のVCALENDAR/VEVENT、UUIDによるUID、UTCのDTSTAMPを付ける。時刻付きはUTC、終日はVALUE=DATEと排他的な終了日を使う。TEXTの改行・バックスラッシュ・カンマ・セミコロンをエスケープし、制御文字を除く。UTF-8の文字を分割せず75バイトで折り返し、CRLFで出力する。招待や通知は生成しない。

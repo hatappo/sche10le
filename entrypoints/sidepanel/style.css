@@ -638,6 +638,31 @@ main {
 #open-area {
   margin-bottom: 12px;
 }
+.open-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.open-actions .primary-button {
+  flex: 1;
+  min-width: 0;
+}
+.download-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--green);
+}
+.download-button:hover {
+  background: var(--wash);
+  border-color: var(--green);
+}
 .primary-button {
   background: var(--green);
   color: #fff;

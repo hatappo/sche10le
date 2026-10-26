@@ -11,6 +11,7 @@ import {
 } from "../../lib/calendar.js";
 import { orderCandidates } from "../../lib/candidate-order.js";
 import { pickFooterQuote } from "../../lib/footer-quotes.js";
+import { calendarFile } from "../../lib/ical.js";
 import { accessFailure, unsupportedPage } from "../../lib/page-access.js";
 import {
   createDraft,
@@ -737,6 +738,33 @@ async function openCalendar() {
   }
 }
 
+function downloadCalendar() {
+  if (!draft || !selectedVariant) return;
+  const errorMessage =
+    "予定ファイルを作成できませんでした。もう一度お試しください。";
+  try {
+    const file = new Blob([calendarFile(selectedVariant, draft, titleFormat)], {
+      type: "text/calendar;charset=utf-8",
+    });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sche10le-${selectedVariant.date}.ics`;
+    link.hidden = true;
+    document.body.append(link);
+    try {
+      link.click();
+      if (el("notice").textContent === errorMessage) notice("");
+    } finally {
+      link.remove();
+      // Let the browser consume the Blob before releasing it.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    }
+  } catch {
+    notice(errorMessage, true);
+  }
+}
+
 /** Keep the settings link stable while status changes, including keyboard focus.
  * @param {string} prefix @param {string} message @param {boolean} [busy]
  */
@@ -833,6 +861,7 @@ el("candidate-order").addEventListener("change", (event) => {
   saveSetting("order", candidateOrder);
 });
 button("open-calendar").addEventListener("click", () => void openCalendar());
+button("download-calendar").addEventListener("click", downloadCalendar);
 button("resume").addEventListener("click", syncPicker);
 document
   .querySelector(".picked-values")

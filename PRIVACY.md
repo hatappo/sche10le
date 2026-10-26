@@ -4,7 +4,7 @@
 
 ## 日本語
 
-最終更新日：2026年10月26日
+最終更新日：2026年10月27日
 
 ### 取り扱う情報と目的
 
@@ -16,7 +16,9 @@ Sche10leは、ユーザーが操作したWebページの本文・構造化デー
 
 ### 保存と削除
 
-ページ内容・日程候補・選択したテキストは処理中のメモリ上で扱い、拡張機能では永続保存しません。移動時間・タイトル書式・AI補完の有効／無効・候補の並び順は、端末内の拡張機能用ストレージに保存します。設定は拡張機能から変更でき、アンインストールすると保存された設定も削除されます。
+ページ内容・日程候補・選択したテキストは処理中のメモリ上で扱い、ユーザーが明示的にダウンロードする予定ファイルを除き、拡張機能では永続保存しません。移動時間・タイトル書式・AI補完の有効／無効・候補の並び順は、端末内の拡張機能用ストレージに保存します。設定は拡張機能から変更でき、アンインストールすると保存された設定も削除されます。
+
+「予定をダウンロード（.ics）」を押した場合は、タイトル・日時・場所・詳細・元ページURLを含む予定ファイルを端末内で生成し、ブラウザのダウンロード機能で保存します。この処理のための外部送信は行いません。ダウンロードしたファイルはユーザーが管理・削除でき、拡張機能をアンインストールしても削除されません。
 
 ### 外部への送信
 
@@ -42,7 +44,7 @@ AI補完は初期状態では無効です。有効にした場合、対応する
 
 ## English
 
-Last updated: October 26, 2026
+Last updated: October 27, 2026
 
 This English version is a translation. If there is any discrepancy, the Japanese version prevails.
 
@@ -56,7 +58,9 @@ Sche10le reads the current page in a tab for which the user has granted temporar
 
 ### Storage and deletion
 
-Page content, date candidates, and selected text are handled in memory during use and are not persistently stored by the extension. Travel time, the title format, the AI assistance setting, and the candidate sort order are stored locally in the extension's storage on the device. These settings can be changed in the extension and are deleted when the extension is uninstalled.
+Page content, date candidates, and selected text are handled in memory during use and are not persistently stored by the extension, except in event files the user explicitly downloads. Travel time, the title format, the AI assistance setting, and the candidate sort order are stored locally in the extension's storage on the device. These settings can be changed in the extension and are deleted when the extension is uninstalled.
+
+Clicking “予定をダウンロード（.ics）” (Download event as .ics) generates an event file locally containing the title, dates and times, location, details, and source page URL, and saves it using the browser’s download feature. No data is sent externally for this operation. Downloaded files are managed and deleted by the user and are not removed when the extension is uninstalled.
 
 ### Sharing information
 

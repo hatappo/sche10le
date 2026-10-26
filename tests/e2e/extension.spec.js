@@ -1532,6 +1532,9 @@ test("ブランドと設定を下部にまとめ、主操作と本文を隠さ�
             const action = document
               .getElementById("open-calendar")
               .getBoundingClientRect();
+            const download = document
+              .getElementById("download-calendar")
+              .getBoundingClientRect();
             const settings = document
               .getElementById("settings-toggle")
               .getBoundingClientRect();
@@ -1539,6 +1542,10 @@ test("ブランドと設定を下部にまとめ、主操作と本文を隠さ�
             return (
               footer.bottom <= innerHeight &&
               action.bottom <= settings.top &&
+              action.right <= download.left &&
+              download.right <= footer.right &&
+              download.top >= action.top &&
+              download.bottom <= action.bottom &&
               parseFloat(getComputedStyle(main).paddingBottom) >=
                 footer.height &&
               document.documentElement.scrollWidth <= innerWidth
@@ -1986,6 +1993,81 @@ test("タッチのフォーカス移動で日程カードが切り替わり、�
     await expect(source.locator("sche10le-picker")).toHaveCount(1);
   } finally {
     await session.detach();
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("ICSを取得途中でもダウンロードし、書式・移動時間を反映して選択と失敗後の再試行を保つ", async () => {
+  const { source, panel } = await open();
+  try {
+    const downloadButton = panel.getByRole("button", {
+      name: "予定をダウンロード（.ics）",
+      exact: true,
+    });
+    await expect(downloadButton).toBeHidden();
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
+    await panel.locator("#travel").fill("30");
+    await panel.locator("#title-format").fill("{from:HHmm} {title} {to:HHmm}");
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await select(panel, "移動込み");
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await expect(downloadButton).toHaveAttribute(
+      "title",
+      "予定をダウンロード（.ics）",
+    );
+    const downloadEvent = panel.waitForEvent("download");
+    await downloadButton.focus();
+    await panel.keyboard.press("Enter");
+    const download = await downloadEvent;
+    expect(download.suggestedFilename()).toBe("sche10le-2026-11-08.ics");
+    const file = (await readFile(await download.path(), "utf8")).replace(
+      /\r\n[ \t]/g,
+      "",
+    );
+    expect(file).toContain(
+      "SUMMARY:1400 蔵前の活版印刷ワークショップ 1600\r\n",
+    );
+    expect(file).toContain(
+      "DTSTART:20261108T043000Z\r\nDTEND:20261108T073000Z\r\n",
+    );
+    expect(file).toContain("LOCATION:東京都台東区蔵前3丁目 アトリエ蔵前\r\n");
+    expect(file).toContain(`${baseUrl}/\r\n`);
+    await expect(panel.locator("#selection")).toBeVisible();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect(
+      await panel.evaluate(() => window.__calendarRequest),
+    ).toBeUndefined();
+    await panel.evaluate(() => {
+      const create = URL.createObjectURL;
+      URL.createObjectURL = (...args) => {
+        URL.createObjectURL = create;
+        throw new Error(`download failed: ${args.length}`);
+      };
+    });
+    await downloadButton.click();
+    await expect(panel.locator("#notice")).toContainText(
+      "予定ファイルを作成できませんでした",
+    );
+    await expect(panel.locator("#selection")).toBeVisible();
+    const retry = panel.waitForEvent("download");
+    await downloadButton.click();
+    expect(await (await retry).failure()).toBeNull();
+    await expect(panel.locator("#notice")).toHaveText("");
+    await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+    await select(panel, "終日");
+    const allDayEvent = panel.waitForEvent("download");
+    await downloadButton.click();
+    const allDay = await allDayEvent;
+    const allDayFile = (await readFile(await allDay.path(), "utf8")).replace(
+      /\r\n[ \t]/g,
+      "",
+    );
+    expect(allDayFile).toContain(
+      "DTSTART;VALUE=DATE:20261108\r\nDTEND;VALUE=DATE:20261109\r\n",
+    );
+  } finally {
     await panel.close();
     await source.close();
   }

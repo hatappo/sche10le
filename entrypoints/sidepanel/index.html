@@ -347,9 +347,34 @@
     </main>
     <footer id="footer" class="footer">
       <div id="open-area" hidden>
-        <button id="open-calendar" class="primary-button" type="button">
-          Googleカレンダーで開く <span aria-hidden="true">↗</span>
-        </button>
+        <div class="open-actions">
+          <button id="open-calendar" class="primary-button" type="button">
+            Googleカレンダーで開く <span aria-hidden="true">↗</span>
+          </button>
+          <button
+            id="download-calendar"
+            class="download-button"
+            type="button"
+            title="予定をダウンロード（.ics）"
+            aria-label="予定をダウンロード（.ics）"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 3v12m-4-4 4 4 4-4M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"
+              />
+            </svg>
+          </button>
+        </div>
         <p class="footer-hint">情報の取得は途中でもOK。保存はカレンダーで。</p>
       </div>
       <div class="footer-tools">
