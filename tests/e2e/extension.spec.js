@@ -1534,3 +1534,194 @@ test("ブランドと設定を下部にまとめ、主操作と本文を隠さ�
     await source.close();
   }
 });
+
+test("出典ラベルとAIスピナーを表示し、リンクからAI設定へ移動して選択を保って戻る", async () => {
+  const { source, panel } = await open();
+  try {
+    await source.evaluate(() => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = "11/25 15:00〜16:00 夜の集まり";
+      document.querySelector("main").append(paragraph);
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.textContent = JSON.stringify({
+        "@type": "Event",
+        startDate: "2026-12-02",
+        name: "構造化イベント",
+      });
+      document.head.append(script);
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".source-tag")).toHaveText(
+      Array(5).fill("自動"),
+    );
+    await expect(
+      panel.locator('.candidate-source[title^="ページ本文"]'),
+    ).toHaveCount(4);
+    await expect(
+      panel.locator('.candidate-source[title^="ページの構造化データ"]'),
+    ).toHaveCount(1);
+    await expect(panel.locator(".candidate-year")).toContainText(
+      "年として解釈",
+    );
+    await panel.evaluate(() => {
+      const checkbox = document.getElementById("ai-enabled");
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+      Object.defineProperty(window, "LanguageModel", {
+        configurable: true,
+        value: {
+          availability: async () => "available",
+          create: async () => ({
+            prompt: () =>
+              new Promise((resolve) => {
+                window.__completeAI = resolve;
+              }),
+            destroy() {},
+          }),
+        },
+      });
+    });
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
+    await panel.locator("#ai-enabled").check();
+    await panel.locator("#settings-close").click();
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIで日程を補完しています。表示されている候補は選べます。",
+    );
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    expect(
+      await panel
+        .locator("#ai-spinner")
+        .evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe("ai-spin");
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    expect(
+      await panel
+        .locator("#ai-spinner")
+        .evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe("none");
+    await panel.setViewportSize({ width: 300, height: 850 });
+    await panel.locator("#ai-status").scrollIntoViewIfNeeded();
+    expect(
+      await panel.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await panel.screenshot({ path: "test-results/ai-busy-narrow.png" });
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await panel
+      .getByRole("button", { name: "AIで日程を補完", exact: true })
+      .click();
+    await expect(panel.locator("#ai-enabled")).toBeFocused();
+    await expect(panel.locator("#ai-enabled")).toBeInViewport();
+    await expect
+      .poll(() => panel.evaluate(() => typeof window.__completeAI))
+      .toBe("function");
+    await panel.evaluate(() =>
+      window.__completeAI(
+        JSON.stringify([
+          {
+            start: "2026-12-03T18:00:00+09:00",
+            end: "2026-12-03T19:00:00+09:00",
+            evidence: "夜の集まり",
+          },
+        ]),
+      ),
+    );
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIの補完が完了しました。",
+    );
+    await panel.keyboard.press("Escape");
+    await expect(panel.locator("#ai-settings-link")).toBeFocused();
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator("#picked-title")).toHaveText(title);
+    await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+    await expect(panel.locator(".source-tag.is-ai")).toHaveText("AI");
+    await expect(
+      panel.locator('.candidate-source[title^="ローカルAI"]'),
+    ).toHaveAttribute("title", /内容をご確認ください\n夜の集まり/);
+    await panel.screenshot({
+      path: "test-results/ai-source-labels.png",
+      fullPage: true,
+    });
+    await panel.locator("#ai-settings-link").click();
+    await panel.locator("#ai-enabled").uncheck();
+    await panel.locator("#settings-close").click();
+    await expect(panel.locator("#ai-area")).toBeHidden();
+    await expect(panel.locator("#settings-toggle")).toBeFocused();
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("AIの失敗・再試行・無効化でスピナーを更新し、古い処理は新しい状態を上書きしない", async () => {
+  const { source, panel } = await open();
+  try {
+    await panel.evaluate(() => {
+      const checkbox = document.getElementById("ai-enabled");
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+      window.__aiRequests = [];
+      Object.defineProperty(window, "LanguageModel", {
+        configurable: true,
+        value: {
+          availability: async () => "available",
+          create: async () => ({
+            prompt: () =>
+              new Promise((resolve, reject) => {
+                window.__aiRequests.push({ resolve, reject });
+              }),
+            destroy() {},
+          }),
+        },
+      });
+    });
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
+    await panel.locator("#ai-enabled").check();
+    await panel.locator("#settings-close").click();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(1);
+    await panel.evaluate(() =>
+      window.__aiRequests[0].reject(new Error("test failure")),
+    );
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator("#ai-status")).toContainText(
+      "補完はできませんでした",
+    );
+    await panel
+      .getByRole("button", { name: "もう一度試す", exact: true })
+      .click();
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(2);
+    await panel.locator("#ai-settings-link").click();
+    await panel.locator("#ai-enabled").uncheck();
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await panel.locator("#ai-enabled").check();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(3);
+    await panel.locator("#settings-close").click();
+    await panel.evaluate(() =>
+      window.__aiRequests[1].reject(new Error("late failure")),
+    );
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    await expect(panel.locator("#ai-status")).toContainText(
+      "表示されている候補は選べます",
+    );
+    await panel.evaluate(() => window.__aiRequests[2].resolve("[]"));
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIの補完が完了しました。",
+    );
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});

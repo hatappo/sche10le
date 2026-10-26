@@ -365,13 +365,30 @@ main {
   letter-spacing: 0.4px;
 }
 .candidate-source {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 3px;
   font-size: 9px;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+}
+.source-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--wash);
+  color: var(--green);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.source-tag.is-ai {
+  background: #fbf1dc;
+  color: #785825;
+}
+.candidate-year {
+  white-space: nowrap;
 }
 .candidate-arrow {
   font-size: 15px;
@@ -734,11 +751,41 @@ main {
 .ai-area {
   margin-top: 14px;
   font-size: 10px;
-  color: var(--muted);
+  color: var(--ink);
 }
-.ai-area button {
+.ai-area > button {
   display: block;
   margin-top: 4px;
+}
+.inline-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.inline-link:hover {
+  text-decoration-thickness: 2px;
+}
+.ai-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1.5px solid var(--line);
+  border-top-color: var(--green);
+  border-right-color: var(--green);
+  border-radius: 50%;
+  animation: ai-spin 800ms linear infinite;
+}
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .is-selected .candidates-heading {
   margin-top: 18px;

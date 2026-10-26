@@ -77,7 +77,7 @@
           </button>
         </div>
       </div>
-      <div class="setting-group">
+      <div class="setting-group" id="ai-settings-group">
         <label class="checkbox-label"
           ><input id="ai-enabled" type="checkbox" />
           利用できる場合はローカルAIで補完</label
@@ -203,8 +203,24 @@
         </p>
       </div>
       <div id="ai-area" class="ai-area" hidden>
-        <span id="ai-status"></span
-        ><button id="ai-download" class="text-button" type="button" hidden>
+        <p id="ai-status" role="status" aria-live="polite">
+          <span
+            id="ai-spinner"
+            class="ai-spinner"
+            aria-hidden="true"
+            hidden
+          ></span
+          ><button
+            id="ai-settings-link"
+            class="inline-link"
+            type="button"
+            aria-controls="settings"
+            title="AI補完の設定を開く"
+          >
+            AIで日程を補完</button
+          ><span id="ai-message"></span>
+        </p>
+        <button id="ai-download" class="text-button" type="button" hidden>
           AIを準備する
         </button>
       </div>

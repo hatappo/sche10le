@@ -103,6 +103,8 @@ let sourceTimer = 0;
 let revealedId = "";
 /** @type {AbortController | undefined} */
 let aiController;
+let aiRevision = 0;
+let settingsReturnTarget = "settings-toggle";
 
 /** @param {string} text @param {boolean} [error] */
 function notice(text, error = false) {
@@ -200,6 +202,8 @@ function stopConnection() {
   clearSource();
   generation++;
   aiController?.abort();
+  aiRevision++;
+  el("ai-spinner").hidden = true;
   clearTimeout(scanTimer);
   scanning = false;
   const previous = port;
@@ -460,16 +464,29 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     node("strong", "", dateText),
     node("span", "candidate-time", timeText),
   );
-  const source =
+  const sourceDescription =
     candidate.source === "structured"
-      ? "構造化データ"
+      ? "ページの構造化データから自動抽出"
       : candidate.source === "ai"
-        ? "AI補完・内容をご確認ください"
-        : candidate.inferredYear
-          ? `${candidate.date.slice(0, 4)}年として解釈`
-          : "ページ内の日付";
-  const evidence = node("span", "candidate-source", source);
-  evidence.title = candidate.evidence;
+        ? "ローカルAIによる補完。内容をご確認ください"
+        : "ページ本文の日付を自動抽出";
+  const evidence = node("span", "candidate-source");
+  evidence.title = `${sourceDescription}\n${candidate.evidence}`;
+  const sourceTag = node(
+    "span",
+    `source-tag${candidate.source === "ai" ? " is-ai" : ""}`,
+    candidate.source === "ai" ? "AI" : "自動",
+  );
+  sourceTag.setAttribute("aria-hidden", "true");
+  evidence.append(sourceTag, node("span", "sr-only", sourceDescription));
+  if (candidate.inferredYear)
+    evidence.append(
+      node(
+        "span",
+        "candidate-year",
+        `${candidate.date.slice(0, 4)}年として解釈`,
+      ),
+    );
   content.append(evidence);
   heading.append(badge, content, node("span", "candidate-arrow", "›"));
   const region = node("div", "variant-region");
@@ -703,56 +720,90 @@ async function openCalendar() {
   }
 }
 
+/** Keep the settings link stable while status changes, including keyboard focus.
+ * @param {string} prefix @param {string} message @param {boolean} [busy]
+ */
+function showAIStatus(prefix, message, busy = false) {
+  el("ai-spinner").hidden = !busy;
+  el("ai-settings-link").textContent = prefix;
+  el("ai-message").textContent = message;
+}
+
 /** @param {number} run */
 async function prepareAI(run) {
   if (!aiEnabled) return;
+  const revision = ++aiRevision;
   const status = await aiAvailability(window.LanguageModel);
-  if (run !== generation || !aiEnabled) return;
+  if (run !== generation || !aiEnabled || revision !== aiRevision) return;
   el("ai-area").hidden = false;
   el("ai-download").hidden = status !== "downloadable";
+  el("ai-download").textContent = "AIを準備する";
   if (status === "available") {
     await runAI(run);
     return;
   }
-  el("ai-status").textContent =
-    status === "downloadable"
-      ? "AIを使うにはモデルのダウンロードが必要です。"
-      : status === "downloading"
-        ? "AIモデルを準備中です。通常の抽出は利用できます。"
-        : "この環境では通常の抽出を利用します。";
+  if (status === "downloadable")
+    showAIStatus("AIを使うには", "モデルのダウンロードが必要です。");
+  else if (status === "downloading")
+    showAIStatus("AIモデル", "を準備中です。通常の抽出は利用できます。", true);
+  else
+    showAIStatus(
+      "AI補完",
+      "はこの環境では利用できません。通常の抽出を利用します。",
+    );
 }
 
 /** @param {number} run */
 async function runAI(run) {
   if (!window.LanguageModel || !pageText || !aiEnabled) return;
+  const revision = ++aiRevision;
   aiController?.abort();
   const controller = new AbortController();
   aiController = controller;
   const timeout = window.setTimeout(() => controller.abort(), 90_000);
   el("ai-area").hidden = false;
   el("ai-download").hidden = true;
-  el("ai-status").textContent =
-    "AIで日程を補完しています。今ある候補は選べます。";
+  showAIStatus(
+    "AIで日程を補完",
+    "しています。表示されている候補は選べます。",
+    true,
+  );
   try {
     const additions = await enhanceDates(
       window.LanguageModel,
       pageText,
       controller.signal,
     );
-    if (run !== generation || !aiEnabled || controller.signal.aborted) return;
+    if (
+      run !== generation ||
+      !aiEnabled ||
+      controller.signal.aborted ||
+      aiController !== controller ||
+      revision !== aiRevision
+    )
+      return;
     candidates = mergeCandidates(candidates, additions);
     // Keep the selected card and draft stable until the user returns to the list.
     if (!draft) reconcileCandidates(visibleOptions());
-    el("ai-status").textContent = "AIの補完が完了しました。";
+    showAIStatus("AIの補完", "が完了しました。");
   } catch {
-    if (run === generation && aiEnabled && aiController === controller) {
-      el("ai-status").textContent =
-        "AIの補完はできませんでした。通常の抽出を利用できます。";
+    if (
+      run === generation &&
+      aiEnabled &&
+      aiController === controller &&
+      revision === aiRevision
+    ) {
+      showAIStatus(
+        "AIの補完",
+        "はできませんでした。通常の抽出を利用できます。",
+      );
       el("ai-download").hidden = false;
       el("ai-download").textContent = "もう一度試す";
     }
   } finally {
     clearTimeout(timeout);
+    if (aiController === controller && revision === aiRevision)
+      el("ai-spinner").hidden = true;
   }
 }
 
@@ -782,7 +833,10 @@ button("deselect").addEventListener("click", () => {
 button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
-  if (settings.hidden) panelScroll = window.scrollY;
+  if (settings.hidden) {
+    panelScroll = window.scrollY;
+    settingsReturnTarget = "settings-toggle";
+  }
   settings.hidden = !settings.hidden;
   document.body.classList.toggle("settings-open", !settings.hidden);
   clearSource();
@@ -795,7 +849,12 @@ function toggleSettings() {
     behavior: "instant",
   });
   if (!settings.hidden) input("travel").focus({ preventScroll: true });
-  else button("settings-toggle").focus({ preventScroll: true });
+  else
+    button(
+      settingsReturnTarget === "ai-settings-link" && !el("ai-area").hidden
+        ? "ai-settings-link"
+        : "settings-toggle",
+    ).focus({ preventScroll: true });
   updateFormatPreview();
 }
 
@@ -920,12 +979,23 @@ function applyTravel() {
 function applyAI() {
   aiEnabled = input("ai-enabled").checked;
   aiController?.abort();
+  aiRevision++;
+  el("ai-spinner").hidden = true;
   if (aiEnabled && pageText) void prepareAI(generation);
   else el("ai-area").hidden = true;
   saveSetting("ai", aiEnabled);
 }
 button("settings-toggle").addEventListener("click", toggleSettings);
 button("settings-close").addEventListener("click", toggleSettings);
+button("ai-settings-link").addEventListener("click", () => {
+  if (el("settings").hidden) toggleSettings();
+  settingsReturnTarget = "ai-settings-link";
+  el("ai-settings-group").scrollIntoView({
+    block: "center",
+    behavior: "instant",
+  });
+  input("ai-enabled").focus({ preventScroll: true });
+});
 input("travel").addEventListener("input", applyTravel);
 input("ai-enabled").addEventListener("change", applyAI);
 button("retry-format").addEventListener("click", () =>
