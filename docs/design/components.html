@@ -9,21 +9,12 @@
       [data-view] { display: none; }
       body[data-demo="list"] [data-view="list"], body[data-demo="pick"] [data-view="pick"], body[data-demo="settings"] [data-view="settings"] { display: block; }
       body[data-demo="settings"] .footer { display: none; }
+      body[data-demo="settings"] .settings { display: flex; }
       .candidate .variant-region { visibility: hidden; }
       .candidate.expanded .variant-region { visibility: visible; }
     </style>
   </head>
   <body data-demo="list">
-    <header class="header">
-      <a class="brand" href="#" aria-label="Sche10le ホーム"
-        ><span class="brand-mark" aria-hidden="true">10</span
-        ><span
-          >sche<span class="brand-ten">10</span>le<span class="brand-period"
-            >.</span
-          ></span
-        ></a
-      ><button class="icon-button" id="gear" aria-label="設定">⚙</button>
-    </header>
     <main data-view="list">
       <div class="source-section">
         <div class="source-text">
@@ -139,18 +130,43 @@
           ><input type="checkbox" />利用できる場合はローカルAIで補完</label
         >
       </div>
+      <p class="settings-quote">
+        <span class="tiny-dot" aria-hidden="true"></span
+        ><span title="Lost time is never found again. — Benjamin Franklin"
+          >失った時間は二度と戻らない。</span
+        >
+      </p>
     </section>
     <footer class="footer">
-      <div class="idle-footer" data-view="list">
-        <span class="tiny-dot"></span> 失った時間は二度と戻らない。
-      </div>
-      <div data-view="pick">
+      <div id="open-area" data-view="pick">
         <button class="primary-button" id="calendar">
           Googleカレンダーで開く <span>↗</span>
+        </button>
+        <p class="footer-hint">情報の取得は途中でもOK。保存はカレンダーで。</p>
+      </div>
+      <div class="footer-tools">
+        <div class="brand" aria-label="Sche10le">
+          <img src="{{BRAND_ICON}}" width="24" height="24" alt="" /><span
+            >sche<span class="brand-ten">10</span>le<span class="brand-period"
+              >.</span
+            ></span
+          >
+        </div>
+        <button id="gear" class="settings-button" aria-label="設定">
+          <span aria-hidden="true">⚙</span> 設定
         </button>
       </div>
     </footer>
     <script>
+      const footer = document.querySelector(".footer");
+      new ResizeObserver(() => {
+        const height = footer.getBoundingClientRect().height;
+        if (height > 0)
+          document.documentElement.style.setProperty(
+            "--footer-height",
+            `${height}px`,
+          );
+      }).observe(footer);
       const card = document.querySelector(".candidate");
       const toggle = document.querySelector(".candidate-heading");
       function expand(on) {
@@ -196,10 +212,6 @@
         view("list");
         toggle.focus();
         expand(false);
-      };
-      document.querySelector(".brand").onclick = (e) => {
-        e.preventDefault();
-        view("list");
       };
       document.getElementById("gear").onclick = () => view("settings");
       document.getElementById("close-settings").onclick = () => view("list");

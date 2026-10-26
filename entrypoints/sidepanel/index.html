@@ -6,26 +6,6 @@
     <title>Sche10le</title>
   </head>
   <body>
-    <header class="header">
-      <a class="brand" href="#" aria-label="Sche10le ホーム"
-        ><span class="brand-mark" aria-hidden="true">10</span
-        ><span
-          >sche<span class="brand-ten">10</span>le<span class="brand-period"
-            >.</span
-          ></span
-        ></a
-      >
-      <button
-        id="settings-toggle"
-        class="icon-button"
-        type="button"
-        aria-label="設定"
-        aria-expanded="false"
-        aria-controls="settings"
-      >
-        ⚙
-      </button>
-    </header>
     <section id="settings" class="settings" aria-label="設定" hidden>
       <div class="section-heading">
         <h2>設定</h2>
@@ -116,6 +96,10 @@
           </button>
         </div>
       </div>
+      <p class="settings-quote">
+        <span class="tiny-dot" aria-hidden="true"></span
+        ><span id="footer-quote"></span>
+      </p>
     </section>
     <main>
       <section
@@ -346,10 +330,26 @@
         </button>
         <p class="footer-hint">情報の取得は途中でもOK。保存はカレンダーで。</p>
       </div>
-      <p id="idle-footer" class="idle-footer">
-        <span class="tiny-dot" aria-hidden="true"></span
-        ><span id="footer-quote"></span>
-      </p>
+      <div class="footer-tools">
+        <div class="brand" aria-label="Sche10le">
+          <img src="/icons/32.png" width="24" height="24" alt="" />
+          <span
+            >sche<span class="brand-ten">10</span>le<span class="brand-period"
+              >.</span
+            ></span
+          >
+        </div>
+        <button
+          id="settings-toggle"
+          class="settings-button"
+          type="button"
+          aria-label="設定"
+          aria-expanded="false"
+          aria-controls="settings"
+        >
+          <span aria-hidden="true">⚙</span> 設定
+        </button>
+      </div>
     </footer>
     <script type="module" src="./main.js"></script>
   </body>

@@ -999,7 +999,7 @@
             </figure>
           </div>
           <p class="small-note">
-            実際の配布用PNGを埋め込み。<br />ヘッダーのマークは30×32px、角丸7px。<br />上下のリングを加えず、横線と数字で表す。
+            実際の配布用PNGを埋め込み。<br />生成原稿は30×32px、角丸7px。フッターではPNGを24pxで表示。<br />上下のリングを加えず、横線と数字で表す。
           </p>
         </div>
       </section>
@@ -1055,7 +1055,7 @@
           <div class="type-sample">
             <span class="label">GEORGIA / BRAND & DATE</span>
             <div class="serif">Sche10le · 10</div>
-            <p>ロゴ 25px・600 ／ 日付 28px。表示例は拡大。</p>
+            <p>ロゴ 20px・600 ／ 日付 28px。表示例は拡大。</p>
           </div>
           <div class="type-sample">
             <span class="label">HIRAGINO / YU GOTHIC / MEIRYO</span>
@@ -1124,6 +1124,8 @@
 
 
 :root {
+  --footer-height: 56px;
+  scroll-padding-bottom: calc(var(--footer-height) + 16px);
   color-scheme: light;
   background: var(--paper);
   color: var(--ink);
@@ -1192,23 +1194,16 @@ a {
 ::selection {
   background: #d5e4cc;
 }
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 24px 18px;
-  border-bottom: 1px solid var(--line);
-}
 .brand {
   display: flex;
-  gap: 10px;
+  gap: 7px;
   align-items: center;
   text-decoration: none;
   font:
-    600 25px/1 Georgia,
+    600 20px/1 Georgia,
     &quot;Times New Roman&quot;,
     serif;
-  letter-spacing: -1.4px;
+  letter-spacing: -1px;
 }
 .brand-mark {
   display: grid;
@@ -1241,22 +1236,29 @@ a {
 .brand-period {
   color: var(--ochre);
 }
-.icon-button {
+.settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 8px;
-  min-width: 34px;
-  height: 34px;
-  font-size: 20px;
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 11px;
   line-height: 1;
-  color: var(--muted);
+  color: var(--ink);
 }
-.icon-button:hover {
+.settings-button span {
+  font-size: 17px;
+}
+.settings-button:hover {
   background: var(--wash);
   color: var(--green);
 }
 main {
-  padding: 0 24px 125px;
+  padding: 0 24px calc(var(--footer-height) + 16px);
 }
 .eyebrow {
   font:
@@ -1655,7 +1657,7 @@ main {
   color: var(--ink);
   text-align: left;
   scroll-margin-top: 16px;
-  scroll-margin-bottom: 125px;
+  scroll-margin-bottom: 16px;
 }
 .field-row:hover {
   background: var(--wash);
@@ -1714,8 +1716,18 @@ main {
   right: 0;
   background: var(--paper);
   border-top: 1px solid var(--line);
-  padding: 16px 24px 14px;
+  padding: 10px 24px;
   z-index: 5;
+}
+.footer-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+}
+#open-area {
+  margin-bottom: 12px;
 }
 .primary-button {
   background: var(--green);
@@ -1746,17 +1758,25 @@ main {
   margin-top: 8px;
   color: var(--muted);
 }
-.idle-footer {
+.settings-quote {
   font-size: 10px;
   display: flex;
   gap: 7px;
   align-items: center;
   justify-content: center;
+  text-align: center;
   color: var(--muted);
+  margin: auto 8px 0;
+  padding-top: 24px;
+}
+.settings-quote .tiny-dot {
+  flex: none;
 }
 .settings {
+  display: flex;
+  flex-direction: column;
   padding: 22px 16px 32px;
-  min-height: calc(100dvh - 77px);
+  min-height: 100dvh;
   background: #eef1e8;
 }
 .settings-open main,
@@ -1775,6 +1795,7 @@ main {
   font-size: 11px;
 }
 .setting-group {
+  flex-shrink: 0;
   background: var(--paper);
   border: 1px solid #d2dbca;
   border-radius: 12px;
@@ -1873,11 +1894,9 @@ main {
   }
 }
 @media (max-width: 320px) {
-  .header {
-    padding: 18px;
-  }
   main {
-    padding: 0 16px 125px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .footer {
     padding-left: 16px;
@@ -1997,21 +2016,12 @@ main {
       [data-view] { display: none; }
       body[data-demo=&quot;list&quot;] [data-view=&quot;list&quot;], body[data-demo=&quot;pick&quot;] [data-view=&quot;pick&quot;], body[data-demo=&quot;settings&quot;] [data-view=&quot;settings&quot;] { display: block; }
       body[data-demo=&quot;settings&quot;] .footer { display: none; }
+      body[data-demo=&quot;settings&quot;] .settings { display: flex; }
       .candidate .variant-region { visibility: hidden; }
       .candidate.expanded .variant-region { visibility: visible; }
     &lt;/style&gt;
   &lt;/head&gt;
   &lt;body data-demo=&quot;list&quot;&gt;
-    &lt;header class=&quot;header&quot;&gt;
-      &lt;a class=&quot;brand&quot; href=&quot;#&quot; aria-label=&quot;Sche10le ホーム&quot;
-        &gt;&lt;span class=&quot;brand-mark&quot; aria-hidden=&quot;true&quot;&gt;10&lt;/span
-        &gt;&lt;span
-          &gt;sche&lt;span class=&quot;brand-ten&quot;&gt;10&lt;/span&gt;le&lt;span class=&quot;brand-period&quot;
-            &gt;.&lt;/span
-          &gt;&lt;/span
-        &gt;&lt;/a
-      &gt;&lt;button class=&quot;icon-button&quot; id=&quot;gear&quot; aria-label=&quot;設定&quot;&gt;⚙&lt;/button&gt;
-    &lt;/header&gt;
     &lt;main data-view=&quot;list&quot;&gt;
       &lt;div class=&quot;source-section&quot;&gt;
         &lt;div class=&quot;source-text&quot;&gt;
@@ -2127,18 +2137,43 @@ main {
           &gt;&lt;input type=&quot;checkbox&quot; /&gt;利用できる場合はローカルAIで補完&lt;/label
         &gt;
       &lt;/div&gt;
+      &lt;p class=&quot;settings-quote&quot;&gt;
+        &lt;span class=&quot;tiny-dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span
+        &gt;&lt;span title=&quot;Lost time is never found again. — Benjamin Franklin&quot;
+          &gt;失った時間は二度と戻らない。&lt;/span
+        &gt;
+      &lt;/p&gt;
     &lt;/section&gt;
     &lt;footer class=&quot;footer&quot;&gt;
-      &lt;div class=&quot;idle-footer&quot; data-view=&quot;list&quot;&gt;
-        &lt;span class=&quot;tiny-dot&quot;&gt;&lt;/span&gt; 失った時間は二度と戻らない。
-      &lt;/div&gt;
-      &lt;div data-view=&quot;pick&quot;&gt;
+      &lt;div id=&quot;open-area&quot; data-view=&quot;pick&quot;&gt;
         &lt;button class=&quot;primary-button&quot; id=&quot;calendar&quot;&gt;
           Googleカレンダーで開く &lt;span&gt;↗&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;p class=&quot;footer-hint&quot;&gt;情報の取得は途中でもOK。保存はカレンダーで。&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;footer-tools&quot;&gt;
+        &lt;div class=&quot;brand&quot; aria-label=&quot;Sche10le&quot;&gt;
+          &lt;img src=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACjklEQVR4nOyXX0hTURzHv+fuj7XZiMAQCiqsh3AVi/7AFpiR4gpBCmVikkZEhCBUD71ERS+RTz0kkaCL/hGWERHGWNEfoQdb0Jxhw2k07I9EIOKytt3TvXdubvPedt26uz74efkdfufw+305v9+551wGKsNAZbRSE6VNlScIxSEwdDuo9DoZDIGQBwU6ts1z3T2RPknSHZZme1GYRrq5YRn+L+MsIfUfulzPk51zSqBQcp6VDKWPzYftJZIC+G1XKHkcA0j4AqQECDVXHNKwubHSKCpAaLh8oGE3xYep3S3S7RvXrIdeq0O2+Eb9iLLRFB8LLBEXIII/OIpcSE+eTkYBmQLkiupfwkUBC/cyksKxZx9qbHvhuHgy4TtV1wxbqQVajRZv/T5cutOBP5GwrHiyBRyxH8DR/bXCNyE0/Svhv3/+ClYXFeP0tcuYDE3hautZ7DJvRdWZY2BZNmNc2SXo7O2BtaUePycnuKMZC1y3uwpri1fhlbcffQMevA8M4WGfGytMy9FS0yArblY9QGdsuWWnYF97PYm5Z+/eCNbKlUQOuTw0YDIUCnbkazDhG/kSGxcuNciKkdMpCI5/E6yNq3mcsi07BDv247usGPMWwHe6ThPbuI4n3TNJZy/Rim1WwXY97ZETLvVJZm6qoFIL+YY7Xu2AyRjbdv4ktN3rxDKDEa0HGzE89hm/w2GY122Ak0ve/ugupKHlPqf7xbwE/AuGEO7aLkGBXg9v4CMi0UwX2KyA1CYkiGTzAmYpxeCnYdnrubpPJ42TI5F+5IMoMyAqgBLcguLQ296brilRAYNOVztnXkI5QqC6c8mOOcdQR7S1Congf0yqfTd6A8lOIrVatV+zfKP6g+QvAAAA//83NENBAAAABklEQVQDAPGqzmxNKhWpAAAAAElFTkSuQmCC&quot; width=&quot;24&quot; height=&quot;24&quot; alt=&quot;&quot; /&gt;&lt;span
+            &gt;sche&lt;span class=&quot;brand-ten&quot;&gt;10&lt;/span&gt;le&lt;span class=&quot;brand-period&quot;
+              &gt;.&lt;/span
+            &gt;&lt;/span
+          &gt;
+        &lt;/div&gt;
+        &lt;button id=&quot;gear&quot; class=&quot;settings-button&quot; aria-label=&quot;設定&quot;&gt;
+          &lt;span aria-hidden=&quot;true&quot;&gt;⚙&lt;/span&gt; 設定
         &lt;/button&gt;
       &lt;/div&gt;
     &lt;/footer&gt;
     &lt;script&gt;
+      const footer = document.querySelector(&quot;.footer&quot;);
+      new ResizeObserver(() =&gt; {
+        const height = footer.getBoundingClientRect().height;
+        if (height &gt; 0)
+          document.documentElement.style.setProperty(
+            &quot;--footer-height&quot;,
+            `${height}px`,
+          );
+      }).observe(footer);
       const card = document.querySelector(&quot;.candidate&quot;);
       const toggle = document.querySelector(&quot;.candidate-heading&quot;);
       function expand(on) {
@@ -2184,10 +2219,6 @@ main {
         view(&quot;list&quot;);
         toggle.focus();
         expand(false);
-      };
-      document.querySelector(&quot;.brand&quot;).onclick = (e) =&gt; {
-        e.preventDefault();
-        view(&quot;list&quot;);
       };
       document.getElementById(&quot;gear&quot;).onclick = () =&gt; view(&quot;settings&quot;);
       document.getElementById(&quot;close-settings&quot;).onclick = () =&gt; view(&quot;list&quot;);
@@ -2250,14 +2281,14 @@ main {
               <span class="key">03 / OPEN</span>
               <h3>主操作は一か所に</h3>
               <p>
-                「Googleカレンダーで開く」を下部に固定。途中でも進める。保存自体はカレンダー側で行う。
+                「Googleカレンダーで開く」を下部に固定。その下に小さなロゴと「⚙ 設定」を1行で置く。ロゴは表示のみ。途中でも進める。保存自体はカレンダー側で行う。
               </p>
             </article>
             <article>
               <span class="key">04 / SETTINGS</span>
               <h3>設定では面ごと切り替える</h3>
               <p>
-                一覧とフッターが退き、専用の淡い背景に。自動保存を統一し、エラーは赤い枠と理由で伝える。
+                一覧とフッターが退き、専用の淡い背景に。自動保存を統一し、エラーは赤い枠と理由で伝える。名言はこの画面の最下部だけに置く。
               </p>
             </article>
           </div>
@@ -2438,7 +2469,7 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
         </p>
         <div class="code-top">
           <span class="code-label"
-            >sche10le-design-system.md · 221行 · UTF-8</span
+            >sche10le-design-system.md · 225行 · UTF-8</span
           >
           <div class="code-actions">
             <button class="control" id="copy-markdown">コピー</button
@@ -2471,17 +2502,17 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
 
 | 要素                   | 現行値                                                        |
 | ---------------------- | ------------------------------------------------------------- |
-| ヘッダーのワードマーク | Georgia → Times New Roman → serif、600、25px / 1、字間 -1.4px |
-| マークとロゴの間隔     | 10px                                                          |
-| ヘッダーのマーク       | 30×32px、深緑、角丸7px                                        |
-| マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |
-| マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |
+| フッターのワードマーク | Georgia → Times New Roman → serif、600、20px / 1、字間 -1px |
+| マークとロゴの間隔     | 7px                                                          |
+| フッターのマーク       | 配布用32px PNGを24×24pxで表示                                        |
+| PNG生成用マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |
+| PNG生成用マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |
 
 マークは上部の短い横線とセリフ体の「10」で構成する。以前のリング付きカレンダー風アイコンは使用しない。縦横比を変形したり、数字を別書体に差し替えたりしない。
 
 配布用PNGは16・32・48・128px。マークの30:32の比率を維持し、高さをキャンバスの87.5%にして中央配置する。背景は透明。128px版はストアアイコンにも使用する。
 
-`npm run icons` はサイドパネルのマークCSSを直接使って描画する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。
+`npm run icons` はサイドパネルCSSに保持した30×32px・角丸7pxのマーク原稿から描画する。フッターは生成済みPNGを使用する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。
 
 ## 3. 色
 
@@ -2543,16 +2574,16 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
 | 場所               | 現行値                                |
 | ------------------ | ------------------------------------- |
 | サイドパネル最小幅 | 280px                                 |
-| ヘッダー余白       | 上24px・左右24px・下18px              |
-| 本文               | 左右24px、下125px（固定フッターの分） |
+| ヘッダー           | 設けない              |
+| 本文               | 左右24px、下はフッターの実高＋16px |
 | 候補の間隔         | 10px                                  |
 | 候補見出し         | 上下15px・左右13px                    |
 | 取得結果の行       | パディング12px、行間4px、角丸8px      |
 | 候補・設定項目     | 角丸12px                              |
 | 主操作             | 最小高さ56px、角丸10px、余白13×15px   |
 | 再スキャン         | 最小高さ36px、角丸7px                 |
-| 固定フッター       | 上16px・左右24px・下14px              |
-| 320px以下          | ヘッダー18px、本文・フッター左右16px  |
+| 固定フッター       | 上下10px・左右24px、下段は最低34px              |
+| 320px以下          | 本文・フッター左右16px  |
 
 影は境界を補う程度に使う。通常カードは細い罫線を主体とし、全要素を浮いたカードにしない。長い本文やURLは折り返す。日時・登録パターンの主要ラベルは狭い幅でも判別できるようにする。
 
@@ -2582,9 +2613,13 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
 
 設定を開くとメインの一覧とフッターを隠し、#eef1e8の専用面に切り替える。移動時間・タイトル書式・AI補完はすべて自動保存。個別の保存ボタンは設けない。有効な書式を即座にプレビューし、不正な書式は赤いエラー表示にする。保存失敗時には該当項目の「再試行」を表示する。
 
-### フッターのことば
+### フッターとブランド
 
-小さな緑の点＋日本語訳。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。
+左に24pxのアイコンと20pxのロゴ、右に「⚙ 設定」を1行で置く。ロゴにリンクや選択解除の動作は持たせない。予定選択中だけ、この行の12px上に主操作エリアを置く。本文下余白とルートのscroll-padding-bottomはResizeObserverで計測したフッター高＋16pxとし、取得結果行のscroll-margin-bottomは16px。設定表示中はフッターを隠すが、直前の高さを保持して復帰時のスクロールを安定させる。
+
+### 設定画面のことば
+
+設定画面の最下部にだけ小さな緑の点＋日本語訳を置く。通常の候補一覧・取得中には表示しない。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。
 
 ## 7. ページ上の取得オーバーレイ
 
@@ -2652,7 +2687,7 @@ UIと同じ紙色・深緑・Georgiaのワードマークを使用する。背�
 | 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |
 | 取得バー                           | lib/picker.js                                              |
 | 元の日時の強調                     | lib/source-highlight.js                                    |
-| フッターの言葉と出典               | lib/footer-quotes.js                                       |
+| 設定画面の言葉と出典               | lib/footer-quotes.js                                       |
 | 配布用アイコン                     | public/icons/{16,32,48,128}.png                            |
 | アイコン生成                       | scripts/generate-icons.js（npm run icons）                 |
 | プロモーション原稿                 | store/promotional/tiles.html                               |
@@ -2677,12 +2712,12 @@ HTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取�
       <footer class="document-footer">
         <span>Sche10le · デザインシステム / 実装 v0.1.1</span
         ><span
-          >参照コミット 9dcedc9 · 生成元 docs/design/design-system.md</span
+          >参照コミット 8d1e0d0 · 生成元 docs/design/design-system.md</span
         >
       </footer>
     </main>
     <script id="markdown-data" type="application/json">
-      "# Sche10le デザインシステム\n\n対象：拡張機能 0.1.1 / 記録日：2026-10-26\n\nこの資料は、現在のUI・アイコン・ストア素材に実装されているデザインを記録する。数値は現行実装の値であり、すべてを共通トークン化したものではない。「方針」は今後の追加・修正時に守る判断基準を示す。\n\n## 1. デザインの軸\n\nページの日程を見つけ、登録方法を選び、必要な文字をページから取得してGoogleカレンダーへ渡す。入力作業と往復を減らし、操作の連続性を優先する。\n\n- 静かな道具：アイボリーと深緑、細い罫線、余白で区切る。装飾や説明を常設しすぎない。\n- その場で理解できる：候補に触れると登録パターンが開く。対象の日時と取得先の項目を視覚的につなぐ。\n- 次の一手を明確にする：濃い緑の大きな面は主操作に使う。選択中は黄土系、取得済みは淡い緑やチェックで区別する。\n- 軽快さを守る：WXT・バニラJSを基本とし、描画やアニメーションのために実行時依存や外部フォントを追加しない。\n\n## 2. ブランドとアイコン\n\n表記は製品名「Sche10le」、ワードマークは「sche10le.」。数字の10だけをイタリックにし、末尾のピリオドを黄土色にする。\n\n| 要素                   | 現行値                                                        |\n| ---------------------- | ------------------------------------------------------------- |\n| ヘッダーのワードマーク | Georgia → Times New Roman → serif、600、25px / 1、字間 -1.4px |\n| マークとロゴの間隔     | 10px                                                          |\n| ヘッダーのマーク       | 30×32px、深緑、角丸7px                                        |\n| マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |\n| マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |\n\nマークは上部の短い横線とセリフ体の「10」で構成する。以前のリング付きカレンダー風アイコンは使用しない。縦横比を変形したり、数字を別書体に差し替えたりしない。\n\n配布用PNGは16・32・48・128px。マークの30:32の比率を維持し、高さをキャンバスの87.5%にして中央配置する。背景は透明。128px版はストアアイコンにも使用する。\n\n`npm run icons` はサイドパネルのマークCSSを直接使って描画する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。\n\n## 3. 色\n\n### 共通トークン（lib/theme.css）\n\n| トークン | 値      | 役割                               |\n| -------- | ------- | ---------------------------------- |\n| --paper  | #f8f8f1 | 基本背景。純白より柔らかい紙色     |\n| --ink    | #293d31 | 主文・見出し                       |\n| --green  | #2c6045 | 主操作・ブランド・成功のアクセント |\n| --muted  | #788171 | 補足・出典・メタ情報               |\n| --line   | #dfe4d6 | 罫線・カードの通常境界             |\n| --wash   | #eaf0e3 | ホバー・補助操作の淡い背景         |\n| --ochre  | #a67d3a | ロゴの点・フォーカスのアクセント   |\n\n### 状態色・専用色（各実装内の値）\n\n| 用途                       | 背景      | 文字・境界など               |\n| -------------------------- | --------- | ---------------------------- |\n| 候補カード                 | #ffffff8c | 境界 --line                  |\n| 展開中の候補               | 同上      | 境界 #9daf99、薄い影         |\n| 選択済みの候補             | #f1f5ed   | 境界 --green                 |\n| 取得先の選択中             | #fbf1dc   | 境界 #d9bd87、ラベル #785825 |\n| 取得中バッジ               | #f5e4bc   | 文字 #785825                 |\n| 設定画面                   | #eef1e8   | 設定項目の背景 --paper       |\n| 書式エラー                 | #fff0ed   | 文字 #972d28、境界 #c3635b   |\n| 一般エラー通知             | #f7ece3   | 文字 #984d37                 |\n| 主操作のホバー             | #1c4934   | 白文字                       |\n| 取得直後のフラッシュ       | #d6ead1   | 光の縁 #b9d9b4               |\n| プロモーション背景         | #214b37   | 紙色の文字                   |\n| プロモーションのアクセント | —         | #d2b477、補足 #d1dfcb        |\n\n選択状態と操作可能状態を同じ濃い緑の塗りで表さない。エラーは色だけでなく、説明・枠・再試行などの操作を併せる。\n\n## 4. タイポグラフィ\n\n外部フォントを読み込まない。日本語はHiragino Kaku Gothic ProN → Yu Gothic → Meiryo → sans-serif、ブランドと日付の数字はGeorgia、時刻などの英数字はAvenir Next → Avenir → sans-serifを基本とする。細部のフォールバックは各CSSを参照する。\n\n| 用途                     | 現行値                          |\n| ------------------------ | ------------------------------- |\n| UIの基本                 | 13px / 1.65                     |\n| セクション見出し         | 13px・600                       |\n| 選択日程の見出し         | 17px・500                       |\n| 設定画面の見出し         | 18px                            |\n| 日付バッジの日           | Georgia 28px / 0.95、字間 -1px  |\n| 時間帯                   | Avenir系 14px / 1.7、字間 0.4px |\n| 取得した内容             | 12px / 1.7                      |\n| 主操作ボタン             | 15px・600 / 1.5                 |\n| 再スキャン・登録パターン | 11px                            |\n| 出典・小ラベル           | 9〜10px                         |\n| タイトル書式入力         | monospace 12px / 1.6            |\n\n小さなメタ情報のサイズは現状値であり、新しい本文に9pxを推奨するものではない。--mutedと紙色の組み合わせは通常サイズの文字に対する4.5:1を満たさないため、重要な説明には--inkを優先する。コントラスト適合を色だけで一律に宣言しない。\n\n## 5. 余白・形・レスポンシブ\n\n厳密な8pxグリッドではない。4・6・8・10・12・16・18・20・24・32pxを主に使い、密度と役割に合わせる。\n\n| 場所               | 現行値                                |\n| ------------------ | ------------------------------------- |\n| サイドパネル最小幅 | 280px                                 |\n| ヘッダー余白       | 上24px・左右24px・下18px              |\n| 本文               | 左右24px、下125px（固定フッターの分） |\n| 候補の間隔         | 10px                                  |\n| 候補見出し         | 上下15px・左右13px                    |\n| 取得結果の行       | パディング12px、行間4px、角丸8px      |\n| 候補・設定項目     | 角丸12px                              |\n| 主操作             | 最小高さ56px、角丸10px、余白13×15px   |\n| 再スキャン         | 最小高さ36px、角丸7px                 |\n| 固定フッター       | 上16px・左右24px・下14px              |\n| 320px以下          | ヘッダー18px、本文・フッター左右16px  |\n\n影は境界を補う程度に使う。通常カードは細い罫線を主体とし、全要素を浮いたカードにしない。長い本文やURLは折り返す。日時・登録パターンの主要ラベルは狭い幅でも判別できるようにする。\n\n## 6. サイドパネルの部品と状態\n\n### 候補一覧\n\n日付バッジ → 日程名・時間帯 → 出典の順に読む。ホバーとキーボードフォーカスで登録パターンを展開し、時間どおり・移動込み・終日で確保を選べる。選択後は該当候補と取得内容に集中させる。「選び直す」で開いた候補と選択状態を解除する。\n\n再スキャンはアイコン＋文字＋淡い背景＋枠のボタン。候補カードと同じ面積・外観にはしない。登場順／日時順は見出し右の控えめなselectで、独立した大きな設定行にしない。並び順は保存する。\n\n### スキャンの状態\n\n未許可のページではボタンと対象ページの情報帯を隠し、紙色と淡い緑の操作案内だけを表示する。案内タイトルは置かず、説明文の「Sche10le のアイコン」と「パズルのアイコン」の直後にそれぞれ画像を添える。画像は隣接する文章と同じ意味なので装飾として扱い、名称と離れて改行しない。エラー色は使わない。未スキャン・実行中は候補欄を空にし、日程の見出し・件数・並び順も隠す。完了後は0件でも見出し・件数・並び順を表示する。アクセス可能なら「スキャン」、実行中は無効な「スキャン中…」、完了後は「再スキャン」。対象外は専用の説明、一時的な失敗はエラー説明と「再試行」にする。0件の案内はスキャン完了時だけ表示する。\n\n### 取得中・取得済み\n\nサイドパネルはタイトル・場所・詳細の取得結果を表示する。行全体がクリック対象で、再選択できる。現在の対象は黄土系の背景と「選択中」のラベルで示す。ホバー／フォーカス時に編集アイコンを出す。取得後は対象欄のフラッシュとチェックで完了を伝える。\n\nタイトルの初期値はページタイトル、場所は空欄、詳細はページURL。詳細の取得後も元ページURLを末尾に空行で残す。書式を適用したタイトルと元の取得文字列を分けて保持する。取得手順を進める操作はページ下部に集約する。\n\n### 主操作\n\n「Googleカレンダーで開く」をサイドパネル下部に固定する。文字は15px・600、最小高さ56px。取得途中でも進める。Googleカレンダー側で確認・保存するため、拡張内で保存完了を表示しない。\n\n### 設定\n\n設定を開くとメインの一覧とフッターを隠し、#eef1e8の専用面に切り替える。移動時間・タイトル書式・AI補完はすべて自動保存。個別の保存ボタンは設けない。有効な書式を即座にプレビューし、不正な書式は赤いエラー表示にする。保存失敗時には該当項目の「再試行」を表示する。\n\n### フッターのことば\n\n小さな緑の点＋日本語訳。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。\n\n## 7. ページ上の取得オーバーレイ\n\nページと独立したclosed Shadow DOMに描画する。ページ本文のCSSで形や操作が崩れないようにする。\n\n- 操作バー：幅640px、最大幅は画面幅−32px、下24px、余白12×16px、角丸14px。\n- 上段：「ページ上の文字をクリック」と対象項目、進捗。\n- 下段：タイトル／場所／詳細、戻る／スキップ／閉じる。カレンダーを開くボタンは置かない。\n- 選択中の項目：黄土系。取得済みの項目：淡い緑。操作可能な主ボタンの濃い緑と区別する。\n- タイトル選択中の「戻る」、取得完了後の「スキップ」は無効状態で残す。詳細を選択中のスキップは可能。\n- 取得完了後も操作バーを残し、前の項目へ戻れる。「閉じる」の名前は全段階で固定し、取得内容を保持してページの通常操作に戻る。\n- 560px以下は下段を2行にし、340px以下は余白・文字を縮める。手順の変化でボタン位置やバー全体の寸法が跳ねない。\n\nオーバーレイ専用色は基本背景#f9f8f2、文字#243e32、境界#b18a46。候補の元文字列は黄土系の縁と波紋で示し、それ以外のページを#19231f・48%で暗くする。ページのクリックを妨げない。\n\n## 8. 動きとフィードバック\n\n| 動作                     | 時間・回数                   |\n| ------------------------ | ---------------------------- |\n| ボタンの色・押下         | 140ms、押下時に下1px         |\n| 候補の境界・影           | 160ms                        |\n| 登録パターンの開閉・矢印 | 180ms                        |\n| 候補の出現               | 220ms、下4pxから現れる       |\n| 取得セクションの出現     | 200ms                        |\n| 元の日時への追従開始     | ホバー／フォーカス後 約180ms |\n| 元文字列の波紋           | 1.1秒×3回                    |\n| 取得バーの開始・再開     | 850ms、背景と光の縁          |\n| ページ上の選択枠の追従   | 70ms                         |\n| 取得先欄のフラッシュ     | 800ms                        |\n| 完了チェック             | 900ms                        |\n| スキャン中の小さな点     | 1秒周期、処理中のみ          |\n\n動きは、原因と結果・対象位置・完了状態を知らせるために使う。飾りの常時アニメーションは追加しない。prefers-reduced-motionでは移動・パルス・画面遷移の動きを抑え、文字や静的なチェックを残す。\n\n## 9. 操作とライティングの方針\n\n- 色だけに依存せず、「選択中」・エラー理由・チェック・disabled状態を併用する。\n- ボタン全体をクリック可能にする。キーボードで候補を展開し、行の再選択はEnter／Spaceでも行える。\n- フォーカス：サイドパネルは黄土色2px・offset 4px。取得バーは3px・offset 2px。\n- スキャンと再スキャンで語彙を統一する。「走査」と混在させない。\n- 「閉じる」は段階によって名前を変えない。「連携完了」「保存完了」といった、実際に確認できない完了表現は使わない。\n- 触れば分かる機能に説明文を重ねない。常設ヒーローコピーを拡張の狭いUIに置かない。\n- 設定を閉じたら元の操作へ戻る。不要な確認ダイアログで操作を止めない。\n- 日付の選択・文字の取得・カレンダーへの移動という主導線を優先し、将来のサービス追加でも主ボタンを横並びに増やさない。\n\n## 10. プロモーション素材\n\nUIと同じ紙色・深緑・Georgiaのワードマークを使用する。背景は少し深い#214b37。黄土系#d2b477の矢印とピリオドで、読み取りからカレンダーへ渡す方向を示す。\n\n| 素材     | 仕様                                      | 主な組版                       |\n| -------- | ----------------------------------------- | ------------------------------ |\n| 小タイル | 440×280px、24ビットRGB PNG、アルファなし  | ロゴ36px、見出し20px、補足10px |\n| マーキー | 1400×560px、24ビットRGB PNG、アルファなし | ロゴ64px、見出し43px、補足16px |\n\nコピーは「ページの日程を、カレンダーへ。」、補足は「Googleカレンダー対応」。見出しの行間は小1.75／大1.65。素材は単純拡大ではなく、キャンバスごとに余白・配置・文字サイズを調整する。切れた文字や過剰な小文字を避け、縮小時もブランドと用途が伝わるようにする。\n\nページとカレンダーの図は機能を説明するイラストであり、実際の製品画面のスクリーンショットではない。ストアのスクリーンショット欄には実画面を使用する。プロモーション画像はZIPに同梱しない。\n\n## 11. 資料と実装の対応\n\n| 内容                               | ソース・素材                                               |\n| ---------------------------------- | ---------------------------------------------------------- |\n| 共通色                             | lib/theme.css                                              |\n| パネルの部品・レスポンシブ         | entrypoints/sidepanel/style.css / index.html               |\n| 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |\n| 取得バー                           | lib/picker.js                                              |\n| 元の日時の強調                     | lib/source-highlight.js                                    |\n| フッターの言葉と出典               | lib/footer-quotes.js                                       |\n| 配布用アイコン                     | public/icons/{16,32,48,128}.png                            |\n| アイコン生成                       | scripts/generate-icons.js（npm run icons）                 |\n| プロモーション原稿                 | store/promotional/tiles.html                               |\n| プロモーションPNG                  | store/promotional/small-440x280.png / marquee-1400x560.png |\n| プロモーション生成                 | scripts/generate-store-tiles.js                            |\n| 本資料のMarkdown原稿               | docs/design/design-system.md                               |\n| 本資料のHTML生成                   | scripts/build-design-system.js                             |\n\n## 12. 更新時の確認\n\n1. 実装CSS・アイコン・プロモーション・本資料で色と字体の意図が揃っているか確認する。\n2. 280〜320pxの狭い幅、キーボードフォーカス、長いタイトル・URLを確認する。\n3. 選択中・完了・操作可能・無効・エラーが判別できるか確認する。\n4. 動きを減らす設定で、意味や完了の通知が失われないか確認する。\n5. PNGの寸法とアルファの有無を検証する。アイコンは透明可、タイルはRGB・アルファなし。\n6. HTMLを再生成し、コードブロック・ダウンロードしたMarkdown・原稿の内容が一致するか確認する。\n\nHTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取り、設定の永続保存、Googleカレンダーへの移動は行わない。資料専用の見出しやナビゲーションの大きさは、拡張本体の新しいトークンではない。\n"
+      "# Sche10le デザインシステム\n\n対象：拡張機能 0.1.1 / 記録日：2026-10-26\n\nこの資料は、現在のUI・アイコン・ストア素材に実装されているデザインを記録する。数値は現行実装の値であり、すべてを共通トークン化したものではない。「方針」は今後の追加・修正時に守る判断基準を示す。\n\n## 1. デザインの軸\n\nページの日程を見つけ、登録方法を選び、必要な文字をページから取得してGoogleカレンダーへ渡す。入力作業と往復を減らし、操作の連続性を優先する。\n\n- 静かな道具：アイボリーと深緑、細い罫線、余白で区切る。装飾や説明を常設しすぎない。\n- その場で理解できる：候補に触れると登録パターンが開く。対象の日時と取得先の項目を視覚的につなぐ。\n- 次の一手を明確にする：濃い緑の大きな面は主操作に使う。選択中は黄土系、取得済みは淡い緑やチェックで区別する。\n- 軽快さを守る：WXT・バニラJSを基本とし、描画やアニメーションのために実行時依存や外部フォントを追加しない。\n\n## 2. ブランドとアイコン\n\n表記は製品名「Sche10le」、ワードマークは「sche10le.」。数字の10だけをイタリックにし、末尾のピリオドを黄土色にする。\n\n| 要素                   | 現行値                                                        |\n| ---------------------- | ------------------------------------------------------------- |\n| フッターのワードマーク | Georgia → Times New Roman → serif、600、20px / 1、字間 -1px |\n| マークとロゴの間隔     | 7px                                                          |\n| フッターのマーク       | 配布用32px PNGを24×24pxで表示                                        |\n| PNG生成用マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |\n| PNG生成用マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |\n\nマークは上部の短い横線とセリフ体の「10」で構成する。以前のリング付きカレンダー風アイコンは使用しない。縦横比を変形したり、数字を別書体に差し替えたりしない。\n\n配布用PNGは16・32・48・128px。マークの30:32の比率を維持し、高さをキャンバスの87.5%にして中央配置する。背景は透明。128px版はストアアイコンにも使用する。\n\n`npm run icons` はサイドパネルCSSに保持した30×32px・角丸7pxのマーク原稿から描画する。フッターは生成済みPNGを使用する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。\n\n## 3. 色\n\n### 共通トークン（lib/theme.css）\n\n| トークン | 値      | 役割                               |\n| -------- | ------- | ---------------------------------- |\n| --paper  | #f8f8f1 | 基本背景。純白より柔らかい紙色     |\n| --ink    | #293d31 | 主文・見出し                       |\n| --green  | #2c6045 | 主操作・ブランド・成功のアクセント |\n| --muted  | #788171 | 補足・出典・メタ情報               |\n| --line   | #dfe4d6 | 罫線・カードの通常境界             |\n| --wash   | #eaf0e3 | ホバー・補助操作の淡い背景         |\n| --ochre  | #a67d3a | ロゴの点・フォーカスのアクセント   |\n\n### 状態色・専用色（各実装内の値）\n\n| 用途                       | 背景      | 文字・境界など               |\n| -------------------------- | --------- | ---------------------------- |\n| 候補カード                 | #ffffff8c | 境界 --line                  |\n| 展開中の候補               | 同上      | 境界 #9daf99、薄い影         |\n| 選択済みの候補             | #f1f5ed   | 境界 --green                 |\n| 取得先の選択中             | #fbf1dc   | 境界 #d9bd87、ラベル #785825 |\n| 取得中バッジ               | #f5e4bc   | 文字 #785825                 |\n| 設定画面                   | #eef1e8   | 設定項目の背景 --paper       |\n| 書式エラー                 | #fff0ed   | 文字 #972d28、境界 #c3635b   |\n| 一般エラー通知             | #f7ece3   | 文字 #984d37                 |\n| 主操作のホバー             | #1c4934   | 白文字                       |\n| 取得直後のフラッシュ       | #d6ead1   | 光の縁 #b9d9b4               |\n| プロモーション背景         | #214b37   | 紙色の文字                   |\n| プロモーションのアクセント | —         | #d2b477、補足 #d1dfcb        |\n\n選択状態と操作可能状態を同じ濃い緑の塗りで表さない。エラーは色だけでなく、説明・枠・再試行などの操作を併せる。\n\n## 4. タイポグラフィ\n\n外部フォントを読み込まない。日本語はHiragino Kaku Gothic ProN → Yu Gothic → Meiryo → sans-serif、ブランドと日付の数字はGeorgia、時刻などの英数字はAvenir Next → Avenir → sans-serifを基本とする。細部のフォールバックは各CSSを参照する。\n\n| 用途                     | 現行値                          |\n| ------------------------ | ------------------------------- |\n| UIの基本                 | 13px / 1.65                     |\n| セクション見出し         | 13px・600                       |\n| 選択日程の見出し         | 17px・500                       |\n| 設定画面の見出し         | 18px                            |\n| 日付バッジの日           | Georgia 28px / 0.95、字間 -1px  |\n| 時間帯                   | Avenir系 14px / 1.7、字間 0.4px |\n| 取得した内容             | 12px / 1.7                      |\n| 主操作ボタン             | 15px・600 / 1.5                 |\n| 再スキャン・登録パターン | 11px                            |\n| 出典・小ラベル           | 9〜10px                         |\n| タイトル書式入力         | monospace 12px / 1.6            |\n\n小さなメタ情報のサイズは現状値であり、新しい本文に9pxを推奨するものではない。--mutedと紙色の組み合わせは通常サイズの文字に対する4.5:1を満たさないため、重要な説明には--inkを優先する。コントラスト適合を色だけで一律に宣言しない。\n\n## 5. 余白・形・レスポンシブ\n\n厳密な8pxグリッドではない。4・6・8・10・12・16・18・20・24・32pxを主に使い、密度と役割に合わせる。\n\n| 場所               | 現行値                                |\n| ------------------ | ------------------------------------- |\n| サイドパネル最小幅 | 280px                                 |\n| ヘッダー           | 設けない              |\n| 本文               | 左右24px、下はフッターの実高＋16px |\n| 候補の間隔         | 10px                                  |\n| 候補見出し         | 上下15px・左右13px                    |\n| 取得結果の行       | パディング12px、行間4px、角丸8px      |\n| 候補・設定項目     | 角丸12px                              |\n| 主操作             | 最小高さ56px、角丸10px、余白13×15px   |\n| 再スキャン         | 最小高さ36px、角丸7px                 |\n| 固定フッター       | 上下10px・左右24px、下段は最低34px              |\n| 320px以下          | 本文・フッター左右16px  |\n\n影は境界を補う程度に使う。通常カードは細い罫線を主体とし、全要素を浮いたカードにしない。長い本文やURLは折り返す。日時・登録パターンの主要ラベルは狭い幅でも判別できるようにする。\n\n## 6. サイドパネルの部品と状態\n\n### 候補一覧\n\n日付バッジ → 日程名・時間帯 → 出典の順に読む。ホバーとキーボードフォーカスで登録パターンを展開し、時間どおり・移動込み・終日で確保を選べる。選択後は該当候補と取得内容に集中させる。「選び直す」で開いた候補と選択状態を解除する。\n\n再スキャンはアイコン＋文字＋淡い背景＋枠のボタン。候補カードと同じ面積・外観にはしない。登場順／日時順は見出し右の控えめなselectで、独立した大きな設定行にしない。並び順は保存する。\n\n### スキャンの状態\n\n未許可のページではボタンと対象ページの情報帯を隠し、紙色と淡い緑の操作案内だけを表示する。案内タイトルは置かず、説明文の「Sche10le のアイコン」と「パズルのアイコン」の直後にそれぞれ画像を添える。画像は隣接する文章と同じ意味なので装飾として扱い、名称と離れて改行しない。エラー色は使わない。未スキャン・実行中は候補欄を空にし、日程の見出し・件数・並び順も隠す。完了後は0件でも見出し・件数・並び順を表示する。アクセス可能なら「スキャン」、実行中は無効な「スキャン中…」、完了後は「再スキャン」。対象外は専用の説明、一時的な失敗はエラー説明と「再試行」にする。0件の案内はスキャン完了時だけ表示する。\n\n### 取得中・取得済み\n\nサイドパネルはタイトル・場所・詳細の取得結果を表示する。行全体がクリック対象で、再選択できる。現在の対象は黄土系の背景と「選択中」のラベルで示す。ホバー／フォーカス時に編集アイコンを出す。取得後は対象欄のフラッシュとチェックで完了を伝える。\n\nタイトルの初期値はページタイトル、場所は空欄、詳細はページURL。詳細の取得後も元ページURLを末尾に空行で残す。書式を適用したタイトルと元の取得文字列を分けて保持する。取得手順を進める操作はページ下部に集約する。\n\n### 主操作\n\n「Googleカレンダーで開く」をサイドパネル下部に固定する。文字は15px・600、最小高さ56px。取得途中でも進める。Googleカレンダー側で確認・保存するため、拡張内で保存完了を表示しない。\n\n### 設定\n\n設定を開くとメインの一覧とフッターを隠し、#eef1e8の専用面に切り替える。移動時間・タイトル書式・AI補完はすべて自動保存。個別の保存ボタンは設けない。有効な書式を即座にプレビューし、不正な書式は赤いエラー表示にする。保存失敗時には該当項目の「再試行」を表示する。\n\n### フッターとブランド\n\n左に24pxのアイコンと20pxのロゴ、右に「⚙ 設定」を1行で置く。ロゴにリンクや選択解除の動作は持たせない。予定選択中だけ、この行の12px上に主操作エリアを置く。本文下余白とルートのscroll-padding-bottomはResizeObserverで計測したフッター高＋16pxとし、取得結果行のscroll-margin-bottomは16px。設定表示中はフッターを隠すが、直前の高さを保持して復帰時のスクロールを安定させる。\n\n### 設定画面のことば\n\n設定画面の最下部にだけ小さな緑の点＋日本語訳を置く。通常の候補一覧・取得中には表示しない。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。\n\n## 7. ページ上の取得オーバーレイ\n\nページと独立したclosed Shadow DOMに描画する。ページ本文のCSSで形や操作が崩れないようにする。\n\n- 操作バー：幅640px、最大幅は画面幅−32px、下24px、余白12×16px、角丸14px。\n- 上段：「ページ上の文字をクリック」と対象項目、進捗。\n- 下段：タイトル／場所／詳細、戻る／スキップ／閉じる。カレンダーを開くボタンは置かない。\n- 選択中の項目：黄土系。取得済みの項目：淡い緑。操作可能な主ボタンの濃い緑と区別する。\n- タイトル選択中の「戻る」、取得完了後の「スキップ」は無効状態で残す。詳細を選択中のスキップは可能。\n- 取得完了後も操作バーを残し、前の項目へ戻れる。「閉じる」の名前は全段階で固定し、取得内容を保持してページの通常操作に戻る。\n- 560px以下は下段を2行にし、340px以下は余白・文字を縮める。手順の変化でボタン位置やバー全体の寸法が跳ねない。\n\nオーバーレイ専用色は基本背景#f9f8f2、文字#243e32、境界#b18a46。候補の元文字列は黄土系の縁と波紋で示し、それ以外のページを#19231f・48%で暗くする。ページのクリックを妨げない。\n\n## 8. 動きとフィードバック\n\n| 動作                     | 時間・回数                   |\n| ------------------------ | ---------------------------- |\n| ボタンの色・押下         | 140ms、押下時に下1px         |\n| 候補の境界・影           | 160ms                        |\n| 登録パターンの開閉・矢印 | 180ms                        |\n| 候補の出現               | 220ms、下4pxから現れる       |\n| 取得セクションの出現     | 200ms                        |\n| 元の日時への追従開始     | ホバー／フォーカス後 約180ms |\n| 元文字列の波紋           | 1.1秒×3回                    |\n| 取得バーの開始・再開     | 850ms、背景と光の縁          |\n| ページ上の選択枠の追従   | 70ms                         |\n| 取得先欄のフラッシュ     | 800ms                        |\n| 完了チェック             | 900ms                        |\n| スキャン中の小さな点     | 1秒周期、処理中のみ          |\n\n動きは、原因と結果・対象位置・完了状態を知らせるために使う。飾りの常時アニメーションは追加しない。prefers-reduced-motionでは移動・パルス・画面遷移の動きを抑え、文字や静的なチェックを残す。\n\n## 9. 操作とライティングの方針\n\n- 色だけに依存せず、「選択中」・エラー理由・チェック・disabled状態を併用する。\n- ボタン全体をクリック可能にする。キーボードで候補を展開し、行の再選択はEnter／Spaceでも行える。\n- フォーカス：サイドパネルは黄土色2px・offset 4px。取得バーは3px・offset 2px。\n- スキャンと再スキャンで語彙を統一する。「走査」と混在させない。\n- 「閉じる」は段階によって名前を変えない。「連携完了」「保存完了」といった、実際に確認できない完了表現は使わない。\n- 触れば分かる機能に説明文を重ねない。常設ヒーローコピーを拡張の狭いUIに置かない。\n- 設定を閉じたら元の操作へ戻る。不要な確認ダイアログで操作を止めない。\n- 日付の選択・文字の取得・カレンダーへの移動という主導線を優先し、将来のサービス追加でも主ボタンを横並びに増やさない。\n\n## 10. プロモーション素材\n\nUIと同じ紙色・深緑・Georgiaのワードマークを使用する。背景は少し深い#214b37。黄土系#d2b477の矢印とピリオドで、読み取りからカレンダーへ渡す方向を示す。\n\n| 素材     | 仕様                                      | 主な組版                       |\n| -------- | ----------------------------------------- | ------------------------------ |\n| 小タイル | 440×280px、24ビットRGB PNG、アルファなし  | ロゴ36px、見出し20px、補足10px |\n| マーキー | 1400×560px、24ビットRGB PNG、アルファなし | ロゴ64px、見出し43px、補足16px |\n\nコピーは「ページの日程を、カレンダーへ。」、補足は「Googleカレンダー対応」。見出しの行間は小1.75／大1.65。素材は単純拡大ではなく、キャンバスごとに余白・配置・文字サイズを調整する。切れた文字や過剰な小文字を避け、縮小時もブランドと用途が伝わるようにする。\n\nページとカレンダーの図は機能を説明するイラストであり、実際の製品画面のスクリーンショットではない。ストアのスクリーンショット欄には実画面を使用する。プロモーション画像はZIPに同梱しない。\n\n## 11. 資料と実装の対応\n\n| 内容                               | ソース・素材                                               |\n| ---------------------------------- | ---------------------------------------------------------- |\n| 共通色                             | lib/theme.css                                              |\n| パネルの部品・レスポンシブ         | entrypoints/sidepanel/style.css / index.html               |\n| 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |\n| 取得バー                           | lib/picker.js                                              |\n| 元の日時の強調                     | lib/source-highlight.js                                    |\n| 設定画面の言葉と出典               | lib/footer-quotes.js                                       |\n| 配布用アイコン                     | public/icons/{16,32,48,128}.png                            |\n| アイコン生成                       | scripts/generate-icons.js（npm run icons）                 |\n| プロモーション原稿                 | store/promotional/tiles.html                               |\n| プロモーションPNG                  | store/promotional/small-440x280.png / marquee-1400x560.png |\n| プロモーション生成                 | scripts/generate-store-tiles.js                            |\n| 本資料のMarkdown原稿               | docs/design/design-system.md                               |\n| 本資料のHTML生成                   | scripts/build-design-system.js                             |\n\n## 12. 更新時の確認\n\n1. 実装CSS・アイコン・プロモーション・本資料で色と字体の意図が揃っているか確認する。\n2. 280〜320pxの狭い幅、キーボードフォーカス、長いタイトル・URLを確認する。\n3. 選択中・完了・操作可能・無効・エラーが判別できるか確認する。\n4. 動きを減らす設定で、意味や完了の通知が失われないか確認する。\n5. PNGの寸法とアルファの有無を検証する。アイコンは透明可、タイルはRGB・アルファなし。\n6. HTMLを再生成し、コードブロック・ダウンロードしたMarkdown・原稿の内容が一致するか確認する。\n\nHTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取り、設定の永続保存、Googleカレンダーへの移動は行わない。資料専用の見出しやナビゲーションの大きさは、拡張本体の新しいトークンではない。\n"
     </script>
     <script>
       const markdown = JSON.parse(

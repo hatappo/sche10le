@@ -217,7 +217,6 @@ function resetSelection() {
   document.body.classList.remove("is-selected");
   el("selection").hidden = true;
   el("open-area").hidden = true;
-  el("idle-footer").hidden = false;
 }
 
 function pageChanged() {
@@ -579,7 +578,6 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  el("idle-footer").hidden = true;
   el("selected-date").textContent = dateRangeLabel(
     variant.date,
     variant.endDate,
@@ -781,13 +779,6 @@ button("deselect").addEventListener("click", () => {
   renderCandidates(true);
   el("candidates-title").focus();
 });
-document.querySelector(".brand")?.addEventListener("click", (event) => {
-  event.preventDefault();
-  if (!el("settings").hidden) toggleSettings();
-  resetSelection();
-  renderCandidates();
-  window.scrollTo({ top: 0 });
-});
 button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
@@ -976,6 +967,17 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
     pageChanged();
 });
 window.addEventListener("pagehide", stopConnection);
+
+// Reserve the actual fixed footer height, including wrapped text and zoom.
+const footerResize = new ResizeObserver(() => {
+  const height = el("footer").getBoundingClientRect().height;
+  if (height > 0)
+    document.documentElement.style.setProperty(
+      "--footer-height",
+      `${height}px`,
+    );
+});
+footerResize.observe(el("footer"));
 
 async function initialize() {
   const quote = pickFooterQuote();

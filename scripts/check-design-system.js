@@ -47,6 +47,13 @@ try {
     path: fileURLToPath(new URL("desktop.png", output)),
   });
   const frame = page.frameLocator("#panel-demo");
+  assert.ok(
+    await frame
+      .locator(".brand img")
+      .evaluate((img) => img.complete && img.naturalWidth > 0),
+  );
+  await expect(frame.locator("header, a.brand")).toHaveCount(0);
+  await expect(frame.locator(".footer .settings-button")).toBeVisible();
   await page.locator("#panel-demo").scrollIntoViewIfNeeded();
   await frame.locator(".candidate-heading").focus();
   await expect(frame.locator(".candidate")).toHaveClass(/expanded/);
@@ -66,12 +73,10 @@ try {
   await page.getByRole("button", { name: "設定", exact: true }).click();
   await expect(frame.locator(".format-preview")).not.toHaveClass(/error/);
   await page.getByRole("button", { name: "取得中", exact: true }).click();
-  await page
-    .locator("#components")
-    .screenshot({
-      animations: "disabled",
-      path: fileURLToPath(new URL("components.png", output)),
-    });
+  await page.locator("#components").screenshot({
+    animations: "disabled",
+    path: fileURLToPath(new URL("components.png", output)),
+  });
   await page.getByRole("button", { name: "取得完了を再生" }).click();
   await expect(page.locator(".motion-check")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -122,12 +127,10 @@ try {
       animations: "disabled",
       path: fileURLToPath(new URL(`mobile-${width}.png`, output)),
     });
-    await page
-      .locator("#components")
-      .screenshot({
-        animations: "disabled",
-        path: fileURLToPath(new URL(`components-${width}.png`, output)),
-      });
+    await page.locator("#components").screenshot({
+      animations: "disabled",
+      path: fileURLToPath(new URL(`components-${width}.png`, output)),
+    });
   }
   assert.deepEqual(errors, []);
   assert.deepEqual(remoteRequests, []);

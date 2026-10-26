@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { FOOTER_QUOTES, pickFooterQuote } from "../lib/footer-quotes.js";
 
-test("全てのフッター文言が抽選でき、READMEにも一覧されている", async () => {
+test("全ての設定画面の名言が抽選でき、READMEにも一覧されている", async () => {
   const readme = await readFile(
     new URL("../README.md", import.meta.url),
     "utf8",

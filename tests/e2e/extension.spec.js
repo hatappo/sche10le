@@ -530,7 +530,7 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await source.screenshot({ path: "test-results/page-source-highlight.png" });
   // The page's original text and inline markup remain intact.
   await expect(target.locator("strong")).toHaveText("１４：００〜１６：００");
-  await panel.locator(".header").hover();
+  await panel.locator(".footer-tools").hover();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
   await source.emulateMedia({ reducedMotion: "reduce" });
   await source.evaluate(() => window.scrollTo(0, 0));
@@ -549,7 +549,7 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
   // Reset no longer pins the first card via focus. Leave it before targeting
   // another card so its collapsing region cannot move that target mid-hover.
-  await panel.locator(".header").hover();
+  await panel.locator(".footer-tools").hover();
   await panel
     .locator(".candidate")
     .last()
@@ -1109,7 +1109,7 @@ test("並び順の保存失敗は再試行でき、連続変更でも最後の�
   await source.close();
 });
 
-test("フッターのことばを起動時に選び、再スキャンや選び直しでは変えない", async () => {
+test("名言は設定画面だけに表示し、再スキャンや選び直しでは変えない", async () => {
   for (const [random, quote] of [
     [0, FOOTER_QUOTES[0]],
     [0.999, FOOTER_QUOTES.at(-1)],
@@ -1126,11 +1126,13 @@ test("フッターのことばを起動時に選び、再スキャンや選び�
     await expect(panel.locator(".candidate")).toHaveCount(3);
     await expect(footer).toHaveText(quote.text);
     await select(panel);
-    await expect(panel.locator("#idle-footer")).toBeHidden();
+    await expect(footer).toBeHidden();
     await expect(
       panel.getByRole("button", { name: "Googleカレンダーで開く" }),
     ).toBeVisible();
     await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+    await expect(footer).toBeHidden();
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
     await expect(footer).toBeVisible();
     await expect(footer).toHaveText(quote.text);
     await panel.setViewportSize({ width: 280, height: 700 });
@@ -1142,6 +1144,7 @@ test("フッターのことばを起動時に選び、再スキャンや選び�
     await panel.screenshot({
       path: `test-results/footer-quote-${random}.png`,
       animations: "disabled",
+      fullPage: true,
     });
     await panel.close();
     await source.close();
@@ -1452,6 +1455,82 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
   } finally {
     await panel.close();
     await other?.close();
+    await source.close();
+  }
+});
+
+test("ブランドと設定を下部にまとめ、主操作と本文を隠さず選択を保つ", async () => {
+  const { source, panel } = await open();
+  try {
+    await expect(panel.locator("header")).toHaveCount(0);
+    await expect(panel.locator("a.brand, button.brand")).toHaveCount(0);
+    await expect(panel.locator("#footer .brand")).toBeVisible();
+    await expect(panel.locator("#footer #settings-toggle")).toHaveText(
+      "⚙ 設定",
+    );
+    await expect(panel.locator("#footer-quote")).toBeHidden();
+    await panel.screenshot({ path: "test-results/footer-layout-list.png" });
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await panel.locator(".brand").click();
+    await expect(panel.locator("#selection")).toBeVisible();
+    await expect(panel.locator("#picked-title")).toHaveText(title);
+    for (const [width, height] of [
+      [390, 900],
+      [280, 500],
+      [390, 400],
+    ]) {
+      await panel.setViewportSize({ width, height });
+      await expect
+        .poll(async () => {
+          return panel.evaluate(() => {
+            const footer = document
+              .getElementById("footer")
+              .getBoundingClientRect();
+            const action = document
+              .getElementById("open-calendar")
+              .getBoundingClientRect();
+            const settings = document
+              .getElementById("settings-toggle")
+              .getBoundingClientRect();
+            const main = document.querySelector("main");
+            return (
+              footer.bottom <= innerHeight &&
+              action.bottom <= settings.top &&
+              parseFloat(getComputedStyle(main).paddingBottom) >=
+                footer.height &&
+              document.documentElement.scrollWidth <= innerWidth
+            );
+          });
+        })
+        .toBe(true);
+      await panel.locator("#field-details").focus();
+      await expect
+        .poll(async () =>
+          panel.evaluate(
+            () =>
+              document.getElementById("field-details").getBoundingClientRect()
+                .bottom <=
+              document.getElementById("footer").getBoundingClientRect().top,
+          ),
+        )
+        .toBe(true);
+      await panel.screenshot({
+        path: `test-results/footer-layout-pick-${width}-${height}.png`,
+        animations: "disabled",
+      });
+      await panel.getByRole("button", { name: "設定", exact: true }).click();
+      await expect(panel.locator("#footer")).toBeHidden();
+      await expect(panel.locator("#footer-quote")).toBeVisible();
+      await expect(panel.locator("#travel")).toBeFocused();
+      await panel.keyboard.press("Escape");
+      await expect(panel.locator("#settings-toggle")).toBeFocused();
+      await expect(panel.locator("#selection")).toBeVisible();
+      await expect(panel.locator("#picked-title")).toHaveText(title);
+    }
+  } finally {
+    await panel.close();
     await source.close();
   }
 });
