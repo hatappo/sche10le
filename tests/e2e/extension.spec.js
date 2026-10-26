@@ -472,7 +472,7 @@ test("狭い幅・キーボード操作・再スキャン時のリスナー重�
   await expect(panel.locator(".candidate")).toHaveCount(3);
   const first = panel.locator(".candidate-heading").first();
   await first.focus();
-  await expect(first).toHaveAttribute("aria-expanded", "true");
+  await expect(panel.locator(".candidate").first()).toHaveClass(/expanded/);
   await panel.keyboard.press("Tab");
   await expect(panel.locator(".variant").first()).toBeFocused();
   await panel.keyboard.press("Enter");
@@ -1859,6 +1859,99 @@ test("Brave用の閉じる操作は対象ウィンドウを指定し、失敗時
     await expect(panel.locator("#selection")).toBeHidden();
   } finally {
     if (!panel.isClosed()) await panel.close();
+    await source.close();
+  }
+});
+
+test("日程カードは自動で開閉し、クリックやEnterでは切り替わらない", async () => {
+  const { source, panel } = await open();
+  try {
+    const card = panel.locator(".candidate").first();
+    const heading = card.locator(".candidate-heading");
+    const region = card.locator(".variant-region");
+    await card.hover();
+    await expect(card).toHaveClass(/expanded/);
+    // A heading is focusable context, not a manual toggle.
+    await expect(heading).toHaveRole("group");
+    await heading.click();
+    await heading.click();
+    await expect(card).toHaveClass(/expanded/);
+    await expect(region).toHaveJSProperty("inert", false);
+    await panel.locator(".brand").hover();
+    await expect(card).not.toHaveClass(/expanded/);
+    // The mouse click left focus on the heading. It must not keep later hovers open.
+    await card.hover();
+    await expect(card).toHaveClass(/expanded/);
+    await panel.locator(".brand").hover();
+    await expect(card).not.toHaveClass(/expanded/);
+    // Keyboard focus still reveals options and keeps them reachable with Tab.
+    await panel.locator("#candidate-order").focus();
+    await panel.keyboard.press("Tab");
+    await expect(heading).toBeFocused();
+    await expect(card).toHaveClass(/expanded/);
+    await panel.keyboard.press("Enter");
+    await expect(card).toHaveClass(/expanded/);
+    await panel.keyboard.press("Enter");
+    await expect(card).toHaveClass(/expanded/);
+    await panel.keyboard.press("Tab");
+    await expect(card.locator(".variant").first()).toBeFocused();
+    await expect(region).toHaveJSProperty("inert", false);
+    await panel.locator("#settings-toggle").focus();
+    await expect(card).not.toHaveClass(/expanded/);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("タッチのフォーカス移動で日程カードが切り替わり、再タップでも閉じない", async () => {
+  const { source, panel } = await open();
+  const session = await context.newCDPSession(panel);
+  try {
+    await panel.mouse.move(0, 0);
+    await session.send("Emulation.setTouchEmulationEnabled", { enabled: true });
+    const card = panel.locator(".candidate").first();
+    const heading = card.locator(".candidate-heading");
+    async function tap(locator) {
+      await locator.scrollIntoViewIfNeeded();
+      const rect = await locator.boundingBox();
+      expect(rect).toBeTruthy();
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [
+          { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
+        ],
+      });
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+    }
+    await expect(card).not.toHaveClass(/expanded/);
+    await tap(heading);
+    await expect(card).toHaveClass(/expanded/);
+    await tap(heading);
+    await expect(card).toHaveClass(/expanded/);
+    const next = panel.locator(".candidate").nth(1);
+    await tap(next.locator(".candidate-heading"));
+    await expect(next).toHaveClass(/expanded/);
+    await expect(card).not.toHaveClass(/expanded/);
+    await tap(heading);
+    await expect(card).toHaveClass(/expanded/);
+    // Let the unfolding region finish before deriving touch coordinates.
+    await expect
+      .poll(async () =>
+        card
+          .locator(".variant-region")
+          .evaluate((element) => element.getAnimations().length),
+      )
+      .toBe(0);
+    await tap(card.locator(".variant").first());
+    await expect(panel.locator("#selection")).toBeVisible();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  } finally {
+    await session.detach();
+    await panel.close();
     await source.close();
   }
 });

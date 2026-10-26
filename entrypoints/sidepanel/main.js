@@ -412,7 +412,10 @@ function reconcileCandidates(options) {
     document.activeElement !== focused
   ) {
     if (focused.isConnected) focused.focus({ preventScroll: true });
-    else list.querySelector("button")?.focus({ preventScroll: true });
+    else
+      /** @type {HTMLElement | null} */ (
+        list.querySelector(".candidate-heading")
+      )?.focus({ preventScroll: true });
   }
   el("count").textContent = String(options.length);
   el("empty").hidden = options.length > 0;
@@ -444,10 +447,10 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     `candidate${candidate.id === selectedId ? " selected" : ""}`,
   );
   card.dataset.candidateId = candidate.id;
-  const heading = document.createElement("button");
-  heading.type = "button";
+  const heading = document.createElement("div");
+  heading.tabIndex = 0;
+  heading.setAttribute("role", "group");
   heading.className = "candidate-heading";
-  heading.setAttribute("aria-expanded", "false");
   const badge = node("span", "date-badge");
   badge.setAttribute("aria-hidden", "true");
   badge.append(
@@ -470,6 +473,10 @@ function candidateCard(candidate, variants, waitForMovement = false) {
       : candidate.source === "ai"
         ? "ローカルAIによる補完。内容をご確認ください"
         : "ページ本文の日付を自動抽出";
+  heading.setAttribute(
+    "aria-label",
+    `${dateText} ${timeText}。${sourceDescription}`,
+  );
   content.title = `${sourceDescription}\n${candidate.evidence}`;
   content.append(node("span", "sr-only", sourceDescription));
   if (candidate.source === "ai" || candidate.inferredYear) {
@@ -521,31 +528,37 @@ function candidateCard(candidate, variants, waitForMovement = false) {
   inner.append(list);
   region.append(inner);
   card.append(heading, region);
-  let pinned = false;
+  const hasKeyboardFocus = () =>
+    card.contains(document.activeElement) &&
+    document.activeElement?.matches(":focus-visible");
   const expand = (/** @type {boolean} */ expanded) => {
     // Picking fields has its own screen; pointer movement must not reopen variants.
     expanded = expanded && !draft;
     card.classList.toggle("expanded", expanded);
-    heading.setAttribute("aria-expanded", String(expanded));
     region.inert = !expanded;
   };
-  card.addEventListener("pointerenter", () => {
-    if (waitForMovement) return;
+  card.addEventListener("pointerenter", (event) => {
+    if (waitForMovement || event.pointerType === "touch") return;
     expand(true);
     revealSource(candidate);
   });
   card.addEventListener("pointermove", (event) => {
     // A rebuilt list can appear beneath a stationary pointer. Resume only on
-    // actual movement, while focus/click remains available immediately.
-    if (!waitForMovement || (!event.movementX && !event.movementY)) return;
+    // actual movement, while focus remains available immediately.
+    if (
+      event.pointerType === "touch" ||
+      !waitForMovement ||
+      (!event.movementX && !event.movementY)
+    )
+      return;
     waitForMovement = false;
     expand(true);
     revealSource(candidate);
   });
-  card.addEventListener("pointerleave", () => {
-    if (!pinned && !card.contains(document.activeElement)) expand(false);
-    if (!card.contains(document.activeElement) && revealedId === candidate.id)
-      clearSource();
+  card.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "touch" || hasKeyboardFocus()) return;
+    expand(false);
+    if (revealedId === candidate.id) clearSource();
   });
   card.addEventListener("focusin", () => {
     expand(true);
@@ -556,18 +569,13 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     // destination so options never become inert while Tab is entering them.
     const next =
       event.relatedTarget instanceof Node ? event.relatedTarget : null;
-    if (!pinned && !card.contains(next) && !card.matches(":hover"))
-      expand(false);
+    if (!card.contains(next) && !card.matches(":hover")) expand(false);
     if (
       !card.contains(next) &&
       !card.matches(":hover") &&
       revealedId === candidate.id
     )
       clearSource();
-  });
-  heading.addEventListener("click", () => {
-    pinned = !pinned;
-    expand(pinned);
   });
   return card;
 }
@@ -585,9 +593,10 @@ function selectCandidate(candidate, variant) {
       /** @type {HTMLElement} */ (card).dataset.candidateId === selectedId;
     card.classList.toggle("selected", chosen);
     card.classList.remove("expanded");
-    card.querySelector("button")?.setAttribute("aria-expanded", "false");
-    const heading = card.querySelector("button");
-    if (heading) heading.disabled = true;
+    const heading = /** @type {HTMLElement | null} */ (
+      card.querySelector(".candidate-heading")
+    );
+    if (heading) heading.tabIndex = -1;
     const region = /** @type {HTMLElement | null} */ (
       card.querySelector(".variant-region")
     );

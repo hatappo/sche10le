@@ -31,10 +31,11 @@
         </select>
       </div>
       <div class="candidate">
-        <button
+        <div
           class="candidate-heading"
-          aria-expanded="false"
-          aria-controls="variants"
+          tabindex="0"
+          role="group"
+          aria-label="11月10日（火）14:00–16:00。ページ本文の日付を自動抽出"
         >
           <span class="date-badge"
             ><span class="month">NOV</span><span class="day">10</span></span
@@ -45,7 +46,7 @@
             ><span class="candidate-time">14:00–16:00</span
             ><span class="sr-only">ページ本文の日付を自動抽出</span></span
           ><span class="candidate-arrow">›</span>
-        </button>
+        </div>
         <div class="variant-region" id="variants" inert>
           <div class="variant-inner">
             <div class="variant-list">
@@ -184,10 +185,8 @@
           );
       }).observe(footer);
       const card = document.querySelector(".candidate");
-      const toggle = document.querySelector(".candidate-heading");
       function expand(on) {
         card.classList.toggle("expanded", on);
-        toggle.setAttribute("aria-expanded", String(on));
         document.querySelector(".variant-region").inert = !on;
       }
       function view(name) {
@@ -203,18 +202,22 @@
           "1400 活版印刷のワークショップ";
         parent.postMessage({ type: "demo-view", view: name }, "*");
       }
-      card.addEventListener("mouseenter", () => expand(true));
-      card.addEventListener("mouseleave", () => {
-        if (!card.contains(document.activeElement)) expand(false);
+      card.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") expand(true);
+      });
+      card.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "touch") return;
+        if (!(
+          card.contains(document.activeElement) &&
+          document.activeElement?.matches(":focus-visible")
+        ))
+          expand(false);
       });
       card.addEventListener("focusin", () => expand(true));
       card.addEventListener("focusout", (e) => {
         if (!card.contains(e.relatedTarget) && !card.matches(":hover"))
           expand(false);
       });
-      toggle.addEventListener("click", () =>
-        expand(!card.classList.contains("expanded")),
-      );
       document.querySelectorAll(".variant").forEach((button) =>
         button.addEventListener("click", () => {
           document.getElementById("variant-label").textContent =

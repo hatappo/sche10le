@@ -36,6 +36,7 @@ button:disabled {
   opacity: 0.45;
 }
 button:focus-visible,
+.candidate-heading:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
@@ -325,9 +326,6 @@ main {
   padding: 15px 13px;
   border: 0;
   background: none;
-}
-.candidate-heading:disabled {
-  opacity: 1;
 }
 .date-badge {
   width: 43px;
