@@ -496,8 +496,10 @@ main {
   animation: appear 200ms;
 }
 .selection-actions {
-  display: flex;
-  justify-content: flex-end;
+  display: none;
+  align-items: center;
+  min-height: 30px;
+  margin: 18px 0 12px;
 }
 .registration-summary {
   font-size: 12px;
@@ -799,8 +801,11 @@ main {
     transform: rotate(360deg);
   }
 }
-.is-selected .candidates-heading {
-  margin-top: 18px;
+.is-selected #results-controls {
+  display: none;
+}
+.is-selected .selection-actions {
+  display: flex;
 }
 .is-selected .candidate:not(.selected) {
   display: none;

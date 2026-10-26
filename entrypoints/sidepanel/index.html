@@ -202,6 +202,11 @@
           </button>
         </div>
       </div>
+      <div class="selection-actions">
+        <button id="deselect" class="text-button" type="button">
+          選び直す
+        </button>
+      </div>
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
       <div id="candidates" class="candidates" aria-label="日程候補"></div>
       <div id="empty" class="empty" hidden>
@@ -239,11 +244,6 @@
         aria-label="選択した予定"
         hidden
       >
-        <div class="selection-actions">
-          <button id="deselect" class="text-button" type="button">
-            選び直す
-          </button>
-        </div>
         <p id="pick-status" class="sr-only" role="status"></p>
         <div class="picked-values" role="group" aria-label="取得した内容">
           <button

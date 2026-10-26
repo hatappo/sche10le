@@ -8,6 +8,7 @@
       body { min-width: 0; }
       [data-view] { display: none; }
       body[data-demo="list"] [data-view="list"], body[data-demo="pick"] [data-view="pick"], body[data-demo="settings"] [data-view="settings"] { display: block; }
+      body[data-demo="pick"] .selection-actions { display: flex; }
       body[data-demo="settings"] .footer { display: none; }
       body[data-demo="settings"] .settings { display: flex; }
       .candidate .variant-region { visibility: hidden; }
@@ -69,6 +70,9 @@
       </div>
     </main>
     <main data-view="pick">
+      <div class="selection-actions">
+        <button class="text-button" id="reset">選び直す</button>
+      </div>
       <article class="candidate selected">
         <div
           class="candidate-heading"
@@ -86,13 +90,10 @@
           ><span class="candidate-arrow">›</span>
         </div>
         <p class="registration-summary" id="variant-label">
-          登録：時間どおり 14:00–16:00
+          時間どおり 14:00–16:00
         </p>
       </article>
       <section class="selection">
-        <div class="selection-actions">
-          <button class="text-button" id="reset">選び直す</button>
-        </div>
         <div class="picked-values">
           <button class="field-row" aria-current="step">
             <span class="field-heading"
@@ -239,7 +240,6 @@
         button.addEventListener("click", () => {
           const label = button.querySelector(".variant-label").textContent;
           document.getElementById("variant-label").textContent =
-            "登録：" +
             label +
             (label === "終日"
               ? ""

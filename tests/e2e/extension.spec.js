@@ -219,11 +219,22 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await select(panel, "移動込み");
   await expect(
     panel.locator(".candidate.selected .registration-summary"),
-  ).toHaveText("登録：移動込み 13:30–16:30");
+  ).toHaveText("移動込み 13:30–16:30");
   await expect(
     panel.locator("#selected-date, #selected-time, #selection .eyebrow"),
   ).toHaveCount(0);
   await expect(panel.locator(".registration-summary")).toHaveCount(1);
+  for (const id of ["candidates-title", "count", "candidate-order"]) {
+    await expect(panel.locator(`#${id}`)).toBeHidden();
+  }
+  await expect(panel.locator("#deselect")).toBeVisible();
+  const resetBounds = await panel.locator("#deselect").boundingBox();
+  const selectedBounds = await panel
+    .locator(".candidate.selected")
+    .boundingBox();
+  expect(resetBounds.y + resetBounds.height).toBeLessThanOrEqual(
+    selectedBounds.y,
+  );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
   await expect(
@@ -331,6 +342,10 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   );
   await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(panel.locator(".registration-summary")).toHaveCount(0);
+  await expect(panel.locator("#deselect")).toBeHidden();
+  for (const id of ["candidates-title", "count", "candidate-order"]) {
+    await expect(panel.locator(`#${id}`)).toBeVisible();
+  }
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#candidates-title")).toBeFocused();
   await expect(
