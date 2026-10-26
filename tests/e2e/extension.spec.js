@@ -472,7 +472,7 @@ test("狭い幅・キーボード操作・再スキャン時のリスナー重�
   await expect(panel.locator(".candidate")).toHaveCount(3);
   const first = panel.locator(".candidate-heading").first();
   await first.focus();
-  await expect(first).toHaveAttribute("aria-expanded", "true");
+  await expect(panel.locator(".candidate").first()).toHaveClass(/expanded/);
   await panel.keyboard.press("Tab");
   await expect(panel.locator(".variant").first()).toBeFocused();
   await panel.keyboard.press("Enter");
@@ -1863,46 +1863,48 @@ test("Brave用の閉じる操作は対象ウィンドウを指定し、失敗時
   }
 });
 
-test("日程カードをクリックで閉じた後も、ホバー離脱で閉じ、キーボード操作は維持する", async () => {
+test("日程カードは自動で開閉し、クリックやEnterでは切り替わらない", async () => {
   const { source, panel } = await open();
   try {
     const card = panel.locator(".candidate").first();
     const heading = card.locator(".candidate-heading");
     const region = card.locator(".variant-region");
     await card.hover();
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
-    // Clicking an already-open heading closes it rather than invisibly pinning it.
+    await expect(card).toHaveClass(/expanded/);
+    // A heading is focusable context, not a manual toggle.
+    await expect(heading).toHaveRole("group");
     await heading.click();
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
-    await expect(region).toHaveJSProperty("inert", true);
+    await heading.click();
+    await expect(card).toHaveClass(/expanded/);
+    await expect(region).toHaveJSProperty("inert", false);
     await panel.locator(".brand").hover();
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).not.toHaveClass(/expanded/);
     // The mouse click left focus on the heading. It must not keep later hovers open.
     await card.hover();
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveClass(/expanded/);
     await panel.locator(".brand").hover();
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).not.toHaveClass(/expanded/);
     // Keyboard focus still reveals options and keeps them reachable with Tab.
     await panel.locator("#candidate-order").focus();
     await panel.keyboard.press("Tab");
     await expect(heading).toBeFocused();
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveClass(/expanded/);
     await panel.keyboard.press("Enter");
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).toHaveClass(/expanded/);
     await panel.keyboard.press("Enter");
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveClass(/expanded/);
     await panel.keyboard.press("Tab");
     await expect(card.locator(".variant").first()).toBeFocused();
     await expect(region).toHaveJSProperty("inert", false);
     await panel.locator("#settings-toggle").focus();
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).not.toHaveClass(/expanded/);
   } finally {
     await panel.close();
     await source.close();
   }
 });
 
-test("タッチでも日程カードを開閉し登録パターンを選べる", async () => {
+test("タッチのフォーカス移動で日程カードが切り替わり、再タップでも閉じない", async () => {
   const { source, panel } = await open();
   const session = await context.newCDPSession(panel);
   try {
@@ -1911,6 +1913,7 @@ test("タッチでも日程カードを開閉し登録パターンを選べる",
     const card = panel.locator(".candidate").first();
     const heading = card.locator(".candidate-heading");
     async function tap(locator) {
+      await locator.scrollIntoViewIfNeeded();
       const rect = await locator.boundingBox();
       expect(rect).toBeTruthy();
       await session.send("Input.dispatchTouchEvent", {
@@ -1924,13 +1927,17 @@ test("タッチでも日程カードを開閉し登録パターンを選べる",
         touchPoints: [],
       });
     }
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).not.toHaveClass(/expanded/);
     await tap(heading);
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveClass(/expanded/);
     await tap(heading);
-    await expect(heading).toHaveAttribute("aria-expanded", "false");
+    await expect(card).toHaveClass(/expanded/);
+    const next = panel.locator(".candidate").nth(1);
+    await tap(next.locator(".candidate-heading"));
+    await expect(next).toHaveClass(/expanded/);
+    await expect(card).not.toHaveClass(/expanded/);
     await tap(heading);
-    await expect(heading).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveClass(/expanded/);
     // Let the unfolding region finish before deriving touch coordinates.
     await expect
       .poll(async () =>

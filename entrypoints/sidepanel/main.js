@@ -412,7 +412,10 @@ function reconcileCandidates(options) {
     document.activeElement !== focused
   ) {
     if (focused.isConnected) focused.focus({ preventScroll: true });
-    else list.querySelector("button")?.focus({ preventScroll: true });
+    else
+      /** @type {HTMLElement | null} */ (
+        list.querySelector(".candidate-heading")
+      )?.focus({ preventScroll: true });
   }
   el("count").textContent = String(options.length);
   el("empty").hidden = options.length > 0;
@@ -444,10 +447,10 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     `candidate${candidate.id === selectedId ? " selected" : ""}`,
   );
   card.dataset.candidateId = candidate.id;
-  const heading = document.createElement("button");
-  heading.type = "button";
+  const heading = document.createElement("div");
+  heading.tabIndex = 0;
+  heading.setAttribute("role", "group");
   heading.className = "candidate-heading";
-  heading.setAttribute("aria-expanded", "false");
   const badge = node("span", "date-badge");
   badge.setAttribute("aria-hidden", "true");
   badge.append(
@@ -470,6 +473,10 @@ function candidateCard(candidate, variants, waitForMovement = false) {
       : candidate.source === "ai"
         ? "ローカルAIによる補完。内容をご確認ください"
         : "ページ本文の日付を自動抽出";
+  heading.setAttribute(
+    "aria-label",
+    `${dateText} ${timeText}。${sourceDescription}`,
+  );
   content.title = `${sourceDescription}\n${candidate.evidence}`;
   content.append(node("span", "sr-only", sourceDescription));
   if (candidate.source === "ai" || candidate.inferredYear) {
@@ -521,8 +528,6 @@ function candidateCard(candidate, variants, waitForMovement = false) {
   inner.append(list);
   region.append(inner);
   card.append(heading, region);
-  /** @type {boolean | undefined} */
-  let expandedBeforePointer;
   const hasKeyboardFocus = () =>
     card.contains(document.activeElement) &&
     document.activeElement?.matches(":focus-visible");
@@ -530,7 +535,6 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     // Picking fields has its own screen; pointer movement must not reopen variants.
     expanded = expanded && !draft;
     card.classList.toggle("expanded", expanded);
-    heading.setAttribute("aria-expanded", String(expanded));
     region.inert = !expanded;
   };
   card.addEventListener("pointerenter", (event) => {
@@ -540,7 +544,7 @@ function candidateCard(candidate, variants, waitForMovement = false) {
   });
   card.addEventListener("pointermove", (event) => {
     // A rebuilt list can appear beneath a stationary pointer. Resume only on
-    // actual movement, while focus/click remains available immediately.
+    // actual movement, while focus remains available immediately.
     if (
       event.pointerType === "touch" ||
       !waitForMovement ||
@@ -573,23 +577,6 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     )
       clearSource();
   });
-  // Focus can expand the card between pointerdown and click. Remember its
-  // visible state beforehand so a first touch still opens a collapsed card.
-  heading.addEventListener("pointerdown", () => {
-    expandedBeforePointer = card.classList.contains("expanded");
-  });
-  heading.addEventListener("pointercancel", () => {
-    expandedBeforePointer = undefined;
-  });
-  heading.addEventListener("click", (event) => {
-    const expanded = !(event.detail > 0 && expandedBeforePointer !== undefined
-      ? expandedBeforePointer
-      : card.classList.contains("expanded"));
-    expandedBeforePointer = undefined;
-    expand(expanded);
-    if (expanded) revealSource(candidate);
-    else if (revealedId === candidate.id) clearSource();
-  });
   return card;
 }
 
@@ -606,9 +593,10 @@ function selectCandidate(candidate, variant) {
       /** @type {HTMLElement} */ (card).dataset.candidateId === selectedId;
     card.classList.toggle("selected", chosen);
     card.classList.remove("expanded");
-    card.querySelector("button")?.setAttribute("aria-expanded", "false");
-    const heading = card.querySelector("button");
-    if (heading) heading.disabled = true;
+    const heading = /** @type {HTMLElement | null} */ (
+      card.querySelector(".candidate-heading")
+    );
+    if (heading) heading.tabIndex = -1;
     const region = /** @type {HTMLElement | null} */ (
       card.querySelector(".variant-region")
     );
