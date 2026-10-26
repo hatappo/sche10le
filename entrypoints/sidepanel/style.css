@@ -202,11 +202,14 @@ main {
   font-weight: 600;
 }
 .stage-check {
-  display: none;
+  display: inline-block;
+  flex: 0 0 12px;
+  inline-size: 12px;
+  visibility: hidden;
   font-size: 10px;
 }
 .stage-title[data-state="complete"] .stage-check {
-  display: inline;
+  visibility: visible;
 }
 .access-guide {
   margin-top: 16px;
@@ -247,6 +250,8 @@ main {
   gap: 8px;
 }
 .candidates-heading {
+  justify-content: flex-start;
+  gap: 16px;
   min-height: 30px;
   margin: 18px 0 12px;
 }
@@ -533,6 +538,7 @@ main {
 }
 .selection-actions {
   display: none;
+  margin-inline-start: auto;
   align-items: center;
   justify-content: flex-end;
   min-height: 30px;
