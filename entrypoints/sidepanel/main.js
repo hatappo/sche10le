@@ -4,7 +4,11 @@ import {
   extractTextEvents,
   mergeCandidates,
 } from "../../lib/extract.js";
-import { calendarUrl, candidateOptions } from "../../lib/calendar.js";
+import {
+  calendarUrl,
+  candidateOptions,
+  registrationSummary,
+} from "../../lib/calendar.js";
 import { orderCandidates } from "../../lib/candidate-order.js";
 import { pickFooterQuote } from "../../lib/footer-quotes.js";
 import { accessFailure, unsupportedPage } from "../../lib/page-access.js";
@@ -593,6 +597,15 @@ function selectCandidate(candidate, variant) {
       /** @type {HTMLElement} */ (card).dataset.candidateId === selectedId;
     card.classList.toggle("selected", chosen);
     card.classList.remove("expanded");
+    card.querySelector(".registration-summary")?.remove();
+    if (chosen)
+      card.append(
+        node(
+          "p",
+          "registration-summary",
+          registrationSummary(variant, candidate),
+        ),
+      );
     const heading = /** @type {HTMLElement | null} */ (
       card.querySelector(".candidate-heading")
     );
@@ -605,12 +618,6 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  el("selected-date").textContent = dateRangeLabel(
-    variant.date,
-    variant.endDate,
-  );
-  el("selected-time").textContent =
-    `${variant.label} · ${variant.start && variant.end ? timeRange(variant.start, variant.end) : "終日"}${variant.note ? `（${variant.note}）` : ""}`;
   syncPicker();
   button("open-calendar").focus({ preventScroll: true });
 }

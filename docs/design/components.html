@@ -69,13 +69,30 @@
       </div>
     </main>
     <main data-view="pick">
-      <section class="selection">
-        <div class="section-heading">
-          <span class="eyebrow">選んだ日程</span
-          ><button class="text-button" id="reset">選び直す</button>
+      <article class="candidate selected">
+        <div
+          class="candidate-heading"
+          role="group"
+          aria-label="11月10日（火）14:00–16:00。ページ本文の日付を自動抽出"
+        >
+          <span class="date-badge"
+            ><span class="month">NOV</span><span class="day">10</span></span
+          ><span
+            class="date-content"
+            title="ページ本文の日付を自動抽出&#10;2026年11月10日 14:00〜16:00"
+            ><strong>11月10日（火）</strong
+            ><span class="candidate-time">14:00–16:00</span
+            ><span class="sr-only">ページ本文の日付を自動抽出</span></span
+          ><span class="candidate-arrow">›</span>
         </div>
-        <h2>11月10日（火）</h2>
-        <p class="selected-time" id="variant-label">時間どおり · 14:00–16:00</p>
+        <p class="registration-summary" id="variant-label">
+          登録：時間どおり 14:00–16:00
+        </p>
+      </article>
+      <section class="selection">
+        <div class="selection-actions">
+          <button class="text-button" id="reset">選び直す</button>
+        </div>
         <div class="picked-values">
           <button class="field-row" aria-current="step">
             <span class="field-heading"
@@ -220,16 +237,19 @@
       });
       document.querySelectorAll(".variant").forEach((button) =>
         button.addEventListener("click", () => {
+          const label = button.querySelector(".variant-label").textContent;
           document.getElementById("variant-label").textContent =
-            button.querySelector(".variant-label").textContent +
-            " · " +
-            button.querySelector(".variant-time").textContent;
+            "登録：" +
+            label +
+            (label === "終日"
+              ? ""
+              : " " + button.querySelector(".variant-time").textContent);
           view("pick");
         }),
       );
       document.getElementById("reset").onclick = () => {
         view("list");
-        toggle.focus();
+        document.querySelector(".order-select").focus();
         expand(false);
       };
       document.getElementById("gear").onclick = () => view("settings");

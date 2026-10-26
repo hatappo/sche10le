@@ -55,8 +55,10 @@ try {
   await expect(frame.locator("header, a.brand")).toHaveCount(0);
   await expect(frame.locator(".footer .settings-button")).toBeVisible();
   await page.locator("#panel-demo").scrollIntoViewIfNeeded();
-  await frame.locator(".candidate-heading").focus();
-  await expect(frame.locator(".candidate")).toHaveClass(/expanded/);
+  await frame.locator('[data-view="list"] .candidate-heading').focus();
+  await expect(frame.locator('[data-view="list"] .candidate')).toHaveClass(
+    /expanded/,
+  );
   await frame.getByRole("button", { name: /移動込み/ }).click();
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "pick");
   await expect(page.locator('[data-view="pick"]')).toHaveAttribute(
@@ -64,6 +66,11 @@ try {
     "true",
   );
   await expect(frame.locator("#variant-label")).toContainText("13:30–16:30");
+  await frame.getByRole("button", { name: "選び直す", exact: true }).click();
+  await expect(frame.locator("body")).toHaveAttribute("data-demo", "list");
+  await expect(frame.locator('[data-view="list"] .candidate')).not.toHaveClass(
+    /expanded/,
+  );
   await page.getByRole("button", { name: "書式エラー", exact: true }).click();
   await expect(frame.locator("#format")).toHaveAttribute(
     "aria-invalid",

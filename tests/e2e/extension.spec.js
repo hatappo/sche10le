@@ -217,6 +217,13 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     animations: "disabled",
   });
   await select(panel, "移動込み");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toHaveText("登録：移動込み 13:30–16:30");
+  await expect(
+    panel.locator("#selected-date, #selected-time, #selection .eyebrow"),
+  ).toHaveCount(0);
+  await expect(panel.locator(".registration-summary")).toHaveCount(1);
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
   await expect(
@@ -323,6 +330,7 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
     "活版印刷について詳しく",
   );
   await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+  await expect(panel.locator(".registration-summary")).toHaveCount(0);
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#candidates-title")).toBeFocused();
   await expect(
@@ -370,7 +378,9 @@ test("移動時間を保存でき、ページ遷移・パネル終了で選択�
   await expect(panel.locator("#settings-status")).toContainText("保存しました");
   await panel.getByRole("button", { name: "閉じる", exact: true }).click();
   await select(panel, "移動込み");
-  await expect(panel.locator("#selected-time")).toContainText("13:15–16:45");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toContainText("13:15–16:45");
   await source.locator("#spa").click();
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#selection")).toBeHidden();
@@ -667,11 +677,15 @@ test("同日の終日カードだけ除き、各時刻の終日パターンを�
   await expect(later.getByRole("button", { name: /移動込み/ })).toBeVisible();
   await expect(later.getByRole("button", { name: /^終日/ })).toBeVisible();
   await later.getByRole("button", { name: /時間どおり/ }).click();
-  await expect(panel.locator("#selected-time")).toContainText("18:00–20:00");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toContainText("18:00–20:00");
   await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await later.hover();
   await later.getByRole("button", { name: /^終日/ }).click();
-  await expect(panel.locator("#selected-time")).toContainText("終日");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toContainText("終日");
   await panel.close();
   await source.close();
 });
@@ -694,7 +708,9 @@ test("令和・英語・午後の日付をスキャンし、出典の強調か�
     await panel.locator(".candidate").first().hover();
     await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
     await select(panel);
-    await expect(panel.locator("#selected-time")).toContainText("14:00–16:00");
+    await expect(
+      panel.locator(".candidate.selected .registration-summary"),
+    ).toContainText("14:00–16:00");
     const opened = context.waitForEvent("page");
     await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
     const calendar = await opened;
@@ -896,7 +912,9 @@ test("登場順と日時順を切り替え、構造化データの位置・同�
   await card.hover();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(1);
   await card.getByRole("button", { name: /時間どおり/ }).click();
-  await expect(panel.locator("#selected-time")).toContainText("10:00–12:00");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toContainText("10:00–12:00");
   await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(order).toHaveValue("date");
   await panel.getByRole("button", { name: "再スキャン" }).click();
@@ -1160,7 +1178,9 @@ test("移動込みの書式は元の開催時刻を保ち、カレンダーは�
   await expect(panel.locator("#settings-status")).toContainText("保存しました");
   await panel.getByRole("button", { name: "閉じる", exact: true }).click();
   await select(panel, "移動込み");
-  await expect(panel.locator("#selected-time")).toContainText("13:30–16:30");
+  await expect(
+    panel.locator(".candidate.selected .registration-summary"),
+  ).toContainText("13:30–16:30");
   await expect(panel.locator("#picked-title")).toHaveText(
     "1400 週末のデザイン散歩 | TOKYO FIELD NOTES 1600",
   );
