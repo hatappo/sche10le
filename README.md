@@ -77,6 +77,21 @@ npm run icons     # ブランドのCSS原稿から各サイズのPNGを再生成
 
 カレンダーへの受け渡しは `chrome.tabs.create` に渡されたURLを検査し、テストでは実際の遷移先を空白タブに置き換えます。Googleカレンダーへのログイン・予定保存は行いません。実際のツールバーからの起動とChrome標準サイドパネルの開閉は手動確認が必要です。
 
+## 変更履歴と配布用ビルド
+
+バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.2.0` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。
+
+```sh
+git fetch --tags
+git switch --detach v0.2.0
+npm ci
+npm run zip
+```
+
+Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0.2.0-chrome.zip`** です。ZIP内の `manifest.json` のバージョンも `0.2.0` になります。ビルド後に通常の開発へ戻る場合は `git switch main` を実行します。
+
+変更してから配布する場合は、`npm run check` と `npm run test:e2e` も実行してください（ブラウザテストの初回準備は `npx playwright install chromium`）。ライブサイトの結果は配布するコミットに対応するものを確認します。バージョン更新時は `package.json`・`package-lock.json`・CHANGELOG・関連資料をそろえてからタグを作成します。
+
 ## 公開前のライブサイト検証
 
 connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetupの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
