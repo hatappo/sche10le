@@ -224,9 +224,15 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     panel.locator("#selected-date, #selected-time, #selection .eyebrow"),
   ).toHaveCount(0);
   await expect(panel.locator(".registration-summary")).toHaveCount(1);
-  for (const id of ["candidates-title", "count", "candidate-order"]) {
-    await expect(panel.locator(`#${id}`)).toBeHidden();
-  }
+  await expect(panel.locator("#candidate-order")).toBeHidden();
+  await expect(panel.locator("#candidates-title")).toBeVisible();
+  await expect(panel.locator("#count")).toBeVisible();
+  await expect(panel.locator("#scan-title .stage-check")).toBeVisible();
+  await expect(panel.locator("#candidates-title .stage-check")).toBeVisible();
+  await expect(panel.locator("#content-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
   await expect(panel.locator("#deselect")).toBeVisible();
   const resetBounds = await panel.locator("#deselect").boundingBox();
   const selectedBounds = await panel
@@ -280,6 +286,8 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
+  await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+  await expect(panel.locator(".stage-title[aria-current]")).toHaveCount(0);
   await panel.screenshot({ path: "test-results/panel-picked.png" });
   await source.screenshot({ path: "test-results/page-picker-complete.png" });
   // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
@@ -289,6 +297,11 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await clickOverlay(source, "戻る");
   await expect(panel.locator("#pick-status")).toContainText("詳細");
+  await expect(panel.locator("#content-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expect(panel.locator("#content-title .stage-check")).toBeHidden();
   await source.locator("#venue").click();
   await expect(panel.locator("#picked-details")).toHaveText(
     `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
@@ -348,6 +361,12 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   }
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#candidates-title")).toBeFocused();
+  await expect(panel.locator("#candidates-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expect(panel.locator("#candidates-title .stage-check")).toBeHidden();
+  await expect(panel.locator("#content-title")).toBeHidden();
   await expect(
     panel.locator(".candidate.selected, .candidate.expanded"),
   ).toHaveCount(0);
@@ -1340,6 +1359,7 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await source.goto("https://ungranted.example/events");
     await expect(panel.locator("#access-guide")).toBeVisible();
     await expect(panel.locator("#source-section")).toBeHidden();
+    await expect(panel.locator("#content-title")).toBeHidden();
     await expect(panel.locator("#candidates-title")).toBeHidden();
     await expect(panel.locator("#count")).toBeHidden();
     await expect(panel.locator("#candidate-order")).toBeHidden();
@@ -1383,6 +1403,12 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await expect(panel.locator("#empty")).toBeHidden();
     await expect(panel.locator("#source-section")).toBeVisible();
     await expect(panel.locator("#results-controls")).toBeHidden();
+    await expect(panel.locator("#scan-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    await expect(panel.locator("#scan-title .stage-check")).toBeHidden();
+    await expect(panel.locator("#scan-result")).toBeHidden();
     await expect(panel.locator(".candidate")).toHaveCount(0);
     // The access probe must not inject the content script or extract candidates.
     // Simulate only the notification from an icon click: fixture access is already granted.

@@ -123,6 +123,32 @@ function showSource(label, title = "") {
   el("source-domain").title = title;
 }
 
+/** Reflect the existing workflow without introducing another progress state. */
+function renderSectionProgress() {
+  /** @type {Array<[string, 'active' | 'complete' | 'waiting']>} */
+  const sections = [
+    ["scan-title", scanState === "complete" ? "complete" : "active"],
+    [
+      "candidates-title",
+      draft ? "complete" : scanState === "complete" ? "active" : "waiting",
+    ],
+    [
+      "content-title",
+      draft ? (draft.step >= 3 ? "complete" : "active") : "waiting",
+    ],
+  ];
+  for (const [id, state] of sections) {
+    const heading = el(id);
+    heading.dataset.state = state;
+    if (state === "active") heading.setAttribute("aria-current", "step");
+    else heading.removeAttribute("aria-current");
+    const status = heading.querySelector("[data-stage-status]");
+    if (status)
+      status.textContent =
+        state === "complete" ? "：完了" : state === "active" ? "：操作中" : "";
+  }
+}
+
 /** @param {typeof scanState} state */
 function setScanState(state) {
   scanState = state;
@@ -151,10 +177,13 @@ function setScanState(state) {
   el("rescan-label").textContent = label;
   el("scan-state").textContent = labels[state];
   el("scan-state").classList.toggle("busy", state === "scanning");
+  el("scan-state").classList.toggle("sr-only", state === "complete");
+  el("scan-result").hidden = state !== "complete";
   el("source-section").hidden = state === "blocked";
   el("results-controls").hidden = state !== "complete";
   el("access-guide").hidden = state !== "blocked";
   el("empty").hidden = state !== "complete" || candidates.length > 0;
+  renderSectionProgress();
 }
 
 /** Check access without reading page content or adding a content script.
@@ -226,6 +255,7 @@ function resetSelection() {
   document.body.classList.remove("is-selected");
   el("selection").hidden = true;
   el("open-area").hidden = true;
+  renderSectionProgress();
 }
 
 function pageChanged() {
@@ -624,6 +654,7 @@ function selectCandidate(candidate, variant) {
 }
 
 function renderDraft() {
+  renderSectionProgress();
   if (!draft) return;
   const complete = draft.step >= 3;
   PICK_FIELDS.forEach((field, index) => {

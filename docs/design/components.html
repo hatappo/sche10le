@@ -18,14 +18,20 @@
   <body data-demo="list">
     <main data-view="list">
       <div class="source-section">
+        <h2 class="stage-title" data-state="complete">
+          スキャン<span class="stage-check" aria-hidden="true">✓</span
+          ><span class="sr-only">：完了</span>
+        </h2>
+        <button class="reload-button">↻ 再スキャン</button>
         <div class="source-text">
           <span class="muted">example.com</span
-          ><span class="status-dot">スキャン完了</span>
+          ><span class="scan-result">1件</span>
         </div>
-        <button class="reload-button">↻ 再スキャン</button>
       </div>
       <div class="section-heading candidates-heading">
-        <h2>見つかった日程 <span class="count">1</span></h2>
+        <h2 class="stage-title" data-state="active" aria-current="step">
+          日時<span class="sr-only">：操作中</span>
+        </h2>
         <select class="order-select" aria-label="候補の並び順">
           <option>登場順</option>
           <option>日時順</option>
@@ -70,8 +76,25 @@
       </div>
     </main>
     <main data-view="pick">
-      <div class="selection-actions">
-        <button class="text-button" id="reset">選び直す</button>
+      <div class="source-section">
+        <h2 class="stage-title" data-state="complete">
+          スキャン<span class="stage-check" aria-hidden="true">✓</span
+          ><span class="sr-only">：完了</span>
+        </h2>
+        <button class="reload-button">↻ 再スキャン</button>
+        <div class="source-text">
+          <span class="muted">example.com</span
+          ><span class="scan-result">1件</span>
+        </div>
+      </div>
+      <div class="section-heading candidates-heading">
+        <h2 class="stage-title" data-state="complete">
+          日時<span class="stage-check" aria-hidden="true">✓</span
+          ><span class="sr-only">：完了</span>
+        </h2>
+        <div class="selection-actions">
+          <button class="text-button" id="reset">選び直す</button>
+        </div>
       </div>
       <article class="candidate selected">
         <div
@@ -94,6 +117,9 @@
         </p>
       </article>
       <section class="selection">
+        <h2 class="stage-title" data-state="active" aria-current="step">
+          内容<span class="sr-only">：操作中</span>
+        </h2>
         <div class="picked-values">
           <button class="field-row" aria-current="step">
             <span class="field-heading"

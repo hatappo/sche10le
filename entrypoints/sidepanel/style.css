@@ -152,26 +152,61 @@ main {
   color: var(--muted);
 }
 .source-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
   margin-top: 16px;
   border-bottom: 1px solid var(--line);
-  padding: 0 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  padding-bottom: 16px;
+}
+.source-section > .reload-button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 .source-text {
+  grid-column: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
-  flex: 1;
 }
 .source-text > .muted {
-  display: block;
+  min-width: 0;
   font-size: 11px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
+.scan-result {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  border-left: 1px solid var(--line);
+  padding-left: 8px;
+}
 .source-text .status-dot {
+  flex: none;
   font-size: 9px;
+}
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.stage-title[data-state="active"] {
+  color: var(--green);
+  font-weight: 600;
+}
+.stage-check {
+  display: none;
+  font-size: 10px;
+}
+.stage-title[data-state="complete"] .stage-check {
+  display: inline;
 }
 .access-guide {
   margin-top: 16px;
@@ -212,6 +247,7 @@ main {
   gap: 8px;
 }
 .candidates-heading {
+  min-height: 30px;
   margin: 18px 0 12px;
 }
 .order-select {
@@ -492,7 +528,7 @@ main {
   padding-top: 10px;
 }
 .selection {
-  margin-top: 12px;
+  margin-top: 24px;
   animation: appear 200ms;
 }
 .selection-actions {
@@ -500,7 +536,6 @@ main {
   align-items: center;
   justify-content: flex-end;
   min-height: 30px;
-  margin: 18px 0 12px;
 }
 .registration-summary {
   font-size: 12px;
@@ -827,7 +862,8 @@ main {
     transform: rotate(360deg);
   }
 }
-.is-selected #results-controls {
+.is-selected #candidate-order,
+.is-selected #order-feedback {
   display: none;
 }
 .is-selected .selection-actions {
