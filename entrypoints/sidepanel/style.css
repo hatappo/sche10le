@@ -257,6 +257,7 @@ main {
 }
 .order-select {
   flex: none;
+  margin-inline-start: auto;
   max-width: 90px;
   min-height: 30px;
   padding: 3px 4px;
