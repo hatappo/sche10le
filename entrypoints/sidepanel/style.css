@@ -938,6 +938,20 @@ main {
   background: #dce8d7;
   border-color: var(--green);
 }
+.reload-button.rescan-link {
+  padding-inline: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  box-shadow: none;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.reload-button.rescan-link:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .picked-confirmation {
   position: absolute;
   right: 0;

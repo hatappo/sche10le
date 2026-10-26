@@ -1400,6 +1400,7 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await expect(
       panel.getByRole("button", { name: "スキャン", exact: true }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
     await expect(panel.locator("#empty")).toBeHidden();
     await expect(panel.locator("#source-section")).toBeVisible();
     await expect(panel.locator("#results-controls")).toBeHidden();
@@ -1428,6 +1429,11 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await expect(
       panel.getByRole("button", { name: "再スキャン" }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
+    await expect(panel.locator("#rescan")).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
     await source.evaluate(() => {
       document.body.replaceChildren(
         document.createTextNode("日程のないページ"),
@@ -1485,6 +1491,7 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect(
       panel.getByRole("button", { name: "再試行", exact: true }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
     await expect(panel.locator("#notice")).toHaveClass(/error/);
     await expect(panel.locator("#access-guide")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();

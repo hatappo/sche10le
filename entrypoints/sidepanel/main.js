@@ -170,6 +170,7 @@ function setScanState(state) {
           ? "スキャン中…"
           : "スキャン";
   const control = button("rescan");
+  control.classList.toggle("rescan-link", state === "complete");
   control.hidden = ["checking", "blocked", "unsupported"].includes(state);
   control.disabled = control.hidden || state === "scanning";
   control.setAttribute("aria-label", label);
