@@ -763,12 +763,12 @@ main {
   border: 0;
   background: transparent;
   color: var(--green);
-  text-decoration: underline;
+  text-decoration: none;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 .inline-link:hover {
-  text-decoration-thickness: 2px;
+  text-decoration-line: underline;
 }
 .ai-spinner {
   display: inline-block;
@@ -780,7 +780,7 @@ main {
   border-top-color: var(--green);
   border-right-color: var(--green);
   border-radius: 50%;
-  animation: ai-spin 800ms linear infinite;
+  animation: ai-spin 3s linear infinite;
 }
 @keyframes ai-spin {
   to {
