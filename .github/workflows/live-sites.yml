@@ -1,0 +1,46 @@
+name: Live event sites
+
+# Deliberately manual-only. Add a schedule only after the initial operation is stable.
+on:
+  workflow_dispatch:
+    inputs:
+      sites:
+        description: "all、またはサイトIDのカンマ区切り（connpass,doorkeeper,peatix,techplay,kokuchpro,meetup）"
+        required: true
+        default: all
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-event-sites
+  cancel-in-progress: false
+
+jobs:
+  live:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LIVE_SITES: ${{ inputs.sites }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:live
+      - name: Upload date-only report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: live-event-sites-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            test-results/live/report.json
+            test-results/live/summary.md
+          if-no-files-found: warn
+          retention-days: 14
