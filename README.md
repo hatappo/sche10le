@@ -77,6 +77,16 @@ npm run icons     # ブランドのCSS原稿から各サイズのPNGを再生成
 
 カレンダーへの受け渡しは `chrome.tabs.create` に渡されたURLを検査し、テストでは実際の遷移先を空白タブに置き換えます。Googleカレンダーへのログイン・予定保存は行いません。実際のツールバーからの起動とChrome標準サイドパネルの開閉は手動確認が必要です。
 
+## 公開前のライブサイト検証
+
+connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetupの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
+
+PRが **mainにマージされたとき** に、登録した全サイトを自動検証します。PRの作成・更新中、マージせずに閉じた場合、mainへの直接pushでは検証しません。必要なときはGitHub Actionsの **Live event sites → Run workflow → main** から手動実行でき、対象サイトも絞れます。ストア更新前にはアップロード対象コミットの結果を確認してください。週次実行は運用が安定してから検討します。
+
+ローカルでは `npm run build` の後に `npm run test:live`。対象を絞る場合は `LIVE_SITES=connpass,meetup npm run test:live` を使います。開始・終了日時の両方を検証し、結果は `test-results/live/report.json` と `summary.md` に出力します。CIでは実行サマリーと14日間保存するArtifactから確認できます。アクセス制限やページ消失も未検証として失敗させ、抽出日時の不一致と区別します。
+
+サイトの追加は原則として [tests/live/sites.js](tests/live/sites.js) にURL・識別文・期待日時を1項目追加するだけです。負荷の制限、結果の読み方、追加・更新方法は [ライブテストの運用手順](tests/live/README.md) を参照してください。
+
 ## 日付・時刻の対応範囲
 
 以下は**ローカルAIを使わない通常スキャン**の対応です。本文は最大100,000文字、候補は最大100件。例で年が省略されている場合は、2026年にスキャンしたものとして示します。

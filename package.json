@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "postinstall": "wxt prepare",
-    "icons": "node scripts/generate-icons.js"
+    "icons": "node scripts/generate-icons.js",
+    "test:live": "playwright test --config playwright.live.config.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
