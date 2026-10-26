@@ -149,8 +149,10 @@ function renderSectionProgress() {
   }
 }
 
-/** @param {typeof scanState} state */
-function setScanState(state) {
+/** @param {typeof scanState} state
+ * @param {boolean} [repeat]
+ */
+function setScanState(state, repeat = false) {
   scanState = state;
   const labels = {
     checking: "確認中",
@@ -170,7 +172,9 @@ function setScanState(state) {
           ? "スキャン中…"
           : "スキャン";
   const control = button("rescan");
-  control.classList.toggle("rescan-link", state === "complete");
+  control.classList.toggle("rescan-link", state === "complete" || repeat);
+  control.setAttribute("aria-busy", String(state === "scanning"));
+  el("scan-spinner").hidden = state !== "scanning";
   control.hidden = ["checking", "blocked", "unsupported"].includes(state);
   control.disabled = control.hidden || state === "scanning";
   control.setAttribute("aria-label", label);
@@ -214,7 +218,7 @@ async function checkAccess(run) {
     });
     if (run !== generation) return;
     showSource(tab.url ? new URL(tab.url).hostname : "現在のページ");
-    setScanState("ready");
+    if (!scanning) setScanState("ready");
     notice("");
     return tab;
   } catch (error) {
@@ -276,10 +280,12 @@ function pageChanged() {
 
 async function scan() {
   if (scanning) return;
+  const repeat = scanState === "complete";
   stopConnection();
   resetSelection();
   const run = generation;
-  setScanState("checking");
+  scanning = true;
+  setScanState("scanning", repeat);
   showSource("ページを確認中");
   candidates = [];
   pageUrl = "";
@@ -290,9 +296,11 @@ async function scan() {
   notice("");
   try {
     const tab = await checkAccess(run);
-    if (!tab?.id || run !== generation) return;
-    scanning = true;
-    setScanState("scanning");
+    if (run !== generation) return;
+    if (!tab?.id) {
+      scanning = false;
+      return;
+    }
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["/content-scripts/page.js"],

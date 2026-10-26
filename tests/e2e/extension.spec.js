@@ -1464,6 +1464,8 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
   const { source, panel } = await open();
   let other;
   try {
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
+    await expect(panel.locator("#rescan .scan-icon")).toBeHidden();
     await panel.evaluate(() => {
       const execute = chrome.scripting.executeScript.bind(chrome.scripting);
       window.__execute = execute;
@@ -1482,6 +1484,18 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect(
       panel.getByRole("button", { name: "スキャン中…", exact: true }),
     ).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#scan-spinner")).toHaveCSS(
+      "animation-duration",
+      "3s",
+    );
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await expect(panel.locator("#scan-spinner")).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+    await panel.emulateMedia({ reducedMotion: "no-preference" });
     await expect(panel.locator("#results-controls")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();
     await expect
@@ -1492,11 +1506,32 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
       panel.getByRole("button", { name: "再試行", exact: true }),
     ).toBeEnabled();
     await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
     await expect(panel.locator("#notice")).toHaveClass(/error/);
     await expect(panel.locator("#access-guide")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();
+    await panel.evaluate(() => {
+      chrome.scripting.executeScript = async (details) => {
+        if (details.files) {
+          chrome.scripting.executeScript = window.__execute;
+          await new Promise((resolve) => {
+            window.__resumeRetry = resolve;
+          });
+        }
+        return window.__execute(details);
+      };
+    });
     await panel.getByRole("button", { name: "再試行", exact: true }).click();
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__resumeRetry)))
+      .toBe(true);
+    await panel.evaluate(() => window.__resumeRetry());
     await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
 
     await panel.evaluate(() => {
       chrome.scripting.executeScript = (details) => {
@@ -1513,6 +1548,9 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect
       .poll(() => panel.evaluate(() => Boolean(window.__rejectAccess)))
       .toBe(true);
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
     other = await context.newPage();
     await other.goto("chrome://settings");
     await expect(panel.locator("#scan-state")).toHaveText("対象外");

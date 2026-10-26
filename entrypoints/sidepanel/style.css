@@ -852,7 +852,8 @@ main {
 .inline-link:hover {
   text-decoration-line: underline;
 }
-.ai-spinner {
+.ai-spinner,
+.scan-spinner {
   display: inline-block;
   width: 11px;
   height: 11px;
@@ -863,6 +864,14 @@ main {
   border-right-color: var(--green);
   border-radius: 50%;
   animation: ai-spin 3s linear infinite;
+}
+.scan-spinner {
+  flex: none;
+  margin-right: 0;
+}
+.reload-button.rescan-link .scan-icon,
+.reload-button[aria-busy="true"] .scan-icon {
+  display: none;
 }
 @keyframes ai-spin {
   to {
