@@ -26,12 +26,9 @@
             max="180"
             step="5"
             value="30"
-            aria-describedby="travel-help settings-status"
+            aria-describedby="settings-status"
           /><span>分ずつ</span>
         </div>
-        <p id="travel-help" class="hint">
-          次に選ぶ「移動込み」に適用されます。
-        </p>
         <div class="setting-feedback">
           <p id="settings-status" class="hint setting-status" role="status"></p>
           <button id="retry-travel" class="text-button" type="button" hidden>
@@ -56,10 +53,22 @@
           ><br />開始・終了は移動時間を含まない開催時刻。終日では空欄になります。
         </p>
         <div id="format-tokens" class="format-tokens" aria-label="変数を挿入">
-          <button type="button" data-token="{title}">タイトル</button>
-          <button type="button" data-token="{from:HHmm}">開始時刻</button>
-          <button type="button" data-token="{to:HHmm}">終了時刻</button>
-          <button type="button" data-token="{date:YYYY-MM-DD}">日付</button>
+          <button type="button" data-token="{title}" title="{title}">
+            タイトル
+          </button>
+          <button type="button" data-token="{from:HHmm}" title="{from:HHmm}">
+            開始時刻
+          </button>
+          <button type="button" data-token="{to:HHmm}" title="{to:HHmm}">
+            終了時刻
+          </button>
+          <button
+            type="button"
+            data-token="{date:YYYY-MM-DD}"
+            title="{date:YYYY-MM-DD}"
+          >
+            日付
+          </button>
         </div>
         <div class="format-preview">
           <span id="format-preview-label">プレビュー</span
