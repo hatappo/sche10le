@@ -113,7 +113,8 @@ a {
 .brand-period {
   color: var(--ochre);
 }
-.settings-button {
+.settings-button,
+.panel-close-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +131,8 @@ a {
 .settings-button span {
   font-size: 20px;
 }
-.settings-button:hover {
+.settings-button:hover,
+.panel-close-button:hover {
   background: var(--wash);
   color: var(--green);
 }
@@ -619,6 +621,17 @@ main {
   justify-content: space-between;
   gap: 12px;
   min-height: 34px;
+}
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.panel-close-error {
+  color: #972d28;
+  font-size: 11px;
+  margin: 8px 0 0;
 }
 #open-area {
   margin-bottom: 12px;
