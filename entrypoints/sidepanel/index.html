@@ -118,7 +118,11 @@
       </div>
     </section>
     <main>
-      <section class="source-section" aria-label="対象ページ">
+      <section
+        id="source-section"
+        class="source-section"
+        aria-label="対象ページ"
+      >
         <div class="source-text">
           <span id="source-domain" class="muted">ページを確認中</span>
           <span id="scan-state" class="status-dot" role="status">確認中</span>
@@ -150,35 +154,60 @@
         </button>
       </section>
       <div id="access-guide" class="access-guide" role="status" hidden>
-        <img src="/icons/32.png" width="32" height="32" alt="" />
-        <div>
-          <strong>このページの日程を探すには</strong>
-          <p>Chromeのツールバーにある Sche10le のアイコンを押してください。</p>
-          <small
-            >見当たらない場合は、拡張機能メニュー（パズルのアイコン）から選べます。</small
-          >
-        </div>
-      </div>
-      <div class="section-heading candidates-heading">
-        <h2 id="candidates-title" tabindex="-1">
-          見つかった日程 <span id="count" class="count">0</span>
-        </h2>
-        <select
-          id="candidate-order"
-          class="order-select"
-          aria-label="日程の並び順"
-          title="日程の並び順"
-          disabled
+        <p>
+          Chromeのツールバーにある
+          <span class="guide-icon-label"
+            >Sche10le のアイコン<img
+              src="/icons/32.png"
+              class="guide-icon"
+              width="22"
+              height="22"
+              alt="" /></span
+          >を押してください。
+        </p>
+        <small
+          >見当たらない場合は、拡張機能メニュー<span class="guide-icon-label"
+            >（パズルのアイコン<svg
+              class="guide-icon puzzle-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M9 5V4a3 3 0 0 1 6 0v1h4a1 1 0 0 1 1 1v4h1a2 2 0 0 1 0 4h-1v5a1 1 0 0 1-1 1h-4v-1a3 3 0 0 0-6 0v1H5a1 1 0 0 1-1-1v-5h1a2 2 0 0 0 0-4H4V6a1 1 0 0 1 1-1Z"
+              /></svg
+            >）</span
+          >から選べます。</small
         >
-          <option value="page">登場順</option>
-          <option value="date">日時順</option>
-        </select>
       </div>
-      <div id="order-feedback" class="order-feedback" hidden>
-        <p id="order-status" class="setting-status" role="status"></p>
-        <button id="retry-order" class="text-button" type="button" hidden>
-          再試行
-        </button>
+      <div id="results-controls" hidden>
+        <div class="section-heading candidates-heading">
+          <h2 id="candidates-title" tabindex="-1">
+            見つかった日程 <span id="count" class="count">0</span>
+          </h2>
+          <select
+            id="candidate-order"
+            class="order-select"
+            aria-label="日程の並び順"
+            title="日程の並び順"
+            disabled
+          >
+            <option value="page">登場順</option>
+            <option value="date">日時順</option>
+          </select>
+        </div>
+        <div id="order-feedback" class="order-feedback" hidden>
+          <p id="order-status" class="setting-status" role="status"></p>
+          <button id="retry-order" class="text-button" type="button" hidden>
+            再試行
+          </button>
+        </div>
       </div>
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
       <div id="candidates" class="candidates" aria-label="日程候補"></div>

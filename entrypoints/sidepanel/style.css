@@ -167,9 +167,6 @@ main {
   font-size: 9px;
 }
 .access-guide {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
   margin-top: 16px;
   padding: 16px;
   border: 1px solid var(--line);
@@ -179,19 +176,23 @@ main {
   font-size: 12px;
   line-height: 1.75;
 }
-.access-guide img {
-  flex: none;
-  margin-top: 2px;
-}
-.access-guide strong {
-  font-weight: 600;
-}
 .access-guide p {
-  margin: 6px 0;
+  margin: 0 0 10px;
 }
 .access-guide small {
   display: block;
   font-size: 11px;
+}
+.guide-icon-label {
+  white-space: nowrap;
+}
+.guide-icon {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.puzzle-icon {
+  color: var(--ink);
 }
 .muted,
 .hint {

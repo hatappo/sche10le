@@ -1300,6 +1300,18 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
   try {
     await source.goto("https://ungranted.example/events");
     await expect(panel.locator("#access-guide")).toBeVisible();
+    await expect(panel.locator("#source-section")).toBeHidden();
+    await expect(panel.locator("#candidates-title")).toBeHidden();
+    await expect(panel.locator("#count")).toBeHidden();
+    await expect(panel.locator("#candidate-order")).toBeHidden();
+    await expect(panel.locator("#access-guide strong")).toHaveCount(0);
+    await expect(panel.locator("#access-guide p img")).toBeVisible();
+    await expect(panel.locator("#access-guide small svg")).toBeVisible();
+    expect(
+      await panel
+        .locator("#access-guide img")
+        .evaluate((img) => img.complete && img.naturalWidth > 0),
+    ).toBe(true);
     await expect(panel.locator("#rescan")).toBeHidden();
     await expect(panel.locator("#rescan")).toBeDisabled();
     await expect(panel.locator("#empty")).toBeHidden();
@@ -1330,6 +1342,8 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
       panel.getByRole("button", { name: "スキャン", exact: true }),
     ).toBeEnabled();
     await expect(panel.locator("#empty")).toBeHidden();
+    await expect(panel.locator("#source-section")).toBeVisible();
+    await expect(panel.locator("#results-controls")).toBeHidden();
     await expect(panel.locator(".candidate")).toHaveCount(0);
     // The access probe must not inject the content script or extract candidates.
     // Simulate only the notification from an icon click: fixture access is already granted.
@@ -1344,6 +1358,8 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
       });
     });
     await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(panel.locator("#results-controls")).toBeVisible();
+    await expect(panel.locator("#count")).toHaveText("3");
     await expect(
       panel.getByRole("button", { name: "再スキャン" }),
     ).toBeEnabled();
@@ -1357,6 +1373,11 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     });
     await panel.getByRole("button", { name: "再スキャン" }).click();
     await expect(panel.locator("#empty-title")).toBeVisible();
+    await expect(panel.locator("#candidates-title")).toBeVisible();
+    await expect(panel.locator("#count")).toBeVisible();
+    await expect(panel.locator("#count")).toHaveText("0");
+    await expect(panel.locator("#candidate-order")).toBeVisible();
+    await expect(panel.locator("#candidate-order")).toBeDisabled();
     await expect(panel.locator("#empty-title")).toHaveText(
       "日程が見つかりませんでした",
     );
@@ -1390,6 +1411,7 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect(
       panel.getByRole("button", { name: "スキャン中…", exact: true }),
     ).toBeDisabled();
+    await expect(panel.locator("#results-controls")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();
     await expect
       .poll(() => panel.evaluate(() => Boolean(window.__resumeInjection)))

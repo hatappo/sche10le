@@ -144,6 +144,8 @@ function setScanState(state) {
   el("rescan-label").textContent = label;
   el("scan-state").textContent = labels[state];
   el("scan-state").classList.toggle("busy", state === "scanning");
+  el("source-section").hidden = state === "blocked";
+  el("results-controls").hidden = state !== "complete";
   el("access-guide").hidden = state !== "blocked";
   el("empty").hidden = state !== "complete" || candidates.length > 0;
 }
