@@ -114,12 +114,12 @@
       <section
         id="source-section"
         class="source-section"
-        aria-label="対象ページ"
+        aria-labelledby="scan-title"
       >
-        <div class="source-text">
-          <span id="source-domain" class="muted">ページを確認中</span>
-          <span id="scan-state" class="status-dot" role="status">確認中</span>
-        </div>
+        <h2 id="scan-title" class="stage-title">
+          スキャン<span class="stage-check" aria-hidden="true">✓</span
+          ><span class="sr-only" data-stage-status></span>
+        </h2>
         <button
           id="rescan"
           class="reload-button"
@@ -130,6 +130,7 @@
           disabled
         >
           <svg
+            class="scan-icon"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -143,8 +144,21 @@
             <path d="M20 7v5h-5" />
             <path d="M20 12a8 8 0 1 0-2.3 5.7M20 12l-3-4" />
           </svg>
+          <span
+            id="scan-spinner"
+            class="scan-spinner"
+            aria-hidden="true"
+            hidden
+          ></span>
           <span id="rescan-label">スキャン</span>
         </button>
+        <div class="source-text">
+          <span id="source-domain" class="muted">ページを確認中</span>
+          <span id="scan-result" class="scan-result" hidden
+            ><span id="count">0</span>件</span
+          >
+          <span id="scan-state" class="status-dot" role="status">確認中</span>
+        </div>
       </section>
       <div id="access-guide" class="access-guide" role="status" hidden>
         <p>
@@ -181,8 +195,9 @@
       </div>
       <div id="results-controls" hidden>
         <div class="section-heading candidates-heading">
-          <h2 id="candidates-title" tabindex="-1">
-            見つかった日程 <span id="count" class="count">0</span>
+          <h2 id="candidates-title" class="stage-title" tabindex="-1">
+            日時<span class="stage-check" aria-hidden="true">✓</span
+            ><span class="sr-only" data-stage-status></span>
           </h2>
           <select
             id="candidate-order"
@@ -194,6 +209,11 @@
             <option value="page">登場順</option>
             <option value="date">日時順</option>
           </select>
+          <div class="selection-actions">
+            <button id="deselect" class="text-button" type="button">
+              選び直す
+            </button>
+          </div>
         </div>
         <div id="order-feedback" class="order-feedback" hidden>
           <p id="order-status" class="setting-status" role="status"></p>
@@ -201,11 +221,6 @@
             再試行
           </button>
         </div>
-      </div>
-      <div class="selection-actions">
-        <button id="deselect" class="text-button" type="button">
-          選び直す
-        </button>
       </div>
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
       <div id="candidates" class="candidates" aria-label="日程候補"></div>
@@ -241,9 +256,13 @@
       <section
         id="selection"
         class="selection"
-        aria-label="選択した予定"
+        aria-labelledby="content-title"
         hidden
       >
+        <h2 id="content-title" class="stage-title">
+          内容<span class="stage-check" aria-hidden="true">✓</span
+          ><span class="sr-only" data-stage-status></span>
+        </h2>
         <p id="pick-status" class="sr-only" role="status"></p>
         <div class="picked-values" role="group" aria-label="取得した内容">
           <button

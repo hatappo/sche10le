@@ -96,7 +96,7 @@ async function select(panel, label = "時間どおり") {
 }
 
 // Resolve a real button inside the closed shadow root, then click its screen position.
-async function clickOverlay(source, name) {
+async function clickOverlay(source, name, key) {
   const session = await context.newCDPSession(source);
   try {
     const { root } = await session.send("DOM.getDocument", {
@@ -122,6 +122,11 @@ async function clickOverlay(source, name) {
     }
     const target = find(root);
     expect(target, `overlay button: ${name}`).toBeTruthy();
+    if (key) {
+      await session.send("DOM.focus", { nodeId: target.nodeId });
+      await source.keyboard.press(key);
+      return;
+    }
     const { model } = await session.send("DOM.getBoxModel", {
       nodeId: target.nodeId,
     });
@@ -159,7 +164,11 @@ async function expectPickerActionsOnly(source, step = 0) {
         labels.push(attributes[index + 1]);
         if (attributes.includes("disabled"))
           disabledLabels.push(attributes[index + 1]);
-        if (["戻る", "スキップ", "閉じる"].includes(attributes[index + 1]))
+        if (
+          ["戻る", "スキップ", "選択モードを閉じる"].includes(
+            attributes[index + 1],
+          )
+        )
           actionNodes.push(node);
         if (!attributes.includes("hidden"))
           visibleLabels.push(attributes[index + 1]);
@@ -182,7 +191,17 @@ async function expectPickerActionsOnly(source, step = 0) {
     );
     expect(labels).not.toContain("Googleカレンダーで開く");
     expect(labels).not.toContain("一時停止");
-    expect(visibleLabels).toContain("閉じる");
+    expect(visibleLabels).toContain("選択モードを閉じる");
+    expect(labels).not.toContain("閉じる");
+    const close = actionNodes.find((node) =>
+      node.attributes.includes("選択モードを閉じる"),
+    );
+    expect(close.attributes[close.attributes.indexOf("title") + 1]).toBe(
+      "選択モードを閉じる（Esc）",
+    );
+    expect(
+      close.children.some((node) => node.nodeName.toLowerCase() === "svg"),
+    ).toBe(true);
     expect(visibleLabels).toEqual(expect.arrayContaining(["戻る", "スキップ"]));
     expect(disabledLabels.includes("戻る")).toBe(step === 0);
     expect(disabledLabels.includes("スキップ")).toBe(step === 3);
@@ -224,9 +243,15 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     panel.locator("#selected-date, #selected-time, #selection .eyebrow"),
   ).toHaveCount(0);
   await expect(panel.locator(".registration-summary")).toHaveCount(1);
-  for (const id of ["candidates-title", "count", "candidate-order"]) {
-    await expect(panel.locator(`#${id}`)).toBeHidden();
-  }
+  await expect(panel.locator("#candidate-order")).toBeHidden();
+  await expect(panel.locator("#candidates-title")).toBeVisible();
+  await expect(panel.locator("#count")).toBeVisible();
+  await expect(panel.locator("#scan-title .stage-check")).toBeVisible();
+  await expect(panel.locator("#candidates-title .stage-check")).toBeVisible();
+  await expect(panel.locator("#content-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
   await expect(panel.locator("#deselect")).toBeVisible();
   const resetBounds = await panel.locator("#deselect").boundingBox();
   const selectedBounds = await panel
@@ -280,6 +305,8 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
+  await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+  await expect(panel.locator(".stage-title[aria-current]")).toHaveCount(0);
   await panel.screenshot({ path: "test-results/panel-picked.png" });
   await source.screenshot({ path: "test-results/page-picker-complete.png" });
   // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
@@ -289,6 +316,11 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await clickOverlay(source, "戻る");
   await expect(panel.locator("#pick-status")).toContainText("詳細");
+  await expect(panel.locator("#content-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expect(panel.locator("#content-title .stage-check")).toBeHidden();
   await source.locator("#venue").click();
   await expect(panel.locator("#picked-details")).toHaveText(
     `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
@@ -348,6 +380,12 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   }
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#candidates-title")).toBeFocused();
+  await expect(panel.locator("#candidates-title")).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  await expect(panel.locator("#candidates-title .stage-check")).toBeHidden();
+  await expect(panel.locator("#content-title")).toBeHidden();
   await expect(
     panel.locator(".candidate.selected, .candidate.expanded"),
   ).toHaveCount(0);
@@ -1302,7 +1340,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await clickOverlay(source, "タイトルを選び直す");
   await source.locator("#event-title").click();
   const title = await panel.locator("#picked-title").textContent();
-  await clickOverlay(source, "閉じる");
+  await clickOverlay(source, "選択モードを閉じる");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#resume")).toBeVisible();
   await source.evaluate(() => {
@@ -1324,6 +1362,12 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
     "step",
   );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await source.locator("#venue").click();
+  await source.locator("#description").click();
+  const values = await panel.locator(".field-value").allTextContents();
+  await clickOverlay(source, "選択モードを閉じる", "Enter");
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  expect(await panel.locator(".field-value").allTextContents()).toEqual(values);
   await panel.close();
   await source.close();
 });
@@ -1340,6 +1384,7 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await source.goto("https://ungranted.example/events");
     await expect(panel.locator("#access-guide")).toBeVisible();
     await expect(panel.locator("#source-section")).toBeHidden();
+    await expect(panel.locator("#content-title")).toBeHidden();
     await expect(panel.locator("#candidates-title")).toBeHidden();
     await expect(panel.locator("#count")).toBeHidden();
     await expect(panel.locator("#candidate-order")).toBeHidden();
@@ -1380,9 +1425,16 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await expect(
       panel.getByRole("button", { name: "スキャン", exact: true }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
     await expect(panel.locator("#empty")).toBeHidden();
     await expect(panel.locator("#source-section")).toBeVisible();
     await expect(panel.locator("#results-controls")).toBeHidden();
+    await expect(panel.locator("#scan-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    await expect(panel.locator("#scan-title .stage-check")).toBeHidden();
+    await expect(panel.locator("#scan-result")).toBeHidden();
     await expect(panel.locator(".candidate")).toHaveCount(0);
     // The access probe must not inject the content script or extract candidates.
     // Simulate only the notification from an icon click: fixture access is already granted.
@@ -1402,6 +1454,11 @@ test("未許可ページでは案内だけを出し、対象外・未スキャ�
     await expect(
       panel.getByRole("button", { name: "再スキャン" }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
+    await expect(panel.locator("#rescan")).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
     await source.evaluate(() => {
       document.body.replaceChildren(
         document.createTextNode("日程のないページ"),
@@ -1432,6 +1489,8 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
   const { source, panel } = await open();
   let other;
   try {
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
+    await expect(panel.locator("#rescan .scan-icon")).toBeHidden();
     await panel.evaluate(() => {
       const execute = chrome.scripting.executeScript.bind(chrome.scripting);
       window.__execute = execute;
@@ -1450,6 +1509,18 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect(
       panel.getByRole("button", { name: "スキャン中…", exact: true }),
     ).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#scan-spinner")).toHaveCSS(
+      "animation-duration",
+      "3s",
+    );
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await expect(panel.locator("#scan-spinner")).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+    await panel.emulateMedia({ reducedMotion: "no-preference" });
     await expect(panel.locator("#results-controls")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();
     await expect
@@ -1459,11 +1530,33 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect(
       panel.getByRole("button", { name: "再試行", exact: true }),
     ).toBeEnabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
     await expect(panel.locator("#notice")).toHaveClass(/error/);
     await expect(panel.locator("#access-guide")).toBeHidden();
     await expect(panel.locator("#empty")).toBeHidden();
+    await panel.evaluate(() => {
+      chrome.scripting.executeScript = async (details) => {
+        if (details.files) {
+          chrome.scripting.executeScript = window.__execute;
+          await new Promise((resolve) => {
+            window.__resumeRetry = resolve;
+          });
+        }
+        return window.__execute(details);
+      };
+    });
     await panel.getByRole("button", { name: "再試行", exact: true }).click();
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "1px");
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__resumeRetry)))
+      .toBe(true);
+    await panel.evaluate(() => window.__resumeRetry());
     await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(panel.locator("#scan-spinner")).toBeHidden();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
 
     await panel.evaluate(() => {
       chrome.scripting.executeScript = (details) => {
@@ -1480,6 +1573,9 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
     await expect
       .poll(() => panel.evaluate(() => Boolean(window.__rejectAccess)))
       .toBe(true);
+    await expect(panel.locator("#scan-spinner")).toBeVisible();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#rescan")).toHaveCSS("border-top-width", "0px");
     other = await context.newPage();
     await other.goto("chrome://settings");
     await expect(panel.locator("#scan-state")).toHaveText("対象外");

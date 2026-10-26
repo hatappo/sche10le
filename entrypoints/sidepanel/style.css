@@ -152,26 +152,64 @@ main {
   color: var(--muted);
 }
 .source-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
   margin-top: 16px;
   border-bottom: 1px solid var(--line);
-  padding: 0 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  padding-bottom: 16px;
+}
+.source-section > .reload-button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 .source-text {
+  grid-column: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
-  flex: 1;
 }
 .source-text > .muted {
-  display: block;
+  min-width: 0;
   font-size: 11px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
+.scan-result {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  border-left: 1px solid var(--line);
+  padding-left: 8px;
+}
 .source-text .status-dot {
+  flex: none;
   font-size: 9px;
+}
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.stage-title[data-state="active"] {
+  color: var(--green);
+  font-weight: 600;
+}
+.stage-check {
+  display: inline-block;
+  flex: 0 0 12px;
+  inline-size: 12px;
+  visibility: hidden;
+  font-size: 10px;
+}
+.stage-title[data-state="complete"] .stage-check {
+  visibility: visible;
 }
 .access-guide {
   margin-top: 16px;
@@ -212,10 +250,14 @@ main {
   gap: 8px;
 }
 .candidates-heading {
+  justify-content: flex-start;
+  gap: 16px;
+  min-height: 30px;
   margin: 18px 0 12px;
 }
 .order-select {
   flex: none;
+  margin-inline-start: auto;
   max-width: 90px;
   min-height: 30px;
   padding: 3px 4px;
@@ -492,15 +534,15 @@ main {
   padding-top: 10px;
 }
 .selection {
-  margin-top: 12px;
+  margin-top: 24px;
   animation: appear 200ms;
 }
 .selection-actions {
   display: none;
+  margin-inline-start: auto;
   align-items: center;
   justify-content: flex-end;
   min-height: 30px;
-  margin: 18px 0 12px;
 }
 .registration-summary {
   font-size: 12px;
@@ -810,7 +852,8 @@ main {
 .inline-link:hover {
   text-decoration-line: underline;
 }
-.ai-spinner {
+.ai-spinner,
+.scan-spinner {
   display: inline-block;
   width: 11px;
   height: 11px;
@@ -822,12 +865,21 @@ main {
   border-radius: 50%;
   animation: ai-spin 3s linear infinite;
 }
+.scan-spinner {
+  flex: none;
+  margin-right: 0;
+}
+.reload-button.rescan-link .scan-icon,
+.reload-button[aria-busy="true"] .scan-icon {
+  display: none;
+}
 @keyframes ai-spin {
   to {
     transform: rotate(360deg);
   }
 }
-.is-selected #results-controls {
+.is-selected #candidate-order,
+.is-selected #order-feedback {
   display: none;
 }
 .is-selected .selection-actions {
@@ -894,6 +946,20 @@ main {
 .reload-button:hover:not(:disabled) {
   background: #dce8d7;
   border-color: var(--green);
+}
+.reload-button.rescan-link {
+  padding-inline: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  box-shadow: none;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.reload-button.rescan-link:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .picked-confirmation {
   position: absolute;

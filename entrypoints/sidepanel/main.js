@@ -123,8 +123,36 @@ function showSource(label, title = "") {
   el("source-domain").title = title;
 }
 
-/** @param {typeof scanState} state */
-function setScanState(state) {
+/** Reflect the existing workflow without introducing another progress state. */
+function renderSectionProgress() {
+  /** @type {Array<[string, 'active' | 'complete' | 'waiting']>} */
+  const sections = [
+    ["scan-title", scanState === "complete" ? "complete" : "active"],
+    [
+      "candidates-title",
+      draft ? "complete" : scanState === "complete" ? "active" : "waiting",
+    ],
+    [
+      "content-title",
+      draft ? (draft.step >= 3 ? "complete" : "active") : "waiting",
+    ],
+  ];
+  for (const [id, state] of sections) {
+    const heading = el(id);
+    heading.dataset.state = state;
+    if (state === "active") heading.setAttribute("aria-current", "step");
+    else heading.removeAttribute("aria-current");
+    const status = heading.querySelector("[data-stage-status]");
+    if (status)
+      status.textContent =
+        state === "complete" ? "：完了" : state === "active" ? "：操作中" : "";
+  }
+}
+
+/** @param {typeof scanState} state
+ * @param {boolean} [repeat]
+ */
+function setScanState(state, repeat = false) {
   scanState = state;
   const labels = {
     checking: "確認中",
@@ -144,6 +172,9 @@ function setScanState(state) {
           ? "スキャン中…"
           : "スキャン";
   const control = button("rescan");
+  control.classList.toggle("rescan-link", state === "complete" || repeat);
+  control.setAttribute("aria-busy", String(state === "scanning"));
+  el("scan-spinner").hidden = state !== "scanning";
   control.hidden = ["checking", "blocked", "unsupported"].includes(state);
   control.disabled = control.hidden || state === "scanning";
   control.setAttribute("aria-label", label);
@@ -151,10 +182,13 @@ function setScanState(state) {
   el("rescan-label").textContent = label;
   el("scan-state").textContent = labels[state];
   el("scan-state").classList.toggle("busy", state === "scanning");
+  el("scan-state").classList.toggle("sr-only", state === "complete");
+  el("scan-result").hidden = state !== "complete";
   el("source-section").hidden = state === "blocked";
   el("results-controls").hidden = state !== "complete";
   el("access-guide").hidden = state !== "blocked";
   el("empty").hidden = state !== "complete" || candidates.length > 0;
+  renderSectionProgress();
 }
 
 /** Check access without reading page content or adding a content script.
@@ -184,7 +218,7 @@ async function checkAccess(run) {
     });
     if (run !== generation) return;
     showSource(tab.url ? new URL(tab.url).hostname : "現在のページ");
-    setScanState("ready");
+    if (!scanning) setScanState("ready");
     notice("");
     return tab;
   } catch (error) {
@@ -226,6 +260,7 @@ function resetSelection() {
   document.body.classList.remove("is-selected");
   el("selection").hidden = true;
   el("open-area").hidden = true;
+  renderSectionProgress();
 }
 
 function pageChanged() {
@@ -245,10 +280,12 @@ function pageChanged() {
 
 async function scan() {
   if (scanning) return;
+  const repeat = scanState === "complete";
   stopConnection();
   resetSelection();
   const run = generation;
-  setScanState("checking");
+  scanning = true;
+  setScanState("scanning", repeat);
   showSource("ページを確認中");
   candidates = [];
   pageUrl = "";
@@ -259,9 +296,11 @@ async function scan() {
   notice("");
   try {
     const tab = await checkAccess(run);
-    if (!tab?.id || run !== generation) return;
-    scanning = true;
-    setScanState("scanning");
+    if (run !== generation) return;
+    if (!tab?.id) {
+      scanning = false;
+      return;
+    }
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["/content-scripts/page.js"],
@@ -624,6 +663,7 @@ function selectCandidate(candidate, variant) {
 }
 
 function renderDraft() {
+  renderSectionProgress();
   if (!draft) return;
   const complete = draft.step >= 3;
   PICK_FIELDS.forEach((field, index) => {
