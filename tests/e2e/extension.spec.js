@@ -96,7 +96,7 @@ async function select(panel, label = "時間どおり") {
 }
 
 // Resolve a real button inside the closed shadow root, then click its screen position.
-async function clickOverlay(source, name) {
+async function clickOverlay(source, name, key) {
   const session = await context.newCDPSession(source);
   try {
     const { root } = await session.send("DOM.getDocument", {
@@ -122,6 +122,11 @@ async function clickOverlay(source, name) {
     }
     const target = find(root);
     expect(target, `overlay button: ${name}`).toBeTruthy();
+    if (key) {
+      await session.send("DOM.focus", { nodeId: target.nodeId });
+      await source.keyboard.press(key);
+      return;
+    }
     const { model } = await session.send("DOM.getBoxModel", {
       nodeId: target.nodeId,
     });
@@ -159,7 +164,11 @@ async function expectPickerActionsOnly(source, step = 0) {
         labels.push(attributes[index + 1]);
         if (attributes.includes("disabled"))
           disabledLabels.push(attributes[index + 1]);
-        if (["戻る", "スキップ", "閉じる"].includes(attributes[index + 1]))
+        if (
+          ["戻る", "スキップ", "選択モードを閉じる"].includes(
+            attributes[index + 1],
+          )
+        )
           actionNodes.push(node);
         if (!attributes.includes("hidden"))
           visibleLabels.push(attributes[index + 1]);
@@ -182,7 +191,17 @@ async function expectPickerActionsOnly(source, step = 0) {
     );
     expect(labels).not.toContain("Googleカレンダーで開く");
     expect(labels).not.toContain("一時停止");
-    expect(visibleLabels).toContain("閉じる");
+    expect(visibleLabels).toContain("選択モードを閉じる");
+    expect(labels).not.toContain("閉じる");
+    const close = actionNodes.find((node) =>
+      node.attributes.includes("選択モードを閉じる"),
+    );
+    expect(close.attributes[close.attributes.indexOf("title") + 1]).toBe(
+      "選択モードを閉じる（Esc）",
+    );
+    expect(
+      close.children.some((node) => node.nodeName.toLowerCase() === "svg"),
+    ).toBe(true);
     expect(visibleLabels).toEqual(expect.arrayContaining(["戻る", "スキップ"]));
     expect(disabledLabels.includes("戻る")).toBe(step === 0);
     expect(disabledLabels.includes("スキップ")).toBe(step === 3);
@@ -1321,7 +1340,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await clickOverlay(source, "タイトルを選び直す");
   await source.locator("#event-title").click();
   const title = await panel.locator("#picked-title").textContent();
-  await clickOverlay(source, "閉じる");
+  await clickOverlay(source, "選択モードを閉じる");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#resume")).toBeVisible();
   await source.evaluate(() => {
@@ -1343,6 +1362,12 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
     "step",
   );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
+  await source.locator("#venue").click();
+  await source.locator("#description").click();
+  const values = await panel.locator(".field-value").allTextContents();
+  await clickOverlay(source, "選択モードを閉じる", "Enter");
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  expect(await panel.locator(".field-value").allTextContents()).toEqual(values);
   await panel.close();
   await source.close();
 });
