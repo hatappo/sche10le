@@ -60,11 +60,12 @@ test.afterAll(async () => {
   if (workspace) await rm(workspace, { recursive: true, force: true });
 });
 
-async function open(footerRandom) {
+async function open(footerRandom, panelInit) {
   const source = await context.newPage();
   await source.goto(baseUrl);
   const panel = await context.newPage();
   await panel.setViewportSize({ width: 390, height: 900 });
+  if (panelInit) await panel.addInitScript(panelInit);
   if (footerRandom !== undefined)
     await panel.addInitScript((value) => {
       Math.random = () => value;
@@ -90,7 +91,7 @@ async function open(footerRandom) {
 async function select(panel, label = "時間どおり") {
   const card = panel.locator(".candidate").first();
   await card.hover();
-  await card.getByRole("button", { name: new RegExp(label) }).click();
+  await card.getByRole("button", { name: new RegExp(`^${label}`) }).click();
   await expect(panel.locator("#selection")).toBeVisible();
 }
 
@@ -304,7 +305,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
 
 test("未取得で開く・スキップ・戻る・選び直しとEscape", async () => {
   const { source, panel } = await open();
-  await select(panel, "終日で確保");
+  await select(panel, "終日");
   await clickOverlay(source, "スキップ");
   await expect(panel.locator("#pick-status")).toContainText("場所");
   await clickOverlay(source, "戻る");
@@ -340,7 +341,7 @@ test("未取得で開く・スキップ・戻る・選び直しとEscape", async
   await expect(panel.locator("#candidate-order")).toBeFocused();
   await panel.keyboard.press("Tab");
   await expect(panel.locator(".candidate").first()).toHaveClass(/expanded/);
-  await select(panel, "終日で確保");
+  await select(panel, "終日");
   const opened = context.waitForEvent("page");
   await panel.getByRole("button", { name: "Googleカレンダーで開く" }).click();
   const calendar = await opened;
@@ -455,7 +456,7 @@ test("タイトル書式をプレビュー・保存し、選び直しと再表�
   await panel.close();
   await source.close();
   const next = await open();
-  await select(next.panel, "終日で確保");
+  await select(next.panel, "終日");
   await expect(next.panel.locator("#picked-title")).toHaveText(
     "週末のデザイン散歩 | TOKYO FIELD NOTES あいうえお",
   );
@@ -658,18 +659,18 @@ test("同日の終日カードだけ除き、各時刻の終日パターンを�
   await expect(panel.locator(".candidate")).toHaveCount(4);
   await expect(panel.locator("#count")).toHaveText("4");
   await expect(
-    panel.locator(".variant-label").filter({ hasText: "終日で確保" }),
+    panel.locator(".variant-label").filter({ hasText: "終日" }),
   ).toHaveCount(4);
   const later = panel.locator(".candidate").last();
   await later.hover();
   await expect(later.getByRole("button", { name: /時間どおり/ })).toBeVisible();
   await expect(later.getByRole("button", { name: /移動込み/ })).toBeVisible();
-  await expect(later.getByRole("button", { name: /終日で確保/ })).toBeVisible();
+  await expect(later.getByRole("button", { name: /^終日/ })).toBeVisible();
   await later.getByRole("button", { name: /時間どおり/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("18:00–20:00");
   await panel.getByRole("button", { name: "選び直す", exact: true }).click();
   await later.hover();
-  await later.getByRole("button", { name: /終日で確保/ }).click();
+  await later.getByRole("button", { name: /^終日/ }).click();
   await expect(panel.locator("#selected-time")).toContainText("終日");
   await panel.close();
   await source.close();
@@ -783,7 +784,7 @@ for (const selected of [false, true]) {
     if (selected) {
       const card = panel.locator(".candidate").last();
       await card.hover();
-      await card.getByRole("button", { name: /終日で確保/ }).click();
+      await card.getByRole("button", { name: /^終日/ }).click();
       await source.locator("#event-title").click();
       await expect(panel.locator("#picked-title")).toContainText(
         "蔵前の活版印刷ワークショップ",
@@ -1462,10 +1463,10 @@ test("一時的な接続失敗は再試行でき、遅れた権限判定は別�
 test("ブランドと設定を下部にまとめ、主操作と本文を隠さず選択を保つ", async () => {
   const { source, panel } = await open();
   try {
+    await expect(panel.locator("#panel-close")).toBeHidden();
     await expect(panel.locator("header")).toHaveCount(0);
     await expect(panel.locator("a.brand, button.brand")).toHaveCount(0);
     await expect(panel.locator("#footer .brand")).toBeVisible();
-    await expect(panel.locator("#footer #settings-toggle")).toHaveText("⚙");
     await expect(panel.locator("#settings-toggle")).toHaveAccessibleName(
       "設定",
     );
@@ -1726,6 +1727,138 @@ test("AIの失敗・再試行・無効化でスピナーを更新し、古い処
     await expect(panel.locator(".candidate")).toHaveCount(3);
   } finally {
     await panel.close();
+    await source.close();
+  }
+});
+
+for (const mode of ["other-browser", "detection-error", "missing-api"]) {
+  test(`閉じるボタンを出さず通常のスキャンを維持する: ${mode}`, async () => {
+    const initializers = {
+      "other-browser": () => {
+        Object.defineProperty(navigator, "brave", {
+          value: { isBrave: async () => false },
+        });
+      },
+      "detection-error": () => {
+        Object.defineProperty(navigator, "brave", {
+          value: {
+            isBrave: async () => {
+              throw new Error("Unavailable");
+            },
+          },
+        });
+      },
+      "missing-api": () => {
+        Object.defineProperty(navigator, "brave", {
+          value: { isBrave: async () => true },
+        });
+        chrome.sidePanel.close = undefined;
+      },
+    };
+    const { source, panel } = await open(undefined, initializers[mode]);
+    try {
+      await expect(panel.locator("#panel-close")).toBeHidden();
+      await select(panel);
+      await source.locator("#event-title").click();
+      await expect(panel.locator("#picked-title")).toContainText(
+        "蔵前の活版印刷ワークショップ",
+      );
+    } finally {
+      await panel.close();
+      await source.close();
+    }
+  });
+}
+
+test("Brave用の閉じる操作は対象ウィンドウを指定し、失敗時の選択と再試行を保つ", async () => {
+  const { source, panel } = await open(undefined, () => {
+    Object.defineProperty(navigator, "brave", {
+      value: { isBrave: async () => true },
+    });
+    window.__closeCalls = [];
+    window.__failClose = true;
+    chrome.sidePanel.close = async (options) => {
+      window.__closeCalls.push(options);
+      if (window.__failClose) throw new Error("Close failed");
+      await new Promise((resolve) => {
+        window.__resolveClose = resolve;
+      });
+    };
+  });
+  try {
+    const close = panel.getByRole("button", {
+      name: "サイドバーを閉じる",
+      exact: true,
+    });
+    await expect(close).toBeVisible();
+    await expect(close).toHaveAttribute("title", "サイドバーを閉じる");
+    await panel.screenshot({
+      path: "test-results/brave-panel-close.png",
+      animations: "disabled",
+    });
+    const expectedWindow = await panel.evaluate(
+      async () => (await chrome.windows.getCurrent()).id,
+    );
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await close.click();
+    await expect(panel.locator("#panel-close-error")).toBeVisible();
+    await expect(close).toBeEnabled();
+    await expect(panel.locator("#picked-title")).toHaveText(title);
+    // A failed close must leave the content-script connection and picker usable.
+    await source.locator("#venue").click();
+    await expect(panel.locator("#picked-location")).toContainText(
+      "東京都台東区蔵前3丁目",
+    );
+    await expectPickerActionsOnly(source, 2);
+    for (const width of [390, 280]) {
+      await panel.setViewportSize({ width, height: 500 });
+      await expect
+        .poll(async () =>
+          panel.evaluate(() => {
+            const close = document
+              .getElementById("panel-close")
+              .getBoundingClientRect();
+            const settings = document
+              .getElementById("settings-toggle")
+              .getBoundingClientRect();
+            const footer = document
+              .getElementById("footer")
+              .getBoundingClientRect();
+            return (
+              close.width >= 36 &&
+              close.height >= 36 &&
+              settings.right <= close.left &&
+              footer.bottom <= innerHeight &&
+              document.documentElement.scrollWidth <= innerWidth &&
+              parseFloat(
+                getComputedStyle(document.querySelector("main")).paddingBottom,
+              ) >= footer.height
+            );
+          }),
+        )
+        .toBe(true);
+    }
+    await panel.setViewportSize({ width: 390, height: 900 });
+    await panel.evaluate(() => {
+      window.__failClose = false;
+    });
+    await close.focus();
+    await panel.keyboard.press("Enter");
+    await expect(close).toBeDisabled();
+    await expect(panel.locator("#panel-close-error")).toBeHidden();
+    await expect
+      .poll(() => panel.evaluate(() => window.__closeCalls))
+      .toEqual([{ windowId: expectedWindow }, { windowId: expectedWindow }]);
+    await panel.evaluate(() => window.__resolveClose());
+    // Native panels are outside Playwright's page surface. Keep the document
+    // alive after API success to exercise cleanup even if the browser caches it.
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await expect(close).toBeEnabled();
+    await expect(panel.locator("#selection")).toBeHidden();
+  } finally {
+    if (!panel.isClosed()) await panel.close();
     await source.close();
   }
 });

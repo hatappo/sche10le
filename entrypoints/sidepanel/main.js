@@ -1039,6 +1039,39 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 window.addEventListener("pagehide", stopConnection);
 
+// Brave omits the browser-owned header. Keep Chrome's existing controls and
+// older browsers unchanged; do not infer the browser from its Chrome-like UA.
+async function initializePanelClose() {
+  try {
+    if (
+      typeof chrome.sidePanel?.close === "function" &&
+      (await navigator.brave?.isBrave()) === true
+    )
+      button("panel-close").hidden = false;
+  } catch {
+    /* Detection is optional and must never block scanning. */
+  }
+}
+
+button("panel-close").addEventListener("click", async () => {
+  const control = button("panel-close");
+  control.disabled = true;
+  el("panel-close-error").hidden = true;
+  try {
+    const current = await chrome.windows.getCurrent();
+    if (current.id === undefined) throw new Error("No panel window");
+    await chrome.sidePanel.close({ windowId: current.id });
+    // Also release the picker if the browser retains this document while hidden.
+    // A rejected close leaves the current selection and connection untouched.
+    pageChanged();
+    control.disabled = false;
+  } catch {
+    control.disabled = false;
+    el("panel-close-error").hidden = false;
+  }
+});
+void initializePanelClose();
+
 // Reserve the actual fixed footer height, including wrapped text and zoom.
 const footerResize = new ResizeObserver(() => {
   const height = el("footer").getBoundingClientRect().height;

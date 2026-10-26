@@ -355,18 +355,55 @@
             ></span
           >
         </div>
-        <button
-          id="settings-toggle"
-          class="settings-button"
-          type="button"
-          aria-label="設定"
-          title="設定"
-          aria-expanded="false"
-          aria-controls="settings"
-        >
-          <span aria-hidden="true">⚙</span>
-        </button>
+        <div class="footer-actions">
+          <button
+            id="settings-toggle"
+            class="settings-button"
+            type="button"
+            aria-label="設定"
+            title="設定"
+            aria-expanded="false"
+            aria-controls="settings"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M18.467 9.321L20.803 10.129L20.803 13.871L18.467 14.679L18.467 14.679L19.548 16.902L16.902 19.548L14.679 18.467L14.679 18.467L13.871 20.803L10.129 20.803L9.321 18.467L9.321 18.467L7.098 19.548L4.452 16.902L5.533 14.679L5.533 14.679L3.197 13.871L3.197 10.129L5.533 9.321L5.533 9.321L4.452 7.098L7.098 4.452L9.321 5.533L9.321 5.533L10.129 3.197L13.871 3.197L14.679 5.533L14.679 5.533L16.902 4.452L19.548 7.098L18.467 9.321Z M12 8.8a3.2 3.2 0 1 0 0 6.4a3.2 3.2 0 1 0 0-6.4Z"
+              />
+            </svg>
+          </button>
+          <button
+            id="panel-close"
+            class="panel-close-button"
+            type="button"
+            aria-label="サイドバーを閉じる"
+            title="サイドバーを閉じる"
+            hidden
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
       </div>
+      <p id="panel-close-error" class="panel-close-error" role="alert" hidden>
+        サイドバーを閉じられませんでした。もう一度お試しください。
+      </p>
     </footer>
     <script type="module" src="./main.js"></script>
   </body>
