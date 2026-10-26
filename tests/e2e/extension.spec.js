@@ -1467,7 +1467,6 @@ test("ブランドと設定を下部にまとめ、主操作と本文を隠さ�
     await expect(panel.locator("header")).toHaveCount(0);
     await expect(panel.locator("a.brand, button.brand")).toHaveCount(0);
     await expect(panel.locator("#footer .brand")).toBeVisible();
-    await expect(panel.locator("#footer #settings-toggle")).toHaveText("⚙");
     await expect(panel.locator("#settings-toggle")).toHaveAccessibleName(
       "設定",
     );
@@ -1793,7 +1792,10 @@ test("Brave用の閉じる操作は対象ウィンドウを指定し、失敗時
     });
     await expect(close).toBeVisible();
     await expect(close).toHaveAttribute("title", "サイドバーを閉じる");
-    await panel.screenshot({ path: "test-results/brave-panel-close.png" });
+    await panel.screenshot({
+      path: "test-results/brave-panel-close.png",
+      animations: "disabled",
+    });
     const expectedWindow = await panel.evaluate(
       async () => (await chrome.windows.getCurrent()).id,
     );

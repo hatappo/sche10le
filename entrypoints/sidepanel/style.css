@@ -123,13 +123,15 @@ a {
   border-radius: 8px;
   min-width: 36px;
   min-height: 36px;
-  padding: 6px 8px;
+  padding: 6px;
   font-size: 11px;
   line-height: 1;
   color: var(--ink);
 }
-.settings-button span {
-  font-size: 20px;
+.settings-button svg,
+.panel-close-button svg {
+  display: block;
+  flex: none;
 }
 .settings-button:hover,
 .panel-close-button:hover {
