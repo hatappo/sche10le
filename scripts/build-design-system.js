@@ -27,7 +27,8 @@ const sidebar = (await read("entrypoints/sidepanel/style.css")).replace(
 );
 const components = (await read("docs/design/components.html"))
   .replace("{{THEME}}", theme)
-  .replace("{{PANEL_CSS}}", sidebar);
+  .replace("{{PANEL_CSS}}", sidebar)
+  .replace("{{BRAND_ICON}}", await dataImage("public/icons/32.png"));
 const picker = await read("lib/picker.js");
 const pickerStyle = picker.match(/style\.textContent = `([\s\S]*?)`;/)?.[1];
 if (!pickerStyle) throw new Error("取得バーのCSSを読み取れません");

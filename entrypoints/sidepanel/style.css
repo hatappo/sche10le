@@ -1,6 +1,8 @@
 @import url("../../lib/theme.css");
 
 :root {
+  --footer-height: 56px;
+  scroll-padding-bottom: calc(var(--footer-height) + 16px);
   color-scheme: light;
   background: var(--paper);
   color: var(--ink);
@@ -69,23 +71,16 @@ a {
 ::selection {
   background: #d5e4cc;
 }
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 24px 18px;
-  border-bottom: 1px solid var(--line);
-}
 .brand {
   display: flex;
-  gap: 10px;
+  gap: 7px;
   align-items: center;
   text-decoration: none;
   font:
-    600 25px/1 Georgia,
+    600 20px/1 Georgia,
     "Times New Roman",
     serif;
-  letter-spacing: -1.4px;
+  letter-spacing: -1px;
 }
 .brand-mark {
   display: grid;
@@ -118,22 +113,29 @@ a {
 .brand-period {
   color: var(--ochre);
 }
-.icon-button {
+.settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 8px;
-  min-width: 34px;
-  height: 34px;
-  font-size: 20px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px 8px;
+  font-size: 11px;
   line-height: 1;
-  color: var(--muted);
+  color: var(--ink);
 }
-.icon-button:hover {
+.settings-button span {
+  font-size: 20px;
+}
+.settings-button:hover {
   background: var(--wash);
   color: var(--green);
 }
 main {
-  padding: 0 24px 125px;
+  padding: 0 24px calc(var(--footer-height) + 16px);
 }
 .eyebrow {
   font:
@@ -165,6 +167,34 @@ main {
 }
 .source-text .status-dot {
   font-size: 9px;
+}
+.access-guide {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--wash);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.75;
+}
+.access-guide p {
+  margin: 0 0 10px;
+}
+.access-guide small {
+  display: block;
+  font-size: 11px;
+}
+.guide-icon-label {
+  white-space: nowrap;
+}
+.guide-icon {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.puzzle-icon {
+  color: var(--ink);
 }
 .muted,
 .hint {
@@ -335,13 +365,30 @@ main {
   letter-spacing: 0.4px;
 }
 .candidate-source {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 3px;
   font-size: 9px;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+}
+.source-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--wash);
+  color: var(--green);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.source-tag.is-ai {
+  background: #fbf1dc;
+  color: #785825;
+}
+.candidate-year {
+  white-space: nowrap;
 }
 .candidate-arrow {
   font-size: 15px;
@@ -504,7 +551,7 @@ main {
   color: var(--ink);
   text-align: left;
   scroll-margin-top: 16px;
-  scroll-margin-bottom: 125px;
+  scroll-margin-bottom: 16px;
 }
 .field-row:hover {
   background: var(--wash);
@@ -563,8 +610,18 @@ main {
   right: 0;
   background: var(--paper);
   border-top: 1px solid var(--line);
-  padding: 16px 24px 14px;
+  padding: 10px 24px;
   z-index: 5;
+}
+.footer-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+}
+#open-area {
+  margin-bottom: 12px;
 }
 .primary-button {
   background: var(--green);
@@ -595,17 +652,25 @@ main {
   margin-top: 8px;
   color: var(--muted);
 }
-.idle-footer {
+.settings-quote {
   font-size: 10px;
   display: flex;
   gap: 7px;
   align-items: center;
   justify-content: center;
+  text-align: center;
   color: var(--muted);
+  margin: auto 8px 0;
+  padding-top: 24px;
+}
+.settings-quote .tiny-dot {
+  flex: none;
 }
 .settings {
+  display: flex;
+  flex-direction: column;
   padding: 22px 16px 32px;
-  min-height: calc(100dvh - 77px);
+  min-height: 100dvh;
   background: #eef1e8;
 }
 .settings-open main,
@@ -624,6 +689,7 @@ main {
   font-size: 11px;
 }
 .setting-group {
+  flex-shrink: 0;
   background: var(--paper);
   border: 1px solid #d2dbca;
   border-radius: 12px;
@@ -685,11 +751,41 @@ main {
 .ai-area {
   margin-top: 14px;
   font-size: 10px;
-  color: var(--muted);
+  color: var(--ink);
 }
-.ai-area button {
+.ai-area > button {
   display: block;
   margin-top: 4px;
+}
+.inline-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  text-decoration: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.inline-link:hover {
+  text-decoration-line: underline;
+}
+.ai-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1.5px solid var(--line);
+  border-top-color: var(--green);
+  border-right-color: var(--green);
+  border-radius: 50%;
+  animation: ai-spin 3s linear infinite;
+}
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .is-selected .candidates-heading {
   margin-top: 18px;
@@ -722,11 +818,9 @@ main {
   }
 }
 @media (max-width: 320px) {
-  .header {
-    padding: 18px;
-  }
   main {
-    padding: 0 16px 125px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .footer {
     padding-left: 16px;

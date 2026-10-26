@@ -70,9 +70,9 @@ async function open(footerRandom) {
       Math.random = () => value;
     }, footerRandom);
   await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
-  await expect(panel.getByRole("button", { name: "再スキャン" })).toBeEnabled();
+  await expect(panel.locator("#scan-state")).toHaveText("対象外");
   await source.bringToFront();
-  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await panel.getByRole("button", { name: "スキャン", exact: true }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
   await expect(panel.locator("#scan-state")).toHaveText("スキャン完了");
   // Browser-initiated tabs.create navigation can bypass Playwright's first-request
@@ -374,7 +374,7 @@ test("移動時間を保存でき、ページ遷移・パネル終了で選択�
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   await expect(panel.locator("#selection")).toBeHidden();
   await expect(panel.locator(".candidate")).toHaveCount(0);
-  await panel.getByRole("button", { name: "再スキャン" }).click();
+  await panel.getByRole("button", { name: "スキャン", exact: true }).click();
   await expect(panel.locator(".candidate")).toHaveCount(3);
   await select(panel);
   await panel.close();
@@ -530,7 +530,7 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await source.screenshot({ path: "test-results/page-source-highlight.png" });
   // The page's original text and inline markup remain intact.
   await expect(target.locator("strong")).toHaveText("１４：００〜１６：００");
-  await panel.locator(".header").hover();
+  await panel.locator(".footer-tools").hover();
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
   await source.emulateMedia({ reducedMotion: "reduce" });
   await source.evaluate(() => window.scrollTo(0, 0));
@@ -549,7 +549,7 @@ test("候補のホバー・フォーカスで元の日時へスクロールし�
   await expect(source.locator("sche10le-source-highlight")).toHaveCount(0);
   // Reset no longer pins the first card via focus. Leave it before targeting
   // another card so its collapsing region cannot move that target mid-hover.
-  await panel.locator(".header").hover();
+  await panel.locator(".footer-tools").hover();
   await panel
     .locator(".candidate")
     .last()
@@ -1109,7 +1109,7 @@ test("並び順の保存失敗は再試行でき、連続変更でも最後の�
   await source.close();
 });
 
-test("フッターのことばを起動時に選び、再スキャンや選び直しでは変えない", async () => {
+test("名言は設定画面だけに表示し、再スキャンや選び直しでは変えない", async () => {
   for (const [random, quote] of [
     [0, FOOTER_QUOTES[0]],
     [0.999, FOOTER_QUOTES.at(-1)],
@@ -1126,11 +1126,13 @@ test("フッターのことばを起動時に選び、再スキャンや選び�
     await expect(panel.locator(".candidate")).toHaveCount(3);
     await expect(footer).toHaveText(quote.text);
     await select(panel);
-    await expect(panel.locator("#idle-footer")).toBeHidden();
+    await expect(footer).toBeHidden();
     await expect(
       panel.getByRole("button", { name: "Googleカレンダーで開く" }),
     ).toBeVisible();
     await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+    await expect(footer).toBeHidden();
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
     await expect(footer).toBeVisible();
     await expect(footer).toHaveText(quote.text);
     await panel.setViewportSize({ width: 280, height: 700 });
@@ -1142,6 +1144,7 @@ test("フッターのことばを起動時に選び、再スキャンや選び�
     await panel.screenshot({
       path: `test-results/footer-quote-${random}.png`,
       animations: "disabled",
+      fullPage: true,
     });
     await panel.close();
     await source.close();
@@ -1287,4 +1290,442 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await panel.close();
   await source.close();
+});
+
+test("未許可ページでは案内だけを出し、対象外・未スキャン・0件を区別する", async () => {
+  const { source, panel } = await open();
+  await context.route("https://ungranted.example/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<h1>2026年11月8日 14:00</h1>",
+    }),
+  );
+  try {
+    await source.goto("https://ungranted.example/events");
+    await expect(panel.locator("#access-guide")).toBeVisible();
+    await expect(panel.locator("#source-section")).toBeHidden();
+    await expect(panel.locator("#candidates-title")).toBeHidden();
+    await expect(panel.locator("#count")).toBeHidden();
+    await expect(panel.locator("#candidate-order")).toBeHidden();
+    await expect(panel.locator("#access-guide strong")).toHaveCount(0);
+    await expect(panel.locator("#access-guide p img")).toBeVisible();
+    await expect(panel.locator("#access-guide small svg")).toBeVisible();
+    expect(
+      await panel
+        .locator("#access-guide img")
+        .evaluate((img) => img.complete && img.naturalWidth > 0),
+    ).toBe(true);
+    await expect(panel.locator("#rescan")).toBeHidden();
+    await expect(panel.locator("#rescan")).toBeDisabled();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(0);
+    await expect(panel.locator("#notice")).not.toHaveClass(/error/);
+    await expect(panel.locator("#scan-state")).toHaveText("待機中");
+    await panel.screenshot({ path: "test-results/scan-access-guidance.png" });
+    await panel.setViewportSize({ width: 300, height: 700 });
+    expect(
+      await panel.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await panel.screenshot({
+      path: "test-results/scan-access-guidance-narrow.png",
+    });
+
+    await source.goto("chrome://settings");
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await expect(panel.locator("#rescan")).toBeHidden();
+    await expect(panel.locator("#access-guide")).toBeHidden();
+    await expect(panel.locator("#notice")).toContainText(
+      "このページではスキャンできません",
+    );
+
+    await source.goto(baseUrl);
+    await expect(
+      panel.getByRole("button", { name: "スキャン", exact: true }),
+    ).toBeEnabled();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect(panel.locator("#source-section")).toBeVisible();
+    await expect(panel.locator("#results-controls")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(0);
+    // The access probe must not inject the content script or extract candidates.
+    // Simulate only the notification from an icon click: fixture access is already granted.
+    await context.serviceWorkers()[0].evaluate(async () => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await chrome.runtime.sendMessage({
+        type: "scan-request",
+        windowId: tab.windowId,
+      });
+    });
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+    await expect(panel.locator("#results-controls")).toBeVisible();
+    await expect(panel.locator("#count")).toHaveText("3");
+    await expect(
+      panel.getByRole("button", { name: "再スキャン" }),
+    ).toBeEnabled();
+    await source.evaluate(() => {
+      document.body.replaceChildren(
+        document.createTextNode("日程のないページ"),
+      );
+      document
+        .querySelectorAll('script[type="application/ld+json"]')
+        .forEach((script) => script.remove());
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator("#empty-title")).toBeVisible();
+    await expect(panel.locator("#candidates-title")).toBeVisible();
+    await expect(panel.locator("#count")).toBeVisible();
+    await expect(panel.locator("#count")).toHaveText("0");
+    await expect(panel.locator("#candidate-order")).toBeVisible();
+    await expect(panel.locator("#candidate-order")).toBeDisabled();
+    await expect(panel.locator("#empty-title")).toHaveText(
+      "日程が見つかりませんでした",
+    );
+    await expect(panel.locator("#access-guide")).toBeHidden();
+  } finally {
+    await context.unroute("https://ungranted.example/**");
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("一時的な接続失敗は再試行でき、遅れた権限判定は別タブの状態を上書きしない", async () => {
+  const { source, panel } = await open();
+  let other;
+  try {
+    await panel.evaluate(() => {
+      const execute = chrome.scripting.executeScript.bind(chrome.scripting);
+      window.__execute = execute;
+      chrome.scripting.executeScript = async (details) => {
+        if (details.files) {
+          chrome.scripting.executeScript = execute;
+          await new Promise((resolve) => {
+            window.__resumeInjection = resolve;
+          });
+          throw new Error("Frame with ID 0 was removed.");
+        }
+        return execute(details);
+      };
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(
+      panel.getByRole("button", { name: "スキャン中…", exact: true }),
+    ).toBeDisabled();
+    await expect(panel.locator("#results-controls")).toBeHidden();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__resumeInjection)))
+      .toBe(true);
+    await panel.evaluate(() => window.__resumeInjection());
+    await expect(
+      panel.getByRole("button", { name: "再試行", exact: true }),
+    ).toBeEnabled();
+    await expect(panel.locator("#notice")).toHaveClass(/error/);
+    await expect(panel.locator("#access-guide")).toBeHidden();
+    await expect(panel.locator("#empty")).toBeHidden();
+    await panel.getByRole("button", { name: "再試行", exact: true }).click();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+
+    await panel.evaluate(() => {
+      chrome.scripting.executeScript = (details) => {
+        if (details.func) {
+          chrome.scripting.executeScript = window.__execute;
+          return new Promise((_resolve, reject) => {
+            window.__rejectAccess = reject;
+          });
+        }
+        return window.__execute(details);
+      };
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect
+      .poll(() => panel.evaluate(() => Boolean(window.__rejectAccess)))
+      .toBe(true);
+    other = await context.newPage();
+    await other.goto("chrome://settings");
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await panel.evaluate(() =>
+      window.__rejectAccess(new Error("Cannot access contents of url")),
+    );
+    await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await expect(panel.locator("#access-guide")).toBeHidden();
+  } finally {
+    await panel.close();
+    await other?.close();
+    await source.close();
+  }
+});
+
+test("ブランドと設定を下部にまとめ、主操作と本文を隠さず選択を保つ", async () => {
+  const { source, panel } = await open();
+  try {
+    await expect(panel.locator("header")).toHaveCount(0);
+    await expect(panel.locator("a.brand, button.brand")).toHaveCount(0);
+    await expect(panel.locator("#footer .brand")).toBeVisible();
+    await expect(panel.locator("#footer #settings-toggle")).toHaveText("⚙");
+    await expect(panel.locator("#settings-toggle")).toHaveAccessibleName(
+      "設定",
+    );
+    await expect(panel.locator("#settings-toggle")).toHaveAttribute(
+      "title",
+      "設定",
+    );
+    await expect(panel.locator("#footer-quote")).toBeHidden();
+    await panel.screenshot({ path: "test-results/footer-layout-list.png" });
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await panel.locator(".brand").click();
+    await expect(panel.locator("#selection")).toBeVisible();
+    await expect(panel.locator("#picked-title")).toHaveText(title);
+    for (const [width, height] of [
+      [390, 900],
+      [280, 500],
+      [390, 400],
+    ]) {
+      await panel.setViewportSize({ width, height });
+      await expect
+        .poll(async () => {
+          return panel.evaluate(() => {
+            const footer = document
+              .getElementById("footer")
+              .getBoundingClientRect();
+            const action = document
+              .getElementById("open-calendar")
+              .getBoundingClientRect();
+            const settings = document
+              .getElementById("settings-toggle")
+              .getBoundingClientRect();
+            const main = document.querySelector("main");
+            return (
+              footer.bottom <= innerHeight &&
+              action.bottom <= settings.top &&
+              parseFloat(getComputedStyle(main).paddingBottom) >=
+                footer.height &&
+              document.documentElement.scrollWidth <= innerWidth
+            );
+          });
+        })
+        .toBe(true);
+      await panel.locator("#field-details").focus();
+      await expect
+        .poll(async () =>
+          panel.evaluate(
+            () =>
+              document.getElementById("field-details").getBoundingClientRect()
+                .bottom <=
+              document.getElementById("footer").getBoundingClientRect().top,
+          ),
+        )
+        .toBe(true);
+      await panel.screenshot({
+        path: `test-results/footer-layout-pick-${width}-${height}.png`,
+        animations: "disabled",
+      });
+      await panel.getByRole("button", { name: "設定", exact: true }).click();
+      await expect(panel.locator("#footer")).toBeHidden();
+      await expect(panel.locator("#footer-quote")).toBeVisible();
+      await expect(panel.locator("#travel")).toBeFocused();
+      await panel.keyboard.press("Escape");
+      await expect(panel.locator("#settings-toggle")).toBeFocused();
+      await expect(panel.locator("#selection")).toBeVisible();
+      await expect(panel.locator("#picked-title")).toHaveText(title);
+    }
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("出典ラベルとAIスピナーを表示し、リンクからAI設定へ移動して選択を保って戻る", async () => {
+  const { source, panel } = await open();
+  try {
+    await source.evaluate(() => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = "11/25 15:00〜16:00 夜の集まり";
+      document.querySelector("main").append(paragraph);
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.textContent = JSON.stringify({
+        "@type": "Event",
+        startDate: "2026-12-02",
+        name: "構造化イベント",
+      });
+      document.head.append(script);
+    });
+    await panel.getByRole("button", { name: "再スキャン" }).click();
+    await expect(panel.locator(".source-tag")).toHaveCount(0);
+    await expect(panel.locator(".candidate-source")).toHaveCount(1);
+    await expect(
+      panel.locator('.date-content[title^="ページ本文"]'),
+    ).toHaveCount(4);
+    await expect(
+      panel.locator('.date-content[title^="ページの構造化データ"]'),
+    ).toHaveCount(1);
+    await expect(panel.locator(".candidate-year")).toContainText(
+      "年として解釈",
+    );
+    await panel.evaluate(() => {
+      const checkbox = document.getElementById("ai-enabled");
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+      Object.defineProperty(window, "LanguageModel", {
+        configurable: true,
+        value: {
+          availability: async () => "available",
+          create: async () => ({
+            prompt: () =>
+              new Promise((resolve) => {
+                window.__completeAI = resolve;
+              }),
+            destroy() {},
+          }),
+        },
+      });
+    });
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
+    await panel.locator("#ai-enabled").check();
+    await panel.locator("#settings-close").click();
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIで日程を補完しています。表示されている候補は選べます。",
+    );
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    expect(
+      await panel
+        .locator("#ai-spinner")
+        .evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe("ai-spin");
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    expect(
+      await panel
+        .locator("#ai-spinner")
+        .evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe("none");
+    await panel.setViewportSize({ width: 300, height: 850 });
+    await panel.locator("#ai-status").scrollIntoViewIfNeeded();
+    expect(
+      await panel.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await panel.screenshot({ path: "test-results/ai-busy-narrow.png" });
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await panel
+      .getByRole("button", { name: "AIで日程を補完", exact: true })
+      .click();
+    await expect(panel.locator("#ai-enabled")).toBeFocused();
+    await expect(panel.locator("#ai-enabled")).toBeInViewport();
+    await expect
+      .poll(() => panel.evaluate(() => typeof window.__completeAI))
+      .toBe("function");
+    await panel.evaluate(() =>
+      window.__completeAI(
+        JSON.stringify([
+          {
+            start: "2026-12-03T18:00:00+09:00",
+            end: "2026-12-03T19:00:00+09:00",
+            evidence: "夜の集まり",
+          },
+        ]),
+      ),
+    );
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIの補完が完了しました。",
+    );
+    await panel.keyboard.press("Escape");
+    await expect(panel.locator("#ai-settings-link")).toBeFocused();
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator("#picked-title")).toHaveText(title);
+    await panel.getByRole("button", { name: "選び直す", exact: true }).click();
+    await expect(panel.locator(".source-tag.is-ai")).toHaveText("AI");
+    await expect(
+      panel.locator('.date-content[title^="ローカルAI"]'),
+    ).toHaveAttribute("title", /内容をご確認ください\n夜の集まり/);
+    await panel.screenshot({
+      path: "test-results/ai-source-labels.png",
+      fullPage: true,
+    });
+    await panel.locator("#ai-settings-link").click();
+    await panel.locator("#ai-enabled").uncheck();
+    await panel.locator("#settings-close").click();
+    await expect(panel.locator("#ai-area")).toBeHidden();
+    await expect(panel.locator("#settings-toggle")).toBeFocused();
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("AIの失敗・再試行・無効化でスピナーを更新し、古い処理は新しい状態を上書きしない", async () => {
+  const { source, panel } = await open();
+  try {
+    await panel.evaluate(() => {
+      const checkbox = document.getElementById("ai-enabled");
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+      window.__aiRequests = [];
+      Object.defineProperty(window, "LanguageModel", {
+        configurable: true,
+        value: {
+          availability: async () => "available",
+          create: async () => ({
+            prompt: () =>
+              new Promise((resolve, reject) => {
+                window.__aiRequests.push({ resolve, reject });
+              }),
+            destroy() {},
+          }),
+        },
+      });
+    });
+    await panel.getByRole("button", { name: "設定", exact: true }).click();
+    await panel.locator("#ai-enabled").check();
+    await panel.locator("#settings-close").click();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(1);
+    await panel.evaluate(() =>
+      window.__aiRequests[0].reject(new Error("test failure")),
+    );
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator("#ai-status")).toContainText(
+      "補完はできませんでした",
+    );
+    await panel
+      .getByRole("button", { name: "もう一度試す", exact: true })
+      .click();
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(2);
+    await panel.locator("#ai-settings-link").click();
+    await panel.locator("#ai-enabled").uncheck();
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await panel.locator("#ai-enabled").check();
+    await expect
+      .poll(() => panel.evaluate(() => window.__aiRequests.length))
+      .toBe(3);
+    await panel.locator("#settings-close").click();
+    await panel.evaluate(() =>
+      window.__aiRequests[1].reject(new Error("late failure")),
+    );
+    await expect(panel.locator("#ai-spinner")).toBeVisible();
+    await expect(panel.locator("#ai-status")).toContainText(
+      "表示されている候補は選べます",
+    );
+    await panel.evaluate(() => window.__aiRequests[2].resolve("[]"));
+    await expect(panel.locator("#ai-status")).toHaveText(
+      "AIの補完が完了しました。",
+    );
+    await expect(panel.locator("#ai-spinner")).toBeHidden();
+    await expect(panel.locator(".candidate")).toHaveCount(3);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
 });

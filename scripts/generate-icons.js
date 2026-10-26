@@ -1,5 +1,5 @@
 // Render the sidebar's actual CSS mark. No extra runtime or build dependencies.
-// Run on macOS with Georgia installed to match the approved header typography.
+// Run on macOS with Georgia installed to match the approved brand typography.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 
@@ -19,7 +19,7 @@ const sidebar = await readFile(
 // Include both .brand-mark declarations and its decorative pseudo-element.
 const mark = sidebar.match(/\.brand-mark(?::before)?\s*\{[^}]*\}/g);
 if (mark?.length !== 3)
-  throw new Error("ヘッダーのアイコンCSSを確認してください");
+  throw new Error("ブランドのアイコンCSSを確認してください");
 
 await mkdir(directory, { recursive: true });
 const browser = await chromium.launch({ channel: "chromium", headless: true });
@@ -42,7 +42,7 @@ try {
     });
     await page.evaluate(() => document.fonts.ready);
     await page.locator(".brand-mark").evaluate((element, size) => {
-      // Keep the header's 30:32 aspect ratio with transparent outer padding.
+      // Keep the mark's 30:32 aspect ratio with transparent outer padding.
       const scale = (size * 0.875) / 32;
       element.style.transform = `scale(${scale})`;
       element.style.left = `${(size - 30 * scale) / 2}px`;

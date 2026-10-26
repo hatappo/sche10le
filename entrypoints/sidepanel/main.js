@@ -7,6 +7,7 @@ import {
 import { calendarUrl, candidateOptions } from "../../lib/calendar.js";
 import { orderCandidates } from "../../lib/candidate-order.js";
 import { pickFooterQuote } from "../../lib/footer-quotes.js";
+import { accessFailure, unsupportedPage } from "../../lib/page-access.js";
 import {
   createDraft,
   FIELD_LABELS,
@@ -63,6 +64,8 @@ let windowId;
 let port;
 let generation = 0;
 let scanning = false;
+/** @type {"checking" | "blocked" | "unsupported" | "ready" | "scanning" | "complete" | "error"} */
+let scanState = "checking";
 let opening = false;
 let scanTimer = 0;
 let travelMinutes = 30;
@@ -100,6 +103,8 @@ let sourceTimer = 0;
 let revealedId = "";
 /** @type {AbortController | undefined} */
 let aiController;
+let aiRevision = 0;
+let settingsReturnTarget = "settings-toggle";
 
 /** @param {string} text @param {boolean} [error] */
 function notice(text, error = false) {
@@ -111,6 +116,75 @@ function notice(text, error = false) {
 function showSource(label, title = "") {
   el("source-domain").textContent = label;
   el("source-domain").title = title;
+}
+
+/** @param {typeof scanState} state */
+function setScanState(state) {
+  scanState = state;
+  const labels = {
+    checking: "確認中",
+    blocked: "待機中",
+    unsupported: "対象外",
+    ready: "未スキャン",
+    scanning: "スキャン中",
+    complete: "スキャン完了",
+    error: "スキャンできませんでした",
+  };
+  const label =
+    state === "complete"
+      ? "再スキャン"
+      : state === "error"
+        ? "再試行"
+        : state === "scanning"
+          ? "スキャン中…"
+          : "スキャン";
+  const control = button("rescan");
+  control.hidden = ["checking", "blocked", "unsupported"].includes(state);
+  control.disabled = control.hidden || state === "scanning";
+  control.setAttribute("aria-label", label);
+  control.title = label;
+  el("rescan-label").textContent = label;
+  el("scan-state").textContent = labels[state];
+  el("scan-state").classList.toggle("busy", state === "scanning");
+  el("source-section").hidden = state === "blocked";
+  el("results-controls").hidden = state !== "complete";
+  el("access-guide").hidden = state !== "blocked";
+  el("empty").hidden = state !== "complete" || candidates.length > 0;
+}
+
+/** Check access without reading page content or adding a content script.
+ * @param {number} run
+ */
+async function checkAccess(run) {
+  try {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (run !== generation) return;
+    if (!tab?.id) throw new Error("ページがありません");
+    sourceTabId = tab.id;
+    windowId = tab.windowId;
+    if (unsupportedPage(tab.url)) {
+      setScanState("unsupported");
+      showSource("スキャン対象外のページ");
+      notice(
+        "このページではスキャンできません。日程のあるWebページを開いてください。",
+      );
+      return;
+    }
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => true,
+    });
+    if (run !== generation) return;
+    showSource(tab.url ? new URL(tab.url).hostname : "現在のページ");
+    setScanState("ready");
+    notice("");
+    return tab;
+  } catch (error) {
+    if (run === generation) scanFailed(error);
+  }
 }
 
 /** @param {object} message */
@@ -128,9 +202,10 @@ function stopConnection() {
   clearSource();
   generation++;
   aiController?.abort();
+  aiRevision++;
+  el("ai-spinner").hidden = true;
   clearTimeout(scanTimer);
   scanning = false;
-  button("rescan").disabled = false;
   const previous = port;
   port = undefined;
   previous?.disconnect();
@@ -146,7 +221,6 @@ function resetSelection() {
   document.body.classList.remove("is-selected");
   el("selection").hidden = true;
   el("open-area").hidden = true;
-  el("idle-footer").hidden = false;
 }
 
 function pageChanged() {
@@ -156,12 +230,12 @@ function pageChanged() {
   pageText = "";
   pageUrl = "";
   sourceTabId = undefined;
-  showSource("ページが切り替わりました");
+  setScanState("checking");
+  showSource("ページを確認中");
   el("ai-area").hidden = true;
   renderCandidates();
-  notice("このページを調べるには、拡張アイコンを押してください。");
-  el("scan-state").textContent = "待機中";
-  el("scan-state").classList.remove("busy");
+  notice("");
+  void checkAccess(generation);
 }
 
 async function scan() {
@@ -169,25 +243,20 @@ async function scan() {
   stopConnection();
   resetSelection();
   const run = generation;
-  scanning = true;
-  button("rescan").disabled = true;
+  setScanState("checking");
   showSource("ページを確認中");
   candidates = [];
+  pageUrl = "";
+  pageText = "";
   renderCandidates();
   el("empty").hidden = true;
   el("ai-area").hidden = true;
-  notice("このページの日程を探しています…");
-  el("scan-state").textContent = "スキャン中";
-  el("scan-state").classList.add("busy");
+  notice("");
   try {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (run !== generation) return;
-    if (!tab?.id) throw new Error("ページがありません");
-    sourceTabId = tab.id;
-    windowId = tab.windowId;
+    const tab = await checkAccess(run);
+    if (!tab?.id || run !== generation) return;
+    scanning = true;
+    setScanState("scanning");
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["/content-scripts/page.js"],
@@ -211,23 +280,30 @@ async function scan() {
       if (scanning && run === generation) scanFailed();
     }, 8000);
     connection.postMessage({ type: "scan" });
-  } catch {
-    if (run === generation) scanFailed();
+  } catch (error) {
+    if (run === generation) scanFailed(error);
   }
 }
 
-function scanFailed() {
+/** @param {unknown} [error] */
+function scanFailed(error) {
   stopConnection();
-  sourceTabId = undefined;
   pageUrl = "";
   pageText = "";
-  showSource("ページにアクセスできません");
-  el("scan-state").textContent = "未接続";
-  el("scan-state").classList.remove("busy");
+  candidates = [];
+  const state = accessFailure(error);
+  setScanState(state);
+  showSource(
+    state === "unsupported" ? "スキャン対象外のページ" : "現在のページ",
+  );
   renderCandidates();
   notice(
-    "対象ページで拡張アイコンを押してください。Chromeの設定画面など、読み取れないページもあります。",
-    true,
+    state === "blocked"
+      ? ""
+      : state === "unsupported"
+        ? "このページではスキャンできません。日程のあるWebページを開いてください。"
+        : "ページとの接続を確認できませんでした。読み込みが終わってから再試行してください。",
+    state === "error",
   );
 }
 
@@ -236,7 +312,6 @@ function receive(message, run) {
   if (message.type === "snapshot") {
     clearTimeout(scanTimer);
     scanning = false;
-    button("rescan").disabled = false;
     if (
       typeof message.text !== "string" ||
       typeof message.url !== "string" ||
@@ -258,8 +333,7 @@ function receive(message, run) {
       extractTextEvents(pageText),
     );
     showSource(new URL(pageUrl).hostname, pageTitle || "タイトルのないページ");
-    el("scan-state").textContent = "スキャン完了";
-    el("scan-state").classList.remove("busy");
+    setScanState("complete");
     notice("");
     renderCandidates();
     void prepareAI(run);
@@ -294,13 +368,7 @@ function visibleOptions() {
 function renderCandidates(neutral = false) {
   const options = visibleOptions();
   el("count").textContent = String(options.length);
-  el("empty").hidden = candidates.length > 0 || scanning;
-  el("empty-title").textContent = pageUrl
-    ? "日程が見つかりませんでした"
-    : "日程はまだ見つかっていません";
-  el("empty-description").textContent = pageUrl
-    ? "画像内の文字は対象外です。日付がテキストで書かれたページをお試しください。"
-    : "日程のあるページを開いて、拡張アイコンを押してください。";
+  el("empty").hidden = candidates.length > 0 || scanState !== "complete";
   const fragment = document.createDocumentFragment();
   for (const { candidate, variants } of options)
     fragment.append(candidateCard(candidate, variants, neutral));
@@ -396,17 +464,31 @@ function candidateCard(candidate, variants, waitForMovement = false) {
     node("strong", "", dateText),
     node("span", "candidate-time", timeText),
   );
-  const source =
+  const sourceDescription =
     candidate.source === "structured"
-      ? "構造化データ"
+      ? "ページの構造化データから自動抽出"
       : candidate.source === "ai"
-        ? "AI補完・内容をご確認ください"
-        : candidate.inferredYear
-          ? `${candidate.date.slice(0, 4)}年として解釈`
-          : "ページ内の日付";
-  const evidence = node("span", "candidate-source", source);
-  evidence.title = candidate.evidence;
-  content.append(evidence);
+        ? "ローカルAIによる補完。内容をご確認ください"
+        : "ページ本文の日付を自動抽出";
+  content.title = `${sourceDescription}\n${candidate.evidence}`;
+  content.append(node("span", "sr-only", sourceDescription));
+  if (candidate.source === "ai" || candidate.inferredYear) {
+    const evidence = node("span", "candidate-source");
+    if (candidate.source === "ai") {
+      const sourceTag = node("span", "source-tag is-ai", "AI");
+      sourceTag.setAttribute("aria-hidden", "true");
+      evidence.append(sourceTag);
+    }
+    if (candidate.inferredYear)
+      evidence.append(
+        node(
+          "span",
+          "candidate-year",
+          `${candidate.date.slice(0, 4)}年として解釈`,
+        ),
+      );
+    content.append(evidence);
+  }
   heading.append(badge, content, node("span", "candidate-arrow", "›"));
   const region = node("div", "variant-region");
   region.inert = true;
@@ -514,7 +596,6 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  el("idle-footer").hidden = true;
   el("selected-date").textContent = dateRangeLabel(
     variant.date,
     variant.endDate,
@@ -640,56 +721,90 @@ async function openCalendar() {
   }
 }
 
+/** Keep the settings link stable while status changes, including keyboard focus.
+ * @param {string} prefix @param {string} message @param {boolean} [busy]
+ */
+function showAIStatus(prefix, message, busy = false) {
+  el("ai-spinner").hidden = !busy;
+  el("ai-settings-link").textContent = prefix;
+  el("ai-message").textContent = message;
+}
+
 /** @param {number} run */
 async function prepareAI(run) {
   if (!aiEnabled) return;
+  const revision = ++aiRevision;
   const status = await aiAvailability(window.LanguageModel);
-  if (run !== generation || !aiEnabled) return;
+  if (run !== generation || !aiEnabled || revision !== aiRevision) return;
   el("ai-area").hidden = false;
   el("ai-download").hidden = status !== "downloadable";
+  el("ai-download").textContent = "AIを準備する";
   if (status === "available") {
     await runAI(run);
     return;
   }
-  el("ai-status").textContent =
-    status === "downloadable"
-      ? "AIを使うにはモデルのダウンロードが必要です。"
-      : status === "downloading"
-        ? "AIモデルを準備中です。通常の抽出は利用できます。"
-        : "この環境では通常の抽出を利用します。";
+  if (status === "downloadable")
+    showAIStatus("AIを使うには", "モデルのダウンロードが必要です。");
+  else if (status === "downloading")
+    showAIStatus("AIモデル", "を準備中です。通常の抽出は利用できます。", true);
+  else
+    showAIStatus(
+      "AI補完",
+      "はこの環境では利用できません。通常の抽出を利用します。",
+    );
 }
 
 /** @param {number} run */
 async function runAI(run) {
   if (!window.LanguageModel || !pageText || !aiEnabled) return;
+  const revision = ++aiRevision;
   aiController?.abort();
   const controller = new AbortController();
   aiController = controller;
   const timeout = window.setTimeout(() => controller.abort(), 90_000);
   el("ai-area").hidden = false;
   el("ai-download").hidden = true;
-  el("ai-status").textContent =
-    "AIで日程を補完しています。今ある候補は選べます。";
+  showAIStatus(
+    "AIで日程を補完",
+    "しています。表示されている候補は選べます。",
+    true,
+  );
   try {
     const additions = await enhanceDates(
       window.LanguageModel,
       pageText,
       controller.signal,
     );
-    if (run !== generation || !aiEnabled || controller.signal.aborted) return;
+    if (
+      run !== generation ||
+      !aiEnabled ||
+      controller.signal.aborted ||
+      aiController !== controller ||
+      revision !== aiRevision
+    )
+      return;
     candidates = mergeCandidates(candidates, additions);
     // Keep the selected card and draft stable until the user returns to the list.
     if (!draft) reconcileCandidates(visibleOptions());
-    el("ai-status").textContent = "AIの補完が完了しました。";
+    showAIStatus("AIの補完", "が完了しました。");
   } catch {
-    if (run === generation && aiEnabled && aiController === controller) {
-      el("ai-status").textContent =
-        "AIの補完はできませんでした。通常の抽出を利用できます。";
+    if (
+      run === generation &&
+      aiEnabled &&
+      aiController === controller &&
+      revision === aiRevision
+    ) {
+      showAIStatus(
+        "AIの補完",
+        "はできませんでした。通常の抽出を利用できます。",
+      );
       el("ai-download").hidden = false;
       el("ai-download").textContent = "もう一度試す";
     }
   } finally {
     clearTimeout(timeout);
+    if (aiController === controller && revision === aiRevision)
+      el("ai-spinner").hidden = true;
   }
 }
 
@@ -716,17 +831,13 @@ button("deselect").addEventListener("click", () => {
   renderCandidates(true);
   el("candidates-title").focus();
 });
-document.querySelector(".brand")?.addEventListener("click", (event) => {
-  event.preventDefault();
-  if (!el("settings").hidden) toggleSettings();
-  resetSelection();
-  renderCandidates();
-  window.scrollTo({ top: 0 });
-});
 button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
-  if (settings.hidden) panelScroll = window.scrollY;
+  if (settings.hidden) {
+    panelScroll = window.scrollY;
+    settingsReturnTarget = "settings-toggle";
+  }
   settings.hidden = !settings.hidden;
   document.body.classList.toggle("settings-open", !settings.hidden);
   clearSource();
@@ -739,7 +850,12 @@ function toggleSettings() {
     behavior: "instant",
   });
   if (!settings.hidden) input("travel").focus({ preventScroll: true });
-  else button("settings-toggle").focus({ preventScroll: true });
+  else
+    button(
+      settingsReturnTarget === "ai-settings-link" && !el("ai-area").hidden
+        ? "ai-settings-link"
+        : "settings-toggle",
+    ).focus({ preventScroll: true });
   updateFormatPreview();
 }
 
@@ -864,12 +980,23 @@ function applyTravel() {
 function applyAI() {
   aiEnabled = input("ai-enabled").checked;
   aiController?.abort();
+  aiRevision++;
+  el("ai-spinner").hidden = true;
   if (aiEnabled && pageText) void prepareAI(generation);
   else el("ai-area").hidden = true;
   saveSetting("ai", aiEnabled);
 }
 button("settings-toggle").addEventListener("click", toggleSettings);
 button("settings-close").addEventListener("click", toggleSettings);
+button("ai-settings-link").addEventListener("click", () => {
+  if (el("settings").hidden) toggleSettings();
+  settingsReturnTarget = "ai-settings-link";
+  el("ai-settings-group").scrollIntoView({
+    block: "center",
+    behavior: "instant",
+  });
+  input("ai-enabled").focus({ preventScroll: true });
+});
 input("travel").addEventListener("input", applyTravel);
 input("ai-enabled").addEventListener("change", applyAI);
 button("retry-format").addEventListener("click", () =>
@@ -903,8 +1030,25 @@ chrome.tabs.onActivated.addListener((info) => {
 chrome.tabs.onUpdated.addListener((tabId, info) => {
   if (tabId === sourceTabId && (info.status === "loading" || info.url))
     pageChanged();
+  else if (
+    tabId === sourceTabId &&
+    info.status === "complete" &&
+    ["checking", "error"].includes(scanState)
+  )
+    pageChanged();
 });
 window.addEventListener("pagehide", stopConnection);
+
+// Reserve the actual fixed footer height, including wrapped text and zoom.
+const footerResize = new ResizeObserver(() => {
+  const height = el("footer").getBoundingClientRect().height;
+  if (height > 0)
+    document.documentElement.style.setProperty(
+      "--footer-height",
+      `${height}px`,
+    );
+});
+footerResize.observe(el("footer"));
 
 async function initialize() {
   const quote = pickFooterQuote();
