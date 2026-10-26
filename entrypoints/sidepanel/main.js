@@ -470,24 +470,25 @@ function candidateCard(candidate, variants, waitForMovement = false) {
       : candidate.source === "ai"
         ? "ローカルAIによる補完。内容をご確認ください"
         : "ページ本文の日付を自動抽出";
-  const evidence = node("span", "candidate-source");
-  evidence.title = `${sourceDescription}\n${candidate.evidence}`;
-  const sourceTag = node(
-    "span",
-    `source-tag${candidate.source === "ai" ? " is-ai" : ""}`,
-    candidate.source === "ai" ? "AI" : "自動",
-  );
-  sourceTag.setAttribute("aria-hidden", "true");
-  evidence.append(sourceTag, node("span", "sr-only", sourceDescription));
-  if (candidate.inferredYear)
-    evidence.append(
-      node(
-        "span",
-        "candidate-year",
-        `${candidate.date.slice(0, 4)}年として解釈`,
-      ),
-    );
-  content.append(evidence);
+  content.title = `${sourceDescription}\n${candidate.evidence}`;
+  content.append(node("span", "sr-only", sourceDescription));
+  if (candidate.source === "ai" || candidate.inferredYear) {
+    const evidence = node("span", "candidate-source");
+    if (candidate.source === "ai") {
+      const sourceTag = node("span", "source-tag is-ai", "AI");
+      sourceTag.setAttribute("aria-hidden", "true");
+      evidence.append(sourceTag);
+    }
+    if (candidate.inferredYear)
+      evidence.append(
+        node(
+          "span",
+          "candidate-year",
+          `${candidate.date.slice(0, 4)}年として解釈`,
+        ),
+      );
+    content.append(evidence);
+  }
   heading.append(badge, content, node("span", "candidate-arrow", "›"));
   const region = node("div", "variant-region");
   region.inert = true;

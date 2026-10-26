@@ -1465,8 +1465,13 @@ test("ブランドと設定を下部にまとめ、主操作と本文を隠さ�
     await expect(panel.locator("header")).toHaveCount(0);
     await expect(panel.locator("a.brand, button.brand")).toHaveCount(0);
     await expect(panel.locator("#footer .brand")).toBeVisible();
-    await expect(panel.locator("#footer #settings-toggle")).toHaveText(
-      "⚙ 設定",
+    await expect(panel.locator("#footer #settings-toggle")).toHaveText("⚙");
+    await expect(panel.locator("#settings-toggle")).toHaveAccessibleName(
+      "設定",
+    );
+    await expect(panel.locator("#settings-toggle")).toHaveAttribute(
+      "title",
+      "設定",
     );
     await expect(panel.locator("#footer-quote")).toBeHidden();
     await panel.screenshot({ path: "test-results/footer-layout-list.png" });
@@ -1552,14 +1557,13 @@ test("出典ラベルとAIスピナーを表示し、リンクからAI設定へ�
       document.head.append(script);
     });
     await panel.getByRole("button", { name: "再スキャン" }).click();
-    await expect(panel.locator(".source-tag")).toHaveText(
-      Array(5).fill("自動"),
-    );
+    await expect(panel.locator(".source-tag")).toHaveCount(0);
+    await expect(panel.locator(".candidate-source")).toHaveCount(1);
     await expect(
-      panel.locator('.candidate-source[title^="ページ本文"]'),
+      panel.locator('.date-content[title^="ページ本文"]'),
     ).toHaveCount(4);
     await expect(
-      panel.locator('.candidate-source[title^="ページの構造化データ"]'),
+      panel.locator('.date-content[title^="ページの構造化データ"]'),
     ).toHaveCount(1);
     await expect(panel.locator(".candidate-year")).toContainText(
       "年として解釈",
@@ -1640,7 +1644,7 @@ test("出典ラベルとAIスピナーを表示し、リンクからAI設定へ�
     await panel.getByRole("button", { name: "選び直す", exact: true }).click();
     await expect(panel.locator(".source-tag.is-ai")).toHaveText("AI");
     await expect(
-      panel.locator('.candidate-source[title^="ローカルAI"]'),
+      panel.locator('.date-content[title^="ローカルAI"]'),
     ).toHaveAttribute("title", /内容をご確認ください\n夜の集まり/);
     await panel.screenshot({
       path: "test-results/ai-source-labels.png",

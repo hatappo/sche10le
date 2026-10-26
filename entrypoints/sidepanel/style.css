@@ -117,18 +117,18 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 8px;
-  min-height: 34px;
+  min-width: 36px;
+  min-height: 36px;
   padding: 6px 8px;
   font-size: 11px;
   line-height: 1;
   color: var(--ink);
 }
 .settings-button span {
-  font-size: 17px;
+  font-size: 20px;
 }
 .settings-button:hover {
   background: var(--wash);
