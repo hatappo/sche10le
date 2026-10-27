@@ -27,6 +27,8 @@ export const sites = [
     name: "Peatix",
     url: "https://peatix.com/event/5222594",
     identity: "第8回OIV登録品種サミット",
+    // The document title arrives before Peatix renders the event description.
+    readySelector: "#field-event-description",
     expected: {
       start: "2026-12-05T13:00:00+09:00",
       end: "2026-12-05T17:00:00+09:00",

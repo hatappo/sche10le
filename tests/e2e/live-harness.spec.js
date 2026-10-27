@@ -17,6 +17,11 @@ test.beforeAll(async () => {
   manifestBefore = await readFile(".output/chrome-mv3/manifest.json", "utf8");
   server = createServer((req, res) => {
     navigations.push(req.url);
+    if (req.url === "/body-rendered") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
     const code = Number(req.url.slice(1));
     if ([403, 429, 404].includes(code)) {
       res.writeHead(code, { "Content-Type": "text/html; charset=utf-8" });
@@ -31,7 +36,29 @@ test.beforeAll(async () => {
       return;
     }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    if (req.url === "/challenge")
+    if (req.url === "/delayed-body" || req.url === "/delayed-no-dates") {
+      const content =
+        req.url === "/delayed-body"
+          ? "2026年11月5日 20:00〜21:00"
+          : "開催内容は公開されていますが日時の記載はありません。";
+      res.end(`<title>${identity}</title><header>イベントサイト</header>
+        <main id="event-details" hidden></main><footer>ページ末尾</footer>
+        <script>
+          // Fetch/hydration can finish long after document.readyState is complete.
+          setTimeout(() => {
+            const details = document.querySelector('#event-details');
+            details.textContent = ${JSON.stringify(content)};
+            details.hidden = false;
+            fetch('/body-rendered');
+          }, 2500);
+        </script>`);
+    } else if (req.url === "/empty-details")
+      res.end(`<title>${identity}</title><main id="event-details"></main>`);
+    else if (req.url === "/hidden-details")
+      res.end(
+        `<title>${identity}</title><main id="event-details" style="visibility:hidden">2026年11月5日 20:00〜21:00</main>`,
+      );
+    else if (req.url === "/challenge")
       res.end("<title>Just a moment...</title><p>Verify you are human</p>");
     else if (req.url === "/changed")
       res.end("<title>別のイベント</title><p>2026年11月5日 20:00〜21:00</p>");
@@ -84,5 +111,33 @@ for (const [route, category, dates] of [
       /<html|<main|<title|ライブ検証用イベント/,
     );
     if (category === "PASS") expect(result.candidates).toHaveLength(1);
+  });
+}
+
+for (const [route, category] of [
+  ["delayed-body", "PASS"],
+  ["delayed-no-dates", "DATE_MISMATCH"],
+  ["empty-details", "PAGE_NOT_READY"],
+  ["hidden-details", "PAGE_NOT_READY"],
+]) {
+  test(`本文の描画待ち: ${route} → ${category}`, async () => {
+    navigations = [];
+    const result = await runLiveCase(
+      {
+        id: "fixture",
+        name: "テスト",
+        url: `${origin}/${route}`,
+        identity,
+        expected,
+        readySelector: "#event-details",
+      },
+      { allowLocalhost: true, readinessTimeout: 5000 },
+    );
+    expect(result.category).toBe(category);
+    expect(result.status).toBe(category === "PASS" ? "passed" : "failed");
+    expect(navigations.filter((url) => url === `/${route}`)).toHaveLength(1);
+    expect(JSON.stringify(result)).not.toMatch(/<main|イベントサイト/);
+    if (route.startsWith("delayed-"))
+      expect(navigations).toContain("/body-rendered");
   });
 }
