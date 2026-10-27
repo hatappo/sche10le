@@ -1792,7 +1792,7 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   await source.close();
 });
 
-test("取得バーの光は開始・再開時だけ一度流れ、動きを減らす設定では省略する", async () => {
+test("取得バーは開始・再開時だけ下から現れ、動きを減らす設定では省略する", async () => {
   const { source, panel } = await open();
   const session = await context.newCDPSession(source);
   async function guideAnimation(action) {
@@ -1826,9 +1826,12 @@ test("取得バーの光は開始・再開時だけ一度流れ、動きを減�
       arguments: [{ value: action }],
       returnByValue: true,
       functionDeclaration: `function(action) {
-        const animation = this.getAnimations({subtree:true}).find(item => item.animationName === 'picker-start');
+        if (action === 'measure') return {top:this.getBoundingClientRect().top, opacity:getComputedStyle(this).opacity};
+        const animation = this.getAnimations().find(item => item.animationName === 'picker-enter');
         if (!animation) return false;
-        if (action === 'pause') { animation.pause(); animation.currentTime = 800; }
+        if (action === 'pause') { animation.pause(); animation.currentTime = 0; }
+        if (action === 'duration') return animation.effect.getTiming().duration;
+        if (action === 'middle') animation.currentTime = 140;
         if (action === 'finish') animation.finish();
         return true;
       }`,
@@ -1838,8 +1841,15 @@ test("取得バーの光は開始・再開時だけ一度流れ、動きを減�
   try {
     await select(panel);
     expect(await guideAnimation("pause")).toBe(true);
-    await source.screenshot({ path: "test-results/picker-arrival-shine.png" });
+    expect(await guideAnimation("duration")).toBe(280);
+    const start = await guideAnimation("measure");
+    expect(start.opacity).toBe("0");
+    await guideAnimation("middle");
+    await source.screenshot({ path: "test-results/picker-arrival.png" });
     expect(await guideAnimation("finish")).toBe(true);
+    const end = await guideAnimation("measure");
+    expect(end.opacity).toBe("1");
+    expect(start.top - end.top).toBeCloseTo(12, 1);
     await clickOverlay(source, "スキップ");
     expect(await guideAnimation("inspect")).toBe(false);
     await clickOverlay(source, "戻る");
