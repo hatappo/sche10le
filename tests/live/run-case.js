@@ -141,6 +141,18 @@ export async function runLiveCase(
             .map((el) => (el.textContent ?? "").slice(0, 200_001))
             .join("\n");
           const snapshot = text + json;
+          const region = readySelector
+            ? document.querySelector(readySelector)
+            : null;
+          // A mounted but empty/hidden placeholder is not rendered event content.
+          const regionReady =
+            !readySelector ||
+            (region instanceof HTMLElement &&
+              region.checkVisibility({
+                opacityProperty: true,
+                visibilityProperty: true,
+              }) &&
+              region.innerText.trim().length > 0);
           const previous = window.__sche10leLiveReady;
           if (!previous || previous.snapshot !== snapshot) {
             window.__sche10leLiveReady = { snapshot, since: performance.now() };
@@ -149,7 +161,7 @@ export async function runLiveCase(
           return (
             document.readyState === "complete" &&
             (document.title.includes(identity) || text.includes(identity)) &&
-            (!readySelector || document.querySelector(readySelector)) &&
+            regionReady &&
             performance.now() - previous.since >= 750
           );
         },
