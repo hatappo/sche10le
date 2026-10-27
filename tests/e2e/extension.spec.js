@@ -254,7 +254,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
         border: style.borderTopColor,
       };
     });
-  expect(expandedCardStyle.background).not.toBe(idleCardStyle.background);
+  expect(expandedCardStyle.background).toBe(idleCardStyle.background);
   expect(expandedCardStyle.border).not.toBe(idleCardStyle.border);
   await select(panel, "移動込み");
   await expect(
@@ -297,31 +297,10 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     "background-color",
     expandedCardStyle.background,
   );
-  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCSS(
-    "border-top-color",
-    expandedCardStyle.border,
-  );
-  // A completed date returns to its quiet card style; only the current field is emphasized.
-  await expect
-    .poll(() =>
-      panel.evaluate(() => {
-        const field = getComputedStyle(
-          document.querySelector('.field-row[aria-current="step"]'),
-        );
-        const card = getComputedStyle(
-          document.querySelector(".candidate.selected"),
-        );
-        return (
-          field.backgroundColor !== card.backgroundColor &&
-          field.borderTopColor !== card.borderTopColor
-        );
-      }),
-    )
-    .toBe(true);
-  await expect(panel.locator(".candidate.selected")).toHaveCSS(
-    "background-color",
-    idleCardStyle.background,
-  );
+  const completedColor = await panel
+    .locator(".candidate.selected")
+    .evaluate((card) => getComputedStyle(card).backgroundColor);
+  expect(completedColor).not.toBe(idleCardStyle.background);
   await expect(panel.locator(".candidate.selected")).toHaveCSS(
     "border-top-color",
     idleCardStyle.border,
@@ -516,7 +495,22 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
   try {
     await select(panel);
     await expect(panel.locator(".field-check:visible")).toHaveCount(0);
+    const currentColor = await panel
+      .locator("#field-title")
+      .evaluate((row) => getComputedStyle(row).backgroundColor);
+    const completeColor = await panel
+      .locator(".candidate.selected")
+      .evaluate((card) => getComputedStyle(card).backgroundColor);
+    expect(currentColor).not.toBe(completeColor);
     await source.locator("#event-title").click();
+    await expect(panel.locator("#field-title")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
+    await expect(panel.locator("#field-location")).toHaveCSS(
+      "background-color",
+      currentColor,
+    );
     await expect.poll(shines).toEqual(["field-title"]);
     await expect(panel.locator("#field-title .field-check")).toBeVisible();
     await expect(panel.locator("#field-title-completion")).toHaveText(
@@ -538,6 +532,10 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
     await expect.poll(shines).toEqual(["field-title", "field-location"]);
     await expect(panel.locator("#field-location .field-check")).toBeVisible();
     await expect(panel.locator("#picked-location")).toHaveText("未設定");
+    await expect(panel.locator("#field-location")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
     await source.locator("#description").click();
     await expect
       .poll(shines)
@@ -555,6 +553,14 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
     ]);
     await panel.locator("#field-details").click();
     await expect(panel.locator("#field-details .field-check")).toBeHidden();
+    await expect(panel.locator("#field-details")).toHaveCSS(
+      "background-color",
+      currentColor,
+    );
+    await expect(panel.locator("#field-title")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
     await expect(panel.locator(".field-check:visible")).toHaveCount(2);
     await source.keyboard.press("Escape");
     await expect(panel.locator(".field-check:visible")).toHaveCount(2);

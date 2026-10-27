@@ -376,9 +376,11 @@ main {
   animation: appear 220ms both;
 }
 .candidate.expanded {
-  background: #f1f5ed;
-  border-color: var(--green);
+  border-color: #9daf99;
   box-shadow: 0 4px 14px #26472c07;
+}
+.candidate.selected {
+  background: #f1f5ed;
 }
 .candidate-heading {
   width: 100%;
@@ -621,10 +623,13 @@ main {
   scroll-margin-bottom: 16px;
 }
 .field-row:hover {
-  background: var(--wash);
+  background: #ffffff8c;
+}
+.field-row[data-complete="true"] {
+  background: #f1f5ed;
 }
 .field-row[aria-current="step"] {
-  background: #f1f5ed;
+  background: #ffffff8c;
   border-color: var(--green);
 }
 .field-heading {
