@@ -11,6 +11,7 @@ export const categories = {
   TARGET_CHANGED: "別ページへの移動・対象イベントを確認できない",
   PAGE_NOT_READY: "本文の読み込みが完了しない",
   HARNESS_ERROR: "検証環境・拡張の実行エラー",
+  TEST_TIMEOUT: "検証全体の時間切れ（最後の段階を要確認）",
   NOT_RUN: "未実行・中断",
 };
 
@@ -121,11 +122,11 @@ export function summaryMarkdown(reports, outcome) {
     "",
     "HTML・DOM・ページ本文は保存していません。合格は対象イベントの開始・終了日時の一致を意味し、全候補の正確性を保証するものではありません。",
     "",
-    "| サイト | 判定 | HTTP | 期待日時 | 候補数 |",
-    "| --- | --- | --- | --- | --- |",
+    "| サイト | 判定 | 段階 | 所要時間 | HTTP | 期待日時 | 候補数 |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...reports.map(
       (r) =>
-        `| ${cell(r.name)} | ${cell(r.category)}: ${cell(categories[r.category])} | ${cell(r.httpStatus)} | ${cell(r.expected.start)} ～ ${cell(r.expected.end)} | ${r.candidates?.length ?? 0} |`,
+        `| ${cell(r.name)} | ${cell(r.category)}: ${cell(categories[r.category])} | ${cell(r.phase)} | ${Number.isFinite(r.durationMs) ? `${(r.durationMs / 1000).toFixed(1)}s` : "—"} | ${cell(r.httpStatus)} | ${cell(r.expected.start)} ～ ${cell(r.expected.end)} | ${r.candidates?.length ?? 0} |`,
     ),
     "",
     ...reports.map((r) => `- ${cell(r.name)}: ${cell(r.url)}`),

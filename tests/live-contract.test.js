@@ -119,3 +119,64 @@ test("レポートは実行されなかったサイトを残し、後処理の�
     "interrupted",
   );
 });
+
+test("全体タイムアウトでも最後の段階・HTTP状態・経過時間を残す", () => {
+  const reporter = new LiveReporter();
+  reporter.onBegin({}, { allTests: () => sites.map((s) => ({ title: s.id })) });
+  const snapshot = { id: sample.id, name: sample.name, url: sample.url,
+    expected: sample.expected, status: "failed", category: "HARNESS_ERROR", candidates: [] };
+  reporter.onTestEnd({ title: sample.id }, {
+    status: "timedOut", duration: 75_000,
+    attachments: [
+      { name: "live-progress", body: Buffer.from(JSON.stringify({ ...snapshot, phase: "navigation", durationMs: 200 })) },
+      { name: "live-progress", body: Buffer.from(JSON.stringify({ ...snapshot, httpStatus: 200, phase: "readiness-health", durationMs: 15_200 })) },
+    ],
+  });
+  const result = reporter.results.get(sample.id);
+  assert.equal(result.status, "failed");
+  assert.equal(result.category, "TEST_TIMEOUT");
+  assert.equal(result.phase, "readiness-health");
+  assert.equal(result.httpStatus, 200);
+  assert.equal(result.durationMs, 75_000);
+  assert.deepEqual(result.phaseHistory, [
+    { phase: "navigation", elapsedMs: 200 },
+    { phase: "readiness-health", elapsedMs: 15_200 },
+  ]);
+  assert.equal(reporter.results.get("meetup").category, "NOT_RUN");
+  const summary = summaryMarkdown([result], "failed");
+  assert.ok(summary.includes("readiness-health"));
+  assert.ok(summary.includes("TEST_TIMEOUT"));
+});
+
+test("終了処理でタイムアウトしても途中のPASSを採用せず、開始前のタイムアウトも区別する", () => {
+  for (const attachments of [[], [{ name: "live-progress", body: Buffer.from(JSON.stringify({
+    ...sample, status: "passed", category: "PASS", phase: "cleanup", durationMs: 70_000, candidates: [],
+  })) }]]) {
+    const reporter = new LiveReporter();
+    reporter.onBegin({}, { allTests: () => [{ title: sample.id }] });
+    reporter.onTestEnd({ title: sample.id }, { status: "timedOut", duration: 75_000, attachments });
+    assert.equal(reporter.results.get(sample.id).category, "TEST_TIMEOUT");
+    assert.equal(reporter.results.get(sample.id).status, "failed");
+  }
+});
+
+test("時間切れ後のcleanupで実際の停止段階を上書きしない", () => {
+  const reporter = new LiveReporter();
+  reporter.onBegin({}, { allTests: () => [{ title: sample.id }] });
+  const snapshot = {
+    ...sample, status: "failed", category: "HARNESS_ERROR", candidates: [],
+    checkedAt: "2026-10-28T00:00:00.500Z", httpStatus: 200,
+  };
+  reporter.onTestEnd({ title: sample.id }, {
+    status: "timedOut", duration: 1500, startTime: new Date("2026-10-28T00:00:00.000Z"),
+    attachments: [
+      { name: "live-progress", body: Buffer.from(JSON.stringify({ ...snapshot, phase: "readiness-health", durationMs: 500 })) },
+      { name: "live-progress", body: Buffer.from(JSON.stringify({ ...snapshot, phase: "cleanup", durationMs: 1100 })) },
+      { name: "live-result", body: Buffer.from(JSON.stringify({ ...snapshot, phase: "cleanup", durationMs: 1200 })) },
+    ],
+  });
+  const result = reporter.results.get(sample.id);
+  assert.equal(result.category, "TEST_TIMEOUT");
+  assert.equal(result.phase, "readiness-health");
+  assert.equal(result.phaseHistory.length, 1);
+});

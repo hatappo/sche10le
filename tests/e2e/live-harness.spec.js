@@ -3,6 +3,9 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { runLiveCase } from "../live/run-case.js";
 
+// Match the live runner: tracing would try to snapshot the frozen-page fixture.
+test.use({ trace: "off" });
+
 let server;
 let origin;
 let manifestBefore;
@@ -36,6 +39,16 @@ test.beforeAll(async () => {
       return;
     }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    if (req.url === "/unresponsive") {
+      res.end(`<title>${identity}</title><main>2026年11月5日 20:00〜21:00</main>
+        <script>
+          addEventListener('load', () => {
+            const until = Date.now() + 15000;
+            while (Date.now() < until) { /* Simulate a blocked renderer. */ }
+          });
+        </script>`);
+      return;
+    }
     if (req.url === "/delayed-body" || req.url === "/delayed-no-dates") {
       const content =
         req.url === "/delayed-body"
@@ -69,6 +82,35 @@ test.beforeAll(async () => {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
+});
+
+test("ページが応答しなくても状態確認を打ち切り、検証段階を残す", async () => {
+  test.setTimeout(10_000);
+  navigations = [];
+  const progress = [];
+  const result = await runLiveCase(
+    {
+      id: "fixture",
+      name: "テスト",
+      url: `${origin}/unresponsive`,
+      identity,
+      expected,
+    },
+    {
+      allowLocalhost: true,
+      readinessTimeout: 500,
+      onProgress: async (snapshot) => progress.push(snapshot),
+    },
+  );
+  expect(result.status).toBe("failed");
+  expect(result.category).toBe("PAGE_NOT_READY");
+  expect(result.healthUnavailable).toBe(true);
+  expect(result.httpStatus).toBe(200);
+  expect(result.durationMs).toBeLessThan(8000);
+  expect(progress.map((p) => p.phase)).toContain("readiness-health");
+  expect(progress.at(-1).phase).toBe("cleanup");
+  expect(navigations.filter((url) => url === "/unresponsive")).toHaveLength(1);
+  expect(JSON.stringify(progress)).not.toMatch(/<main|ライブ検証用イベント/);
 });
 
 test.afterAll(async () => {

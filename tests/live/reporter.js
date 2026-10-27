@@ -20,12 +20,37 @@ export default class LiveReporter {
     }
   }
   onTestEnd(test, result) {
+    const progress = result.attachments
+      .filter((item) => item.name === "live-progress" && item.body)
+      .map((item) => JSON.parse(item.body.toString("utf8")))
+      .filter((snapshot) => {
+        if (result.status !== "timedOut") return true;
+        // Cleanup may emit attachments after the deadline. It must not replace
+        // the phase that was actually running when the test timed out.
+        const startOffset = result.startTime && snapshot.checkedAt
+          ? Date.parse(snapshot.checkedAt) - result.startTime.getTime()
+          : 0;
+        return startOffset + snapshot.durationMs <= result.duration;
+      });
     const attachment = result.attachments.find(
       (item) => item.name === "live-result",
     );
-    if (!attachment?.body) return;
-    const report = JSON.parse(attachment.body.toString("utf8"));
-    if (result.status !== "passed" && report.category === "PASS") {
+    const report = attachment?.body && result.status !== "timedOut"
+      ? JSON.parse(attachment.body.toString("utf8"))
+      : (progress.at(-1) ?? this.results.get(test.title));
+    if (!report) return;
+    report.phaseHistory = progress.map((p) => ({
+      phase: p.phase,
+      elapsedMs: p.durationMs,
+    }));
+    if (result.status === "timedOut") {
+      report.status = "failed";
+      report.category = "TEST_TIMEOUT";
+      report.durationMs = result.duration;
+    } else if (
+      (!attachment?.body && !["skipped", "interrupted"].includes(result.status)) ||
+      (result.status !== "passed" && report.category === "PASS")
+    ) {
       report.status = "failed";
       report.category = "HARNESS_ERROR";
     }
