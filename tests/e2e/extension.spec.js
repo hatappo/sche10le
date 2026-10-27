@@ -150,6 +150,7 @@ async function expectPickerActionsOnly(source, step = 0) {
     const visibleLabels = [];
     const disabledLabels = [];
     const actionNodes = [];
+    const stepNodes = [];
     let guide;
     function visit(node) {
       const attributes = node.attributes ?? [];
@@ -162,6 +163,12 @@ async function expectPickerActionsOnly(source, step = 0) {
         guide = node;
       if (node.nodeName === "BUTTON" && index >= 0) {
         labels.push(attributes[index + 1]);
+        if (
+          ["タイトルを選び直す", "場所を選び直す", "詳細を選び直す"].includes(
+            attributes[index + 1],
+          )
+        )
+          stepNodes.push(node);
         if (attributes.includes("disabled"))
           disabledLabels.push(attributes[index + 1]);
         if (
@@ -214,6 +221,40 @@ async function expectPickerActionsOnly(source, step = 0) {
         nodeId: node.nodeId,
       });
       positions.push(button.border);
+    }
+    expect(stepNodes).toHaveLength(3);
+    for (const [index, node] of stepNodes.entries()) {
+      const { object } = await session.send("DOM.resolveNode", {
+        nodeId: node.nodeId,
+      });
+      const { result } = await session.send("Runtime.callFunctionOn", {
+        objectId: object.objectId,
+        returnByValue: true,
+        functionDeclaration: `function() {
+          const label = this.querySelector('.step-label');
+          const check = this.querySelector('.step-check');
+          const bounds = this.getBoundingClientRect();
+          const textBounds = label.getBoundingClientRect();
+          const checkBounds = check.getBoundingClientRect();
+          return {
+            label: label.textContent,
+            visible: getComputedStyle(check).visibility === 'visible',
+            fits: textBounds.left >= bounds.left && checkBounds.right <= bounds.right && textBounds.right <= checkBounds.left,
+            current: this.getAttribute('aria-current'),
+            weight: getComputedStyle(label).fontWeight,
+            shadow: getComputedStyle(this).boxShadow,
+            position: [bounds.x, bounds.y, bounds.width, bounds.height]
+          };
+        }`,
+      });
+      const state = result.value;
+      expect(state.label).toBe(["タイトル", "場所", "詳細"][index]);
+      expect(state.visible).toBe(index < step);
+      expect(state.fits).toBe(true);
+      expect(state.current).toBe(index === step ? "step" : null);
+      expect(state.weight).toBe(index === step ? "600" : "400");
+      expect(state.shadow).toBe("none");
+      positions.push(state.position);
     }
     return { width: model.width, height: model.height, positions };
   } finally {
@@ -1705,7 +1746,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   const { source, panel } = await open();
   await source.emulateMedia({ reducedMotion: "reduce" });
   await select(panel);
-  for (const width of [1000, 390, 320]) {
+  for (const width of [1000, 390, 320, 280]) {
     await source.setViewportSize({ width, height: 850 });
     await clickOverlay(source, "タイトルを選び直す");
     await expect(panel.locator("#field-title")).toHaveAttribute(
