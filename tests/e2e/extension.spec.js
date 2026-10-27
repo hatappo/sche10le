@@ -272,6 +272,27 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     .locator('.field-row[aria-current="step"]')
     .evaluate((button) => getComputedStyle(button).backgroundColor);
   expect(activeColor).not.toBe(primaryColor);
+  // Compare settled colors; the date card transitions its border on selection.
+  await expect
+    .poll(() =>
+      panel.evaluate(() => {
+        const field = getComputedStyle(
+          document.querySelector('.field-row[aria-current="step"]'),
+        );
+        const card = getComputedStyle(
+          document.querySelector(".candidate.selected"),
+        );
+        return (
+          field.backgroundColor === card.backgroundColor &&
+          field.borderTopColor === card.borderTopColor
+        );
+      }),
+    )
+    .toBe(true);
+  await panel.screenshot({
+    path: "test-results/panel-current-field.png",
+    animations: "disabled",
+  });
   await source.screenshot({
     path: "test-results/page-picker.png",
     animations: "disabled",

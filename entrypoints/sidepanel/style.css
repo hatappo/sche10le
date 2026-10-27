@@ -627,8 +627,8 @@ main {
   background: var(--wash);
 }
 .field-row[aria-current="step"] {
-  background: #fbf1dc;
-  border-color: #d9bd87;
+  background: #f1f5ed;
+  border-color: var(--green);
 }
 .field-heading {
   display: flex;
