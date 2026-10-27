@@ -579,7 +579,7 @@ test("内容完了後は補足文を切り替え、項目の光の後に主操�
         .getAnimations({ subtree: true })
         .find(
           (animation) => animation.animationName === "calendar-ready-glow",
-        ).currentTime = 1000;
+        ).currentTime = 1300;
     });
     await panel.screenshot({ path: "test-results/calendar-ready-glow.png" });
     await primary.evaluate((button) =>
