@@ -843,6 +843,10 @@ test("完了の光は10秒の間隔で追加2回まで繰り返し、待機中�
     await expect(primary).not.toHaveClass(/calendar-ready/);
     expect(await count()).toBe(4);
   } finally {
+    // Playwright's page.clock controls the shared browser context, including future
+    // pages. Restore wall time and resume timers before later tests use hover delays.
+    await panel.clock.setSystemTime(new Date());
+    await panel.clock.resume();
     await panel.close();
     await source.close();
   }
@@ -1807,6 +1811,59 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   );
   await panel.close();
   await source.close();
+});
+
+test("内容の選び直しでは値を保持し、日時を選び直すと初期値に戻る", async () => {
+  const { source, panel } = await open();
+  const values = panel.locator(".field-value");
+  try {
+    await select(panel);
+    const initial = await values.allTextContents();
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    const completed = await values.allTextContents();
+    expect(completed.every((value, index) => value !== initial[index])).toBe(
+      true,
+    );
+    for (const field of ["title", "location", "details"]) {
+      await panel.locator(`#field-${field}`).click();
+      await expect(panel.locator(`#field-${field}`)).toHaveAttribute(
+        "aria-current",
+        "step",
+      );
+      await expect(values).toHaveText(completed);
+      await source.keyboard.press("Escape");
+      await expect(source.locator("sche10le-picker")).toHaveCount(0);
+      await expect(values).toHaveText(completed);
+    }
+    await panel.locator("#field-title").click();
+    await source.locator("#event-link").click();
+    await expect(panel.locator("#picked-title")).toContainText(
+      "活版印刷について詳しく",
+    );
+    await expect(panel.locator("#field-location")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    const revised = await values.allTextContents();
+    expect(revised[0]).not.toBe(completed[0]);
+    expect(revised.slice(1)).toEqual(completed.slice(1));
+    await clickOverlay(source, "戻る");
+    await expect(values).toHaveText(revised);
+    await clickOverlay(source, "スキップ");
+    await clickOverlay(source, "スキップ");
+    await clickOverlay(source, "スキップ");
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await expect(values).toHaveText(revised);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(values).toHaveText(initial);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
 });
 
 test("取得バーは開始・再開時だけ下から現れ、動きを減らす設定では省略する", async () => {
