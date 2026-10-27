@@ -245,6 +245,17 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     path: "test-results/panel-variants.png",
     animations: "disabled",
   });
+  const expandedCardStyle = await panel
+    .locator(".candidate.expanded")
+    .evaluate((card) => {
+      const style = getComputedStyle(card);
+      return {
+        background: style.backgroundColor,
+        border: style.borderTopColor,
+      };
+    });
+  expect(expandedCardStyle.background).not.toBe(idleCardStyle.background);
+  expect(expandedCardStyle.border).not.toBe(idleCardStyle.border);
   await select(panel, "移動込み");
   await expect(
     panel.locator(".candidate.selected .registration-summary"),
@@ -282,6 +293,14 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     .locator('.field-row[aria-current="step"]')
     .evaluate((button) => getComputedStyle(button).backgroundColor);
   expect(activeColor).not.toBe(primaryColor);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCSS(
+    "background-color",
+    expandedCardStyle.background,
+  );
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCSS(
+    "border-top-color",
+    expandedCardStyle.border,
+  );
   // A completed date returns to its quiet card style; only the current field is emphasized.
   await expect
     .poll(() =>

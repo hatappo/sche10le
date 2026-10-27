@@ -376,7 +376,8 @@ main {
   animation: appear 220ms both;
 }
 .candidate.expanded {
-  border-color: #9daf99;
+  background: #f1f5ed;
+  border-color: var(--green);
   box-shadow: 0 4px 14px #26472c07;
 }
 .candidate-heading {
