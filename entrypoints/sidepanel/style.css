@@ -379,10 +379,6 @@ main {
   border-color: #9daf99;
   box-shadow: 0 4px 14px #26472c07;
 }
-.candidate.selected {
-  border-color: var(--green);
-  background: #f1f5ed;
-}
 .candidate-heading {
   width: 100%;
   display: flex;
