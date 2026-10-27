@@ -627,6 +627,7 @@ main {
 }
 .field-row[data-complete="true"] {
   background: #f1f5ed;
+  border-color: var(--line);
 }
 .field-row[aria-current="step"] {
   background: #ffffff8c;

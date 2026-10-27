@@ -396,8 +396,8 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#pick-status")).toHaveText(
     "カレンダーへ進めます",
   );
-  await expect(source.locator("sche10le-picker")).toHaveCount(1);
-  await expectPickerActionsOnly(source, 3);
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await expect(panel.locator("#resume")).toBeHidden();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
@@ -405,12 +405,12 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator(".stage-title[aria-current]")).toHaveCount(0);
   await panel.screenshot({ path: "test-results/panel-picked.png" });
   await source.screenshot({ path: "test-results/page-picker-complete.png" });
-  // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
+  // Completion removes the guide and releases ordinary page interaction.
   await source.locator("#event-title").click();
   await expect(panel.locator("#pick-status")).toHaveText(
     "カレンダーへ進めます",
   );
-  await clickOverlay(source, "戻る");
+  await panel.locator("#field-details").click();
   await expect(panel.locator("#pick-status")).toContainText("詳細");
   await expect(panel.locator("#content-title")).toHaveAttribute(
     "aria-current",
@@ -421,12 +421,12 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#picked-details")).toHaveText(
     `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
   );
-  await clickOverlay(source, "詳細を選び直す");
+  await panel.locator("#field-details").click();
   await source.locator("#description").click();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
-  await clickOverlay(source, "タイトルを選び直す");
+  await panel.locator("#field-title").click();
   await expect(panel.locator("#field-title")).toHaveAttribute(
     "aria-current",
     "step",
@@ -557,6 +557,16 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
       "background-color",
       completeColor,
     );
+    const cardBorder = await panel
+      .locator(".candidate.selected")
+      .evaluate((card) => getComputedStyle(card).borderTopColor);
+    for (const edge of ["top", "right", "bottom", "left"]) {
+      await expect(panel.locator("#field-title")).toHaveCSS(
+        `border-${edge}-color`,
+        cardBorder,
+      );
+    }
+    await expect(panel.locator("#field-title")).toHaveCSS("box-shadow", "none");
     await expect(panel.locator("#field-location")).toHaveCSS(
       "background-color",
       currentColor,
@@ -1823,7 +1833,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await select(panel);
   for (const width of [1000, 390, 320, 280]) {
     await source.setViewportSize({ width, height: 850 });
-    await clickOverlay(source, "タイトルを選び直す");
+    await panel.locator("#field-title").click();
     await expect(panel.locator("#field-title")).toHaveAttribute(
       "aria-current",
       "step",
@@ -1835,7 +1845,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
       "aria-current",
       "step",
     );
-    for (let step = 1; step <= 3; step++) {
+    for (let step = 1; step <= 2; step++) {
       await clickOverlay(source, "スキップ");
       await expect(panel.locator("#pick-status")).toHaveText(
         step === 3
@@ -1844,17 +1854,19 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
       );
       expect(await expectPickerActionsOnly(source, step)).toEqual(initial);
     }
-    await clickOverlay(source, "スキップ");
-    await expect(panel.locator("#pick-status")).toHaveText(
-      "カレンダーへ進めます",
-    );
     await source.screenshot({
       path: `test-results/picker-stable-${width}.png`,
       animations: "disabled",
     });
+    await clickOverlay(source, "スキップ");
+    await expect(panel.locator("#pick-status")).toHaveText(
+      "カレンダーへ進めます",
+    );
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await expect(panel.locator("#resume")).toBeHidden();
   }
   await source.setViewportSize({ width: 1000, height: 850 });
-  await clickOverlay(source, "タイトルを選び直す");
+  await panel.locator("#field-title").click();
   await source.locator("#event-title").click();
   const title = await panel.locator("#picked-title").textContent();
   await clickOverlay(source, "選択モードを閉じる");
@@ -1882,6 +1894,10 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await source.locator("#venue").click();
   await source.locator("#description").click();
   const values = await panel.locator(".field-value").allTextContents();
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await panel.locator("#field-details").focus();
+  await panel.keyboard.press("Enter");
+  await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await clickOverlay(source, "選択モードを閉じる", "Enter");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   expect(await panel.locator(".field-value").allTextContents()).toEqual(values);

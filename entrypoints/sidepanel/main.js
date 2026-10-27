@@ -764,7 +764,11 @@ function syncPicker() {
   paused = false;
   // Rotate the token after every step so delayed clicks cannot advance twice.
   selectionToken = crypto.randomUUID();
-  send({ type: "pick", step: draft.step, token: selectionToken });
+  send(
+    draft.step >= PICK_FIELDS.length
+      ? { type: "stop" }
+      : { type: "pick", step: draft.step, token: selectionToken },
+  );
   renderDraft();
 }
 function advance() {
