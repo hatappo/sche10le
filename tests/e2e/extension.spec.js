@@ -1890,6 +1890,147 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
   }
 });
 
+test("取得バーを上下に移動し、下端で初期位置に戻せる", async () => {
+  const { source, panel } = await open();
+  const session = await context.newCDPSession(source);
+  async function bar(focus = false) {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    function find(node) {
+      const attributes = node.attributes ?? [];
+      if (
+        attributes[attributes.indexOf("aria-label") + 1] ===
+        "取得バーの位置を調整"
+      )
+        return node;
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ]) {
+        const found = find(child);
+        if (found) return found;
+      }
+    }
+    const node = find(root);
+    expect(node).toBeTruthy();
+    if (focus) await session.send("DOM.focus", { nodeId: node.nodeId });
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: node.nodeId,
+    });
+    const { result } = await session.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      returnByValue: true,
+      functionDeclaration: `function() {
+        const guide = this.closest('.guide');
+        const rect = guide.getBoundingClientRect();
+        return {top: rect.top, bottom: rect.bottom, left: rect.left, width: rect.width,
+          dragging: guide.classList.contains('is-dragging'), scroll: window.scrollY,
+          cursor: getComputedStyle(this).cursor};
+      }`,
+    });
+    return result.value;
+  }
+  async function dragBy(x, y) {
+    const initial = await bar();
+    await source.mouse.move(initial.left + 50, initial.top + 25);
+    await source.mouse.down();
+    await expect.poll(async () => (await bar()).dragging).toBe(true);
+    await source.mouse.move(initial.left + 50 + x, initial.top + 25 + y, {
+      steps: 8,
+    });
+    await source.mouse.up();
+    await expect.poll(async () => (await bar()).dragging).toBe(false);
+    return bar();
+  }
+  try {
+    await source.emulateMedia({ reducedMotion: "reduce" });
+    await select(panel);
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    const initial = await bar();
+    expect(initial.bottom).toBe(850 - 24);
+    expect(initial.cursor).toBe("grab");
+    await source.evaluate(() => {
+      const text = document.createElement("p");
+      text.id = "covered-title";
+      text.textContent = "ページ下端のタイトル";
+      text.style.cssText = "position:fixed;bottom:50px;left:40%;margin:0";
+      document.body.append(text);
+    });
+    const covered = await source.locator("#covered-title").boundingBox();
+    expect(covered.y).toBeGreaterThan(initial.top);
+    expect(covered.y + covered.height).toBeLessThan(initial.bottom);
+    const moved = await dragBy(100, -240);
+    expect(moved.top).toBe(initial.top - 240);
+    expect(moved.left).toBe(initial.left);
+    expect(moved.scroll).toBe(initial.scroll);
+    await expect(panel.locator("#field-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    await source.locator("#covered-title").click();
+    await expect(panel.locator("#picked-title")).toContainText(
+      "ページ下端のタイトル",
+    );
+    await expect(panel.locator("#field-location")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    expect((await bar()).top).toBe(moved.top);
+    await source.screenshot({
+      path: "test-results/picker-moved.png",
+      animations: "disabled",
+    });
+    await clickOverlay(source, "選択モードを閉じる");
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await panel.locator("#resume").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).top).toBe(moved.top);
+    // A real drag down to the screen edge stops exactly at the initial position.
+    expect((await dragBy(-100, 290)).bottom).toBe(initial.bottom);
+    await bar(true);
+    await source.keyboard.press("ArrowUp");
+    expect((await bar()).top).toBe(initial.top - 16);
+    await source.keyboard.press("ArrowDown");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("Home");
+    expect((await bar()).top).toBe(24);
+    await source.keyboard.press("ArrowUp");
+    expect((await bar()).top).toBe(24);
+    await source.keyboard.press("End");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("ArrowDown");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("Home");
+    await source.setViewportSize({ width: 280, height: 500 });
+    await expect.poll(async () => (await bar()).top).toBe(24);
+    const narrow = await bar();
+    expect(narrow.left).toBeGreaterThanOrEqual(16);
+    expect(narrow.left + narrow.width).toBeLessThanOrEqual(280 - 16);
+    expect(narrow.bottom).toBeLessThanOrEqual(500 - 24);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).bottom).toBe(500 - 24);
+    // Escape also cancels an in-progress drag and restores ordinary page input.
+    const beforeCancel = await bar();
+    await source.mouse.move(beforeCancel.left + 50, beforeCancel.top + 25);
+    await source.mouse.down();
+    await source.mouse.move(beforeCancel.left + 50, beforeCancel.top - 50);
+    await source.keyboard.press("Escape");
+    await source.mouse.up();
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await panel.locator("#resume").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).dragging).toBe(false);
+  } finally {
+    await session.detach();
+    await panel.close();
+    await source.close();
+  }
+});
+
 test("操作バーは手順間で大きさとボタン位置を保ち、閉じる操作でページ操作へ戻れる", async () => {
   const { source, panel } = await open();
   await source.emulateMedia({ reducedMotion: "reduce" });

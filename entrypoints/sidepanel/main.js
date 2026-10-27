@@ -701,7 +701,7 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  syncPicker();
+  syncPicker(true);
   button("open-calendar").focus({ preventScroll: true });
 }
 
@@ -759,7 +759,7 @@ function scrollToPickedField(index) {
   });
 }
 
-function syncPicker() {
+function syncPicker(resetPosition = false) {
   if (!draft) return;
   paused = false;
   // Rotate the token after every step so delayed clicks cannot advance twice.
@@ -771,6 +771,7 @@ function syncPicker() {
           type: "pick",
           step: draft.step,
           token: selectionToken,
+          resetPosition,
         },
   );
   renderDraft();

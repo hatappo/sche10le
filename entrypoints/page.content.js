@@ -65,7 +65,11 @@ export default defineContentScript({
           });
         } else if (message.type === "pick") {
           currentHighlight.clear();
-          currentPicker.start(message.step, message.token);
+          currentPicker.start(
+            message.step,
+            message.token,
+            message.resetPosition === true,
+          );
         } else if (message.type === "reveal-source") {
           currentHighlight.reveal(message.locator);
         } else if (message.type === "clear-source") {
