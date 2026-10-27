@@ -643,7 +643,7 @@ main {
   min-height: 18px;
   margin-bottom: 5px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 .field-check {
   color: var(--muted);
@@ -651,7 +651,7 @@ main {
 }
 .field-number {
   margin-right: 4px;
-  font-size: 9px;
+  font-size: 10px;
 }
 .field-label {
   font-weight: 400;
@@ -687,7 +687,7 @@ main {
 .source-note {
   display: flex;
   gap: 6px;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 11px;
 }
@@ -810,7 +810,7 @@ main {
   font-size: 17px;
 }
 .footer-hint {
-  font-size: 9px;
+  font-size: 11px;
   text-align: center;
   margin-top: 8px;
   color: var(--muted);
