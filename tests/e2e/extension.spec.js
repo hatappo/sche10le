@@ -531,6 +531,92 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
   }
 });
 
+test("内容完了後は補足文を切り替え、項目の光の後に主操作を一度だけ案内する", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__calendarCues = [];
+    document.addEventListener("animationstart", (event) => {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.closest("#field-details")
+      ) {
+        window.__detailsShineAt = performance.now();
+      }
+      if (event.animationName === "calendar-ready-glow") {
+        window.__calendarCues.push(performance.now() - window.__detailsShineAt);
+        event.target
+          .getAnimations({ subtree: true })
+          .find(
+            (animation) => animation.animationName === "calendar-ready-glow",
+          )
+          .pause();
+      }
+    });
+  });
+  const primary = panel.locator("#open-calendar");
+  const hint = panel.locator("#calendar-hint");
+  const initialHint = "情報の取得は途中でもOK。保存は Google カレンダーで。";
+  const completeHint = "Google カレンダーで修正してから保存できます。";
+  try {
+    await select(panel);
+    await expect(hint).toHaveText(initialHint);
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    const bounds = await primary.boundingBox();
+    // Completion must not move keyboard focus to the primary action.
+    await panel.locator("#download-calendar").focus();
+    await source.locator("#description").click();
+    await expect(hint).toHaveText(completeHint);
+    await expect
+      .poll(() => panel.evaluate(() => window.__calendarCues.length))
+      .toBe(1);
+    expect(
+      await panel.evaluate(() => window.__calendarCues[0]),
+    ).toBeGreaterThanOrEqual(550);
+    await expect(panel.locator("#download-calendar")).toBeFocused();
+    expect(await primary.boundingBox()).toEqual(bounds);
+    await primary.evaluate((button) => {
+      button
+        .getAnimations({ subtree: true })
+        .find(
+          (animation) => animation.animationName === "calendar-ready-glow",
+        ).currentTime = 1000;
+    });
+    await panel.screenshot({ path: "test-results/calendar-ready-glow.png" });
+    await primary.evaluate((button) =>
+      button
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .play(),
+    );
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(hint).toHaveText(completeHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await panel.evaluate(() => window.__calendarCues.length)).toBe(1);
+
+    await panel.locator("#field-details").click();
+    await expect(hint).toHaveText(initialHint);
+    await source.locator("#description").click();
+    await expect(primary).toHaveClass(/calendar-ready/);
+    await panel.locator("#field-details").click();
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    await expect(hint).toHaveText(initialHint);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await clickOverlay(source, "スキップ");
+    await expect(hint).toHaveText(completeHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await panel.evaluate(() => window.__calendarCues.length)).toBe(1);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(hint).toHaveText(initialHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
 test("未取得で開く・スキップ・戻る・選び直しとEscape", async () => {
   const { source, panel } = await open();
   await select(panel, "終日");

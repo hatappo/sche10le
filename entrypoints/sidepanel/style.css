@@ -733,6 +733,7 @@ main {
   border-color: var(--green);
 }
 .primary-button {
+  position: relative;
   background: var(--green);
   color: #fff;
   border: 1px solid var(--green);
@@ -748,6 +749,23 @@ main {
   font-weight: 600;
   line-height: 1.5;
   box-shadow: 0 3px 5px #243e3210;
+}
+.primary-button.calendar-ready::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px #8fb79555,
+    0 0 12px #8fb79544;
+  opacity: 0;
+  animation: calendar-ready-glow 700ms ease-in-out 650ms;
+}
+@keyframes calendar-ready-glow {
+  50% {
+    opacity: 1;
+  }
 }
 .primary-button:hover {
   background: #1c4934;

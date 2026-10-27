@@ -150,6 +150,20 @@ function renderSectionProgress() {
   ];
   for (const [id, state] of sections) {
     const heading = el(id);
+    if (id === "content-title") {
+      const complete = state === "complete";
+      const primary = button("open-calendar");
+      if (!complete) primary.classList.remove("calendar-ready");
+      else if (
+        heading.dataset.state !== "complete" &&
+        !matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        primary.classList.add("calendar-ready");
+      }
+      el("calendar-hint").textContent = complete
+        ? "Google カレンダーで修正してから保存できます。"
+        : "情報の取得は途中でもOK。保存は Google カレンダーで。";
+    }
     updateCompletionEffect(
       heading.querySelector(".stage-label"),
       state === "complete",
@@ -760,6 +774,7 @@ function pausePicking() {
 
 async function openCalendar() {
   if (!draft || !selectedVariant || opening) return;
+  button("open-calendar").classList.remove("calendar-ready");
   opening = true;
   button("open-calendar").disabled = true;
   const url = calendarUrl(selectedVariant, draft, titleFormat);
@@ -777,6 +792,7 @@ async function openCalendar() {
 
 function downloadCalendar() {
   if (!draft || !selectedVariant) return;
+  button("open-calendar").classList.remove("calendar-ready");
   const errorMessage =
     "予定ファイルを作成できませんでした。もう一度お試しください。";
   try {
@@ -905,6 +921,11 @@ el("candidate-order").addEventListener("change", (event) => {
   if (!draft) renderCandidates();
   saveSetting("order", candidateOrder);
 });
+for (const event of ["animationend", "animationcancel"]) {
+  button("open-calendar").addEventListener(event, () => {
+    button("open-calendar").classList.remove("calendar-ready");
+  });
+}
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("download-calendar").addEventListener("click", downloadCalendar);
 button("resume").addEventListener("click", syncPicker);
@@ -925,6 +946,7 @@ button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
   if (settings.hidden) {
+    button("open-calendar").classList.remove("calendar-ready");
     panelScroll = window.scrollY;
     settingsReturnTarget = "settings-toggle";
   }
