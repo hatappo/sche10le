@@ -122,6 +122,23 @@ async function clickOverlay(source, name, key) {
     }
     const target = find(root);
     expect(target, `overlay button: ${name}`).toBeTruthy();
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: target.nodeId,
+    });
+    await expect
+      .poll(async () => {
+        const { result } = await session.send("Runtime.callFunctionOn", {
+          objectId: object.objectId,
+          returnByValue: true,
+          functionDeclaration: `function() {
+          const guide = this.closest('.guide');
+          return getComputedStyle(guide).visibility === 'visible' &&
+            guide.getAnimations().every(animation => animation.playState === 'finished');
+        }`,
+        });
+        return result.value;
+      })
+      .toBe(true);
     if (key) {
       await session.send("DOM.focus", { nodeId: target.nodeId });
       await source.keyboard.press(key);
@@ -1826,12 +1843,14 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
       arguments: [{ value: action }],
       returnByValue: true,
       functionDeclaration: `function(action) {
-        if (action === 'measure') return {top:this.getBoundingClientRect().top, opacity:getComputedStyle(this).opacity};
+        if (action === 'measure') return {top:this.getBoundingClientRect().top, opacity:getComputedStyle(this).opacity, visibility:getComputedStyle(this).visibility};
         const animation = this.getAnimations().find(item => item.animationName === 'picker-enter');
         if (!animation) return false;
         if (action === 'pause') { animation.pause(); animation.currentTime = 0; }
         if (action === 'duration') return animation.effect.getTiming().duration;
-        if (action === 'middle') animation.currentTime = 140;
+        if (action === 'delay') return animation.effect.getTiming().delay;
+        if (action === 'waiting') animation.currentTime = 550;
+        if (action === 'middle') animation.currentTime = animation.effect.getTiming().delay + 240;
         if (action === 'finish') animation.finish();
         return true;
       }`,
@@ -1841,9 +1860,12 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
   try {
     await select(panel);
     expect(await guideAnimation("pause")).toBe(true);
-    expect(await guideAnimation("duration")).toBe(280);
+    expect(await guideAnimation("duration")).toBe(480);
+    expect(await guideAnimation("delay")).toBe(650);
+    await guideAnimation("waiting");
     const start = await guideAnimation("measure");
     expect(start.opacity).toBe("0");
+    expect(start.visibility).toBe("hidden");
     await guideAnimation("middle");
     await source.screenshot({ path: "test-results/picker-arrival.png" });
     expect(await guideAnimation("finish")).toBe(true);
@@ -1857,6 +1879,8 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
     await clickOverlay(source, "選択モードを閉じる");
     await panel.locator("#resume").click();
     expect(await guideAnimation("pause")).toBe(true);
+    expect(await guideAnimation("delay")).toBe(0);
+    await guideAnimation("finish");
     await clickOverlay(source, "選択モードを閉じる");
     await source.emulateMedia({ reducedMotion: "reduce" });
     await panel.locator("#resume").click();

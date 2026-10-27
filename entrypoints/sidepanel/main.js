@@ -701,7 +701,7 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  syncPicker();
+  syncPicker(true);
   button("open-calendar").focus({ preventScroll: true });
 }
 
@@ -759,7 +759,8 @@ function scrollToPickedField(index) {
   });
 }
 
-function syncPicker() {
+/** @param {boolean} [afterDateSelection] */
+function syncPicker(afterDateSelection = false) {
   if (!draft) return;
   paused = false;
   // Rotate the token after every step so delayed clicks cannot advance twice.
@@ -767,7 +768,12 @@ function syncPicker() {
   send(
     draft.step >= PICK_FIELDS.length
       ? { type: "stop" }
-      : { type: "pick", step: draft.step, token: selectionToken },
+      : {
+          type: "pick",
+          step: draft.step,
+          token: selectionToken,
+          afterDateSelection,
+        },
   );
   renderDraft();
 }
@@ -957,7 +963,7 @@ reducedMotion.addEventListener("change", () => {
 });
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("download-calendar").addEventListener("click", downloadCalendar);
-button("resume").addEventListener("click", syncPicker);
+button("resume").addEventListener("click", () => syncPicker());
 document
   .querySelector(".picked-values")
   ?.querySelectorAll("button")
