@@ -1849,7 +1849,7 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
         if (action === 'pause') { animation.pause(); animation.currentTime = 0; }
         if (action === 'duration') return animation.effect.getTiming().duration;
         if (action === 'delay') return animation.effect.getTiming().delay;
-        if (action === 'middle') animation.currentTime = animation.effect.getTiming().delay + 240;
+        if (action === 'middle') animation.currentTime = animation.effect.getTiming().delay + animation.effect.getTiming().duration / 2;
         if (action === 'finish') animation.finish();
         return true;
       }`,
@@ -1859,7 +1859,7 @@ test("取得バーは開始・再開時だけ下から現れ、動きを減ら�
   try {
     await select(panel);
     expect(await guideAnimation("pause")).toBe(true);
-    expect(await guideAnimation("duration")).toBe(480);
+    expect(await guideAnimation("duration")).toBe(650);
     expect(await guideAnimation("delay")).toBe(0);
     const start = await guideAnimation("measure");
     expect(start.opacity).toBe("0");
