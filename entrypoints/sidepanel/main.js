@@ -694,7 +694,6 @@ function renderDraft() {
     row.dataset.complete = String(done);
     row.querySelector(".field-check")?.toggleAttribute("hidden", !done);
     el(`field-${field}-completion`).textContent = done ? "設定済み" : "";
-    row.querySelector(".field-status")?.toggleAttribute("hidden", !active);
     if (active) row.setAttribute("aria-current", "step");
     else row.removeAttribute("aria-current");
   });

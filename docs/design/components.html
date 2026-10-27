@@ -131,24 +131,21 @@
           <button class="field-row" aria-current="step">
             <span class="field-heading"
               ><span class="field-label">タイトル</span
-              ><span class="field-check" aria-hidden="true" hidden>✓</span>
-              <span class="field-status">選択中</span
+              ><span class="field-check" aria-hidden="true" hidden>✓</span
               ><span class="field-edit">✎</span></span
             ><span class="field-value">活版印刷のワークショップ</span>
           </button>
           <button class="field-row">
             <span class="field-heading"
               ><span class="field-label">場所</span
-              ><span class="field-check" aria-hidden="true" hidden>✓</span>
-              <span class="field-status" hidden>選択中</span
+              ><span class="field-check" aria-hidden="true" hidden>✓</span
               ><span class="field-edit">✎</span></span
             ><span class="field-value is-empty">未設定</span>
           </button>
           <button class="field-row">
             <span class="field-heading"
               ><span class="field-label">詳細</span
-              ><span class="field-check" aria-hidden="true" hidden>✓</span>
-              <span class="field-status" hidden>選択中</span
+              ><span class="field-check" aria-hidden="true" hidden>✓</span
               ><span class="field-edit">✎</span></span
             ><span class="field-value">https://example.com/workshop</span>
           </button>
@@ -323,10 +320,8 @@
           (row.onclick = () => {
             document.querySelectorAll(".field-row").forEach((other) => {
               other.removeAttribute("aria-current");
-              other.querySelector(".field-status").hidden = true;
             });
             row.setAttribute("aria-current", "step");
-            row.querySelector(".field-status").hidden = false;
           }),
       );
       document.getElementById("download-demo").onclick = () =>

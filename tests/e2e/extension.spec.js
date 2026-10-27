@@ -285,8 +285,19 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#pick-status")).toHaveText(
     "ページ上の場所をクリック",
   );
-  await expect(panel.locator("#field-title .field-status")).toBeHidden();
-  await expect(panel.locator("#field-location .field-status")).toBeVisible();
+  await expect(panel.locator("#field-title .field-label")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
+  await expect(panel.locator(".field-status")).toHaveCount(0);
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#picked-location")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await panel.screenshot({ path: "test-results/panel-picking.png" });
   await source.screenshot({ path: "test-results/page-picker-progress.png" });
   await source.locator("#venue").click();
@@ -1430,7 +1441,7 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   await source.locator("#venue").click();
   await source.locator("#description").click();
   await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
-  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
   await panel.locator("#field-location").focus();
   await panel.keyboard.press("Tab");
   await expect(panel.locator("#field-details")).toBeFocused();
@@ -1455,14 +1466,28 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   );
   await source.keyboard.press("Escape");
   await expect(panel.locator("#resume")).toBeVisible();
-  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
   await panel.locator("#field-location").focus();
   await panel.keyboard.press("Space");
   await expect(panel.locator("#resume")).toBeHidden();
-  await expect(panel.locator("#field-location .field-status")).toBeVisible();
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#picked-location")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await source.locator("#venue").click();
-  await expect(panel.locator("#field-details .field-status")).toBeVisible();
+  await expect(panel.locator("#field-details .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await panel.close();
   await source.close();
 });

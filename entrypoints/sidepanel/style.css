@@ -643,12 +643,11 @@ main {
   color: var(--muted);
   font-size: 10px;
 }
-.field-status {
-  padding: 1px 6px;
-  border-radius: 4px;
-  color: #785825;
-  background: #f5e4bc;
-  font-size: 9px;
+.field-label {
+  font-weight: 400;
+}
+.field-row[aria-current="step"] .field-label {
+  font-weight: 600;
 }
 .field-edit {
   margin-left: auto;
