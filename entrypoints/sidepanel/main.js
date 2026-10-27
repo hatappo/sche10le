@@ -123,6 +123,17 @@ function showSource(label, title = "") {
   el("source-domain").title = title;
 }
 
+/** @param {Element | null} label @param {boolean} complete @param {boolean} wasComplete */
+function updateCompletionEffect(label, complete, wasComplete) {
+  if (!complete) label?.classList.remove("is-completing");
+  else if (
+    !wasComplete &&
+    !matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    label?.classList.add("is-completing");
+  }
+}
+
 /** Reflect the existing workflow without introducing another progress state. */
 function renderSectionProgress() {
   /** @type {Array<[string, 'active' | 'complete' | 'waiting']>} */
@@ -139,15 +150,11 @@ function renderSectionProgress() {
   ];
   for (const [id, state] of sections) {
     const heading = el(id);
-    const label = heading.querySelector(".stage-label");
-    if (state !== "complete") label?.classList.remove("is-completing");
-    else if (
-      heading.dataset.state &&
-      heading.dataset.state !== "complete" &&
-      !matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      label?.classList.add("is-completing");
-    }
+    updateCompletionEffect(
+      heading.querySelector(".stage-label"),
+      state === "complete",
+      !heading.dataset.state || heading.dataset.state === "complete",
+    );
     heading.dataset.state = state;
     if (state === "active") heading.setAttribute("aria-current", "step");
     else heading.removeAttribute("aria-current");
@@ -402,7 +409,7 @@ function receive(message, run) {
     const pickedStep = draft.step;
     draft = pickField(draft, message.text);
     syncPicker();
-    if (draft.step !== pickedStep) flashPickedField(pickedStep);
+    if (draft.step !== pickedStep) scrollToPickedField(pickedStep);
   } else if (message.type === "skip") advance();
   else if (message.type === "choose-field") chooseField(message.fieldIndex);
   else if (message.type === "back") back();
@@ -678,6 +685,15 @@ function renderDraft() {
   PICK_FIELDS.forEach((field, index) => {
     const row = el(`field-${field}`);
     const active = !paused && index === draft?.step;
+    const done = index < (draft?.step ?? 0);
+    updateCompletionEffect(
+      row.querySelector(".field-label"),
+      done,
+      row.dataset.complete === "true",
+    );
+    row.dataset.complete = String(done);
+    row.querySelector(".field-check")?.toggleAttribute("hidden", !done);
+    el(`field-${field}-completion`).textContent = done ? "設定済み" : "";
     row.querySelector(".field-status")?.toggleAttribute("hidden", !active);
     if (active) row.setAttribute("aria-current", "step");
     else row.removeAttribute("aria-current");
@@ -708,40 +724,13 @@ function chooseField(index) {
 }
 
 /** @param {number} index */
-function flashPickedField(index) {
+function scrollToPickedField(index) {
   const row = el(`field-${PICK_FIELDS[index]}`);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  row.getAnimations().forEach((animation) => animation.cancel());
-  row.querySelector(".picked-confirmation")?.remove();
-  const check = node("span", "picked-confirmation", "✓");
-  check.setAttribute("aria-hidden", "true");
-  row.append(check);
   row.scrollIntoView({
     block: "nearest",
     behavior: reduced ? "instant" : "smooth",
   });
-  row.animate(
-    [
-      { backgroundColor: "#d6ead1", boxShadow: "0 0 0 3px #b9d9b4" },
-      { backgroundColor: "transparent", boxShadow: "0 0 0 0 #b9d9b400" },
-    ],
-    { duration: reduced ? 0 : 800, easing: "ease-out" },
-  );
-  const animation = check.animate(
-    reduced
-      ? [{ opacity: 1 }, { opacity: 1 }]
-      : [
-          { opacity: 0, transform: "translateY(5px) scale(.75)" },
-          { opacity: 1, transform: "translateY(0) scale(1.1)", offset: 0.25 },
-          { opacity: 1, transform: "translateY(0) scale(1)", offset: 0.75 },
-          { opacity: 0, transform: "translateY(-5px) scale(1)" },
-        ],
-    { duration: 900, easing: "ease-out" },
-  );
-  void animation.finished.then(
-    () => check.remove(),
-    () => check.remove(),
-  );
 }
 
 function syncPicker() {
@@ -901,7 +890,7 @@ async function runAI(run) {
   }
 }
 
-for (const label of document.querySelectorAll(".stage-label")) {
+for (const label of document.querySelectorAll(".stage-label, .field-label")) {
   label.addEventListener("animationend", () => {
     label.classList.remove("is-completing");
   });

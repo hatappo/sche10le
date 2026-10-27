@@ -274,10 +274,12 @@
             type="button"
             data-step="0"
             aria-label="タイトルを選び直す"
-            aria-describedby="picked-title"
+            aria-describedby="picked-title field-title-completion"
           >
             <span class="field-heading">
-              <span>タイトル</span>
+              <span class="field-label">タイトル</span>
+              <span class="field-check" aria-hidden="true" hidden>✓</span>
+              <span id="field-title-completion" class="sr-only"></span>
               <span class="field-status" aria-hidden="true" hidden>選択中</span>
               <svg
                 class="field-edit"
@@ -302,10 +304,12 @@
             type="button"
             data-step="1"
             aria-label="場所を選び直す"
-            aria-describedby="picked-location"
+            aria-describedby="picked-location field-location-completion"
           >
             <span class="field-heading">
-              <span>場所</span>
+              <span class="field-label">場所</span>
+              <span class="field-check" aria-hidden="true" hidden>✓</span>
+              <span id="field-location-completion" class="sr-only"></span>
               <span class="field-status" aria-hidden="true" hidden>選択中</span>
               <svg
                 class="field-edit"
@@ -330,10 +334,12 @@
             type="button"
             data-step="2"
             aria-label="詳細を選び直す"
-            aria-describedby="picked-details"
+            aria-describedby="picked-details field-details-completion"
           >
             <span class="field-heading">
-              <span>詳細</span>
+              <span class="field-label">詳細</span>
+              <span class="field-check" aria-hidden="true" hidden>✓</span>
+              <span id="field-details-completion" class="sr-only"></span>
               <span class="field-status" aria-hidden="true" hidden>選択中</span>
               <svg
                 class="field-edit"

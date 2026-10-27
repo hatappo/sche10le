@@ -201,7 +201,8 @@ main {
   color: var(--green);
   font-weight: 600;
 }
-.stage-label.is-completing {
+.stage-label.is-completing,
+.field-label.is-completing {
   background-image: linear-gradient(
     110deg,
     var(--muted) 38%,
@@ -638,6 +639,10 @@ main {
   color: var(--muted);
   font-size: 10px;
 }
+.field-check {
+  color: var(--muted);
+  font-size: 10px;
+}
 .field-status {
   padding: 1px 6px;
   border-radius: 4px;
@@ -983,20 +988,6 @@ main {
   background: none;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-.picked-confirmation {
-  position: absolute;
-  right: 0;
-  top: -8px;
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--green);
-  color: white;
-  font-size: 12px;
-  pointer-events: none;
 }
 .format-input {
   display: block;

@@ -281,9 +281,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await expect(panel.locator("#picked-details")).toHaveText(`${baseUrl}/`);
   await source.locator("#event-title").click();
-  await expect(panel.locator("#field-title .picked-confirmation")).toHaveText(
-    "✓",
-  );
+  await expect(panel.locator("#field-title .field-check")).toHaveText("✓");
   await expect(panel.locator("#pick-status")).toHaveText(
     "ページ上の場所をクリック",
   );
@@ -357,7 +355,10 @@ test("工程見出しは完了時だけ一度光り、再描画や動きを減�
   const { source, panel } = await open(undefined, () => {
     window.__stageShines = [];
     document.addEventListener("animationstart", (event) => {
-      if (event.animationName === "stage-shine") {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.matches(".stage-label")
+      ) {
         window.__stageShines.push(event.target.closest(".stage-title").id);
         if (event.target.closest("#candidates-title")) {
           event.target.getAnimations()[0].pause();
@@ -424,6 +425,95 @@ test("工程見出しは完了時だけ一度光り、再描画や動きを減�
       "content-title",
       "content-title",
     ]);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("内容の各ラベルは取得・スキップで光ってチェックを残し、選び直しとリセットに追従する", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__fieldShines = [];
+    document.addEventListener("animationstart", (event) => {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.matches(".field-label")
+      ) {
+        window.__fieldShines.push(event.target.closest(".field-row").id);
+      }
+    });
+  });
+  const shines = () => panel.evaluate(() => window.__fieldShines);
+  try {
+    await select(panel);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(0);
+    await source.locator("#event-title").click();
+    await expect.poll(shines).toEqual(["field-title"]);
+    await expect(panel.locator("#field-title .field-check")).toBeVisible();
+    await expect(panel.locator("#field-title-completion")).toHaveText(
+      "設定済み",
+    );
+    expect(
+      await panel
+        .locator("#field-title")
+        .evaluate(
+          (row) =>
+            row
+              .getAnimations()
+              .filter((animation) => !(animation instanceof CSSTransition))
+              .length,
+        ),
+    ).toBe(0);
+    await expect(panel.locator(".picked-confirmation")).toHaveCount(0);
+    await clickOverlay(source, "スキップ");
+    await expect.poll(shines).toEqual(["field-title", "field-location"]);
+    await expect(panel.locator("#field-location .field-check")).toBeVisible();
+    await expect(panel.locator("#picked-location")).toHaveText("未設定");
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual(["field-title", "field-location", "field-details"]);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    await panel.screenshot({ path: "test-results/fields-complete.png" });
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    expect(await shines()).toEqual([
+      "field-title",
+      "field-location",
+      "field-details",
+    ]);
+    await panel.locator("#field-details").click();
+    await expect(panel.locator("#field-details .field-check")).toBeHidden();
+    await expect(panel.locator(".field-check:visible")).toHaveCount(2);
+    await source.keyboard.press("Escape");
+    await expect(panel.locator(".field-check:visible")).toHaveCount(2);
+    await panel.locator("#resume").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual([
+        "field-title",
+        "field-location",
+        "field-details",
+        "field-details",
+      ]);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#field-details").click();
+    await clickOverlay(source, "スキップ");
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    expect(await shines()).toEqual([
+      "field-title",
+      "field-location",
+      "field-details",
+      "field-details",
+    ]);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(0);
   } finally {
     await panel.close();
     await source.close();
