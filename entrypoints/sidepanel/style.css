@@ -645,6 +645,11 @@ main {
   color: var(--muted);
   font-size: 10px;
 }
+.field-number {
+  margin-right: 4px;
+  font-size: 9px;
+  font-weight: 400;
+}
 .field-label {
   font-weight: 400;
 }

@@ -231,15 +231,21 @@ async function expectPickerActionsOnly(source, step = 0) {
         objectId: object.objectId,
         returnByValue: true,
         functionDeclaration: `function() {
+          const number = this.querySelector('.step-number');
           const label = this.querySelector('.step-label');
           const check = this.querySelector('.step-check');
           const bounds = this.getBoundingClientRect();
+          const numberBounds = number.getBoundingClientRect();
           const textBounds = label.getBoundingClientRect();
           const checkBounds = check.getBoundingClientRect();
+          const visible = getComputedStyle(check).display !== 'none';
+          const right = visible ? checkBounds.right : textBounds.right;
           return {
+            number: number.textContent,
             label: label.textContent,
-            visible: getComputedStyle(check).visibility === 'visible',
-            fits: textBounds.left >= bounds.left && checkBounds.right <= bounds.right && textBounds.right <= checkBounds.left,
+            visible,
+            centered: Math.abs((numberBounds.left + right) / 2 - (bounds.left + bounds.right) / 2) < 1,
+            fits: numberBounds.left >= bounds.left && right <= bounds.right && (!visible || textBounds.right <= checkBounds.left),
             current: this.getAttribute('aria-current'),
             weight: getComputedStyle(label).fontWeight,
             shadow: getComputedStyle(this).boxShadow,
@@ -248,7 +254,9 @@ async function expectPickerActionsOnly(source, step = 0) {
         }`,
       });
       const state = result.value;
+      expect(state.number).toBe(String(index + 1));
       expect(state.label).toBe(["タイトル", "場所", "詳細"][index]);
+      expect(state.centered).toBe(true);
       expect(state.visible).toBe(index < step);
       expect(state.fits).toBe(true);
       expect(state.current).toBe(index === step ? "step" : null);
@@ -324,6 +332,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
+  await expect(panel.locator(".field-number")).toHaveText(["1", "2", "3"]);
   await expect(
     panel.locator("#steps, #previous, #skip, .pick-instruction"),
   ).toHaveCount(0);
@@ -1740,6 +1749,72 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   );
   await panel.close();
   await source.close();
+});
+
+test("取得バーの光は開始・再開時だけ一度流れ、動きを減らす設定では省略する", async () => {
+  const { source, panel } = await open();
+  const session = await context.newCDPSession(source);
+  async function guideAnimation(action) {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    function find(node) {
+      const attributes = node.attributes ?? [];
+      if (
+        attributes[attributes.indexOf("class") + 1]
+          ?.split(" ")
+          .includes("guide")
+      )
+        return node;
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ]) {
+        const found = find(child);
+        if (found) return found;
+      }
+    }
+    const guide = find(root);
+    expect(guide).toBeTruthy();
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: guide.nodeId,
+    });
+    const { result } = await session.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      arguments: [{ value: action }],
+      returnByValue: true,
+      functionDeclaration: `function(action) {
+        const animation = this.getAnimations({subtree:true}).find(item => item.animationName === 'picker-start');
+        if (!animation) return false;
+        if (action === 'pause') { animation.pause(); animation.currentTime = 800; }
+        if (action === 'finish') animation.finish();
+        return true;
+      }`,
+    });
+    return result.value;
+  }
+  try {
+    await select(panel);
+    expect(await guideAnimation("pause")).toBe(true);
+    await source.screenshot({ path: "test-results/picker-arrival-shine.png" });
+    expect(await guideAnimation("finish")).toBe(true);
+    await clickOverlay(source, "スキップ");
+    expect(await guideAnimation("inspect")).toBe(false);
+    await clickOverlay(source, "戻る");
+    expect(await guideAnimation("inspect")).toBe(false);
+    await clickOverlay(source, "選択モードを閉じる");
+    await panel.locator("#resume").click();
+    expect(await guideAnimation("pause")).toBe(true);
+    await clickOverlay(source, "選択モードを閉じる");
+    await source.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#resume").click();
+    expect(await guideAnimation("inspect")).toBe(false);
+  } finally {
+    await session.detach();
+    await panel.close();
+    await source.close();
+  }
 });
 
 test("操作バーは手順間で大きさとボタン位置を保ち、閉じる操作でページ操作へ戻れる", async () => {
