@@ -122,6 +122,23 @@ async function clickOverlay(source, name, key) {
     }
     const target = find(root);
     expect(target, `overlay button: ${name}`).toBeTruthy();
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: target.nodeId,
+    });
+    await expect
+      .poll(async () => {
+        const { result } = await session.send("Runtime.callFunctionOn", {
+          objectId: object.objectId,
+          returnByValue: true,
+          functionDeclaration: `function() {
+          const guide = this.closest('.guide');
+          return getComputedStyle(guide).visibility === 'visible' &&
+            guide.getAnimations().every(animation => animation.playState === 'finished');
+        }`,
+        });
+        return result.value;
+      })
+      .toBe(true);
     if (key) {
       await session.send("DOM.focus", { nodeId: target.nodeId });
       await source.keyboard.press(key);
@@ -150,6 +167,7 @@ async function expectPickerActionsOnly(source, step = 0) {
     const visibleLabels = [];
     const disabledLabels = [];
     const actionNodes = [];
+    const stepNodes = [];
     let guide;
     function visit(node) {
       const attributes = node.attributes ?? [];
@@ -162,6 +180,12 @@ async function expectPickerActionsOnly(source, step = 0) {
         guide = node;
       if (node.nodeName === "BUTTON" && index >= 0) {
         labels.push(attributes[index + 1]);
+        if (
+          ["タイトルを選び直す", "場所を選び直す", "詳細を選び直す"].includes(
+            attributes[index + 1],
+          )
+        )
+          stepNodes.push(node);
         if (attributes.includes("disabled"))
           disabledLabels.push(attributes[index + 1]);
         if (
@@ -215,6 +239,60 @@ async function expectPickerActionsOnly(source, step = 0) {
       });
       positions.push(button.border);
     }
+    expect(stepNodes).toHaveLength(3);
+    for (const [index, node] of stepNodes.entries()) {
+      const { object } = await session.send("DOM.resolveNode", {
+        nodeId: node.nodeId,
+      });
+      const { result } = await session.send("Runtime.callFunctionOn", {
+        objectId: object.objectId,
+        returnByValue: true,
+        functionDeclaration: `function() {
+          const number = this.querySelector('.step-number');
+          const label = this.querySelector('.step-label');
+          const check = this.querySelector('.step-check');
+          const bounds = this.getBoundingClientRect();
+          const numberBounds = number.getBoundingClientRect();
+          const textBounds = label.getBoundingClientRect();
+          const checkBounds = check.getBoundingClientRect();
+          const visible = getComputedStyle(check).display !== 'none';
+          const right = visible ? checkBounds.right : textBounds.right;
+          return {
+            number: number.textContent,
+            label: label.textContent,
+            visible,
+            centered: Math.abs((numberBounds.left + right) / 2 - (bounds.left + bounds.right) / 2) < 1,
+            fits: numberBounds.left >= bounds.left && right <= bounds.right && (!visible || textBounds.right <= checkBounds.left),
+            current: this.getAttribute('aria-current'),
+            weight: getComputedStyle(label).fontWeight,
+            numberWeight: getComputedStyle(number).fontWeight,
+            color: getComputedStyle(label).color,
+            numberColor: getComputedStyle(number).color,
+            interacting: this.matches(':hover, :focus-visible'),
+            shadow: getComputedStyle(this).boxShadow,
+            position: [bounds.x, bounds.y, bounds.width, bounds.height]
+          };
+        }`,
+      });
+      const state = result.value;
+      expect(state.number).toBe(String(index + 1));
+      expect(state.label).toBe(["タイトル", "場所", "詳細"][index]);
+      expect(state.centered).toBe(true);
+      expect(state.visible).toBe(index < step);
+      expect(state.fits).toBe(true);
+      expect(state.current).toBe(index === step ? "step" : null);
+      expect(state.weight).toBe(index === step ? "600" : "400");
+      expect(state.numberWeight).toBe(state.weight);
+      expect(state.numberColor).toBe(state.color);
+      if (index < step) {
+        expect(state.color).toBe(
+          state.interacting ? "rgb(44, 96, 69)" : "rgb(120, 129, 113)",
+        );
+      }
+      if (index === step) expect(state.color).toBe("rgb(44, 96, 69)");
+      expect(state.shadow).toBe("none");
+      positions.push(state.position);
+    }
     return { width: model.width, height: model.height, positions };
   } finally {
     await session.detach();
@@ -230,11 +308,32 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     path: "test-results/panel-candidates.png",
     animations: "disabled",
   });
+  const idleCardStyle = await panel
+    .locator(".candidate")
+    .first()
+    .evaluate((card) => {
+      const style = getComputedStyle(card);
+      return {
+        background: style.backgroundColor,
+        border: style.borderTopColor,
+      };
+    });
   await panel.locator(".candidate").first().hover();
   await panel.screenshot({
     path: "test-results/panel-variants.png",
     animations: "disabled",
   });
+  const expandedCardStyle = await panel
+    .locator(".candidate.expanded")
+    .evaluate((card) => {
+      const style = getComputedStyle(card);
+      return {
+        background: style.backgroundColor,
+        border: style.borderTopColor,
+      };
+    });
+  expect(expandedCardStyle.background).toBe(idleCardStyle.background);
+  expect(expandedCardStyle.border).not.toBe(idleCardStyle.border);
   await select(panel, "移動込み");
   await expect(
     panel.locator(".candidate.selected .registration-summary"),
@@ -262,6 +361,7 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await expectPickerActionsOnly(source);
+  await expect(panel.locator(".field-number")).toHaveText(["1", "2", "3"]);
   await expect(
     panel.locator("#steps, #previous, #skip, .pick-instruction"),
   ).toHaveCount(0);
@@ -272,6 +372,22 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
     .locator('.field-row[aria-current="step"]')
     .evaluate((button) => getComputedStyle(button).backgroundColor);
   expect(activeColor).not.toBe(primaryColor);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCSS(
+    "background-color",
+    expandedCardStyle.background,
+  );
+  const completedColor = await panel
+    .locator(".candidate.selected")
+    .evaluate((card) => getComputedStyle(card).backgroundColor);
+  expect(completedColor).not.toBe(idleCardStyle.background);
+  await expect(panel.locator(".candidate.selected")).toHaveCSS(
+    "border-top-color",
+    idleCardStyle.border,
+  );
+  await panel.screenshot({
+    path: "test-results/panel-current-field.png",
+    animations: "disabled",
+  });
   await source.screenshot({
     path: "test-results/page-picker.png",
     animations: "disabled",
@@ -281,14 +397,42 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   );
   await expect(panel.locator("#picked-details")).toHaveText(`${baseUrl}/`);
   await source.locator("#event-title").click();
-  await expect(panel.locator("#field-title .picked-confirmation")).toHaveText(
-    "✓",
-  );
+  await expect(panel.locator("#field-title .field-check")).toHaveText("✓");
   await expect(panel.locator("#pick-status")).toHaveText(
     "ページ上の場所をクリック",
   );
-  await expect(panel.locator("#field-title .field-status")).toBeHidden();
-  await expect(panel.locator("#field-location .field-status")).toBeVisible();
+  await expect(panel.locator("#field-title .field-label")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
+  await expect(panel.locator(".field-status")).toHaveCount(0);
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#field-location .field-number")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#field-location .field-number")).toHaveCSS(
+    "color",
+    "rgb(44, 96, 69)",
+  );
+  await expect(panel.locator("#field-title .field-label")).not.toHaveClass(
+    /is-completing/,
+  );
+  await expect(panel.locator("#field-title .field-number")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
+  await expect(panel.locator("#field-title .field-number")).toHaveCSS(
+    "color",
+    "rgb(120, 129, 113)",
+  );
+  await expect(panel.locator("#picked-location")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await panel.screenshot({ path: "test-results/panel-picking.png" });
   await source.screenshot({ path: "test-results/page-picker-progress.png" });
   await source.locator("#venue").click();
@@ -300,8 +444,8 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#pick-status")).toHaveText(
     "カレンダーへ進めます",
   );
-  await expect(source.locator("sche10le-picker")).toHaveCount(1);
-  await expectPickerActionsOnly(source, 3);
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await expect(panel.locator("#resume")).toBeHidden();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
@@ -309,12 +453,12 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator(".stage-title[aria-current]")).toHaveCount(0);
   await panel.screenshot({ path: "test-results/panel-picked.png" });
   await source.screenshot({ path: "test-results/page-picker-complete.png" });
-  // Completing all three fields keeps the guide, but ordinary page clicks no longer pick.
+  // Completion removes the guide and releases ordinary page interaction.
   await source.locator("#event-title").click();
   await expect(panel.locator("#pick-status")).toHaveText(
     "カレンダーへ進めます",
   );
-  await clickOverlay(source, "戻る");
+  await panel.locator("#field-details").click();
   await expect(panel.locator("#pick-status")).toContainText("詳細");
   await expect(panel.locator("#content-title")).toHaveAttribute(
     "aria-current",
@@ -325,12 +469,12 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#picked-details")).toHaveText(
     `東京都台東区蔵前3丁目 アトリエ蔵前\n\n${baseUrl}/`,
   );
-  await clickOverlay(source, "詳細を選び直す");
+  await panel.locator("#field-details").click();
   await source.locator("#description").click();
   await expect(panel.locator("#picked-details")).toHaveText(
     `受付は開始30分前から。入口でチケットを提示してください。\n\n${baseUrl}/`,
   );
-  await clickOverlay(source, "タイトルを選び直す");
+  await panel.locator("#field-title").click();
   await expect(panel.locator("#field-title")).toHaveAttribute(
     "aria-current",
     "step",
@@ -351,6 +495,361 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await calendar.close();
   await panel.close();
   await source.close();
+});
+
+test("工程見出しは完了時だけ一度光り、再描画や動きを減らす設定では繰り返さない", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__stageShines = [];
+    document.addEventListener("animationstart", (event) => {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.matches(".stage-label")
+      ) {
+        window.__stageShines.push(event.target.closest(".stage-title").id);
+        if (event.target.closest("#candidates-title")) {
+          event.target.getAnimations()[0].pause();
+        }
+      }
+    });
+  });
+  const shines = () => panel.evaluate(() => window.__stageShines);
+  try {
+    await expect.poll(shines).toEqual(["scan-title"]);
+    await select(panel);
+    await expect.poll(shines).toEqual(["scan-title", "candidates-title"]);
+    const label = panel.locator("#candidates-title .stage-label");
+    await label.evaluate((element) => {
+      const animation = element.getAnimations()[0];
+      animation.pause();
+      animation.currentTime = 200;
+    });
+    await panel.screenshot({
+      path: "test-results/section-completion-shine.png",
+    });
+    await label.evaluate((element) => element.getAnimations()[0].play());
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual(["scan-title", "candidates-title", "content-title"]);
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    await expect(label).toHaveCSS(
+      "color",
+      await panel
+        .locator("#candidates-title")
+        .evaluate((element) => getComputedStyle(element).color),
+    );
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+    expect(await shines()).toEqual([
+      "scan-title",
+      "candidates-title",
+      "content-title",
+    ]);
+
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual([
+        "scan-title",
+        "candidates-title",
+        "content-title",
+        "content-title",
+      ]);
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    expect(await shines()).toEqual([
+      "scan-title",
+      "candidates-title",
+      "content-title",
+      "content-title",
+    ]);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("内容の各ラベルは取得・スキップで光ってチェックを残し、選び直しとリセットに追従する", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__fieldShines = [];
+    document.addEventListener("animationstart", (event) => {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.matches(".field-label")
+      ) {
+        window.__fieldShines.push(event.target.closest(".field-row").id);
+      }
+    });
+  });
+  const shines = () => panel.evaluate(() => window.__fieldShines);
+  try {
+    await select(panel);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(0);
+    const currentColor = await panel
+      .locator("#field-title")
+      .evaluate((row) => getComputedStyle(row).backgroundColor);
+    const completeColor = await panel
+      .locator(".candidate.selected")
+      .evaluate((card) => getComputedStyle(card).backgroundColor);
+    expect(currentColor).not.toBe(completeColor);
+    await source.locator("#event-title").click();
+    await expect(panel.locator("#field-title")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
+    const cardBorder = await panel
+      .locator(".candidate.selected")
+      .evaluate((card) => getComputedStyle(card).borderTopColor);
+    for (const edge of ["top", "right", "bottom", "left"]) {
+      await expect(panel.locator("#field-title")).toHaveCSS(
+        `border-${edge}-color`,
+        cardBorder,
+      );
+    }
+    await expect(panel.locator("#field-title")).toHaveCSS("box-shadow", "none");
+    await expect(panel.locator("#field-location")).toHaveCSS(
+      "background-color",
+      currentColor,
+    );
+    await expect.poll(shines).toEqual(["field-title"]);
+    await expect(panel.locator("#field-title .field-check")).toBeVisible();
+    await expect(panel.locator("#field-title-completion")).toHaveText(
+      "設定済み",
+    );
+    expect(
+      await panel
+        .locator("#field-title")
+        .evaluate(
+          (row) =>
+            row
+              .getAnimations()
+              .filter((animation) => !(animation instanceof CSSTransition))
+              .length,
+        ),
+    ).toBe(0);
+    await expect(panel.locator(".picked-confirmation")).toHaveCount(0);
+    await clickOverlay(source, "スキップ");
+    await expect.poll(shines).toEqual(["field-title", "field-location"]);
+    await expect(panel.locator("#field-location .field-check")).toBeVisible();
+    await expect(panel.locator("#picked-location")).toHaveText("未設定");
+    await expect(panel.locator("#field-location")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual(["field-title", "field-location", "field-details"]);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    await panel.screenshot({ path: "test-results/fields-complete.png" });
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    expect(await shines()).toEqual([
+      "field-title",
+      "field-location",
+      "field-details",
+    ]);
+    await panel.locator("#field-details").click();
+    await expect(panel.locator("#field-details .field-check")).toBeHidden();
+    await expect(panel.locator("#field-details")).toHaveCSS(
+      "background-color",
+      currentColor,
+    );
+    await expect(panel.locator("#field-title")).toHaveCSS(
+      "background-color",
+      completeColor,
+    );
+    await expect(panel.locator(".field-check:visible")).toHaveCount(2);
+    await source.keyboard.press("Escape");
+    await expect(panel.locator(".field-check:visible")).toHaveCount(2);
+    await panel.locator("#resume").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual([
+        "field-title",
+        "field-location",
+        "field-details",
+        "field-details",
+      ]);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#field-details").click();
+    await clickOverlay(source, "スキップ");
+    await expect(panel.locator(".field-check:visible")).toHaveCount(3);
+    await expect(panel.locator(".field-label.is-completing")).toHaveCount(0);
+    expect(await shines()).toEqual([
+      "field-title",
+      "field-location",
+      "field-details",
+      "field-details",
+    ]);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(panel.locator(".field-check:visible")).toHaveCount(0);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("内容完了後は補足文を切り替え、項目の光の後に主操作を案内する", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__calendarCues = [];
+    document.addEventListener("animationstart", (event) => {
+      if (
+        event.animationName === "stage-shine" &&
+        event.target.closest("#field-details")
+      ) {
+        window.__detailsShineAt = performance.now();
+      }
+      if (event.animationName === "calendar-ready-glow") {
+        window.__calendarCues.push(performance.now() - window.__detailsShineAt);
+        event.target
+          .getAnimations({ subtree: true })
+          .find(
+            (animation) => animation.animationName === "calendar-ready-glow",
+          )
+          .pause();
+      }
+    });
+  });
+  const primary = panel.locator("#open-calendar");
+  const hint = panel.locator("#calendar-hint");
+  const initialHint = "情報の取得は途中でもOK。保存は Google カレンダーで。";
+  const completeHint = "Google カレンダーで修正してから保存できます。";
+  try {
+    await select(panel);
+    await expect(hint).toHaveText(initialHint);
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    const bounds = await primary.boundingBox();
+    // Completion must not move keyboard focus to the primary action.
+    await panel.locator("#download-calendar").focus();
+    await source.locator("#description").click();
+    await expect(hint).toHaveText(completeHint);
+    await expect
+      .poll(() => panel.evaluate(() => window.__calendarCues.length))
+      .toBe(1);
+    expect(
+      await panel.evaluate(() => window.__calendarCues[0]),
+    ).toBeGreaterThanOrEqual(550);
+    await expect(panel.locator("#download-calendar")).toBeFocused();
+    expect(await primary.boundingBox()).toEqual(bounds);
+    await primary.evaluate((button) => {
+      button
+        .getAnimations({ subtree: true })
+        .find(
+          (animation) => animation.animationName === "calendar-ready-glow",
+        ).currentTime = 1300;
+    });
+    await panel.screenshot({ path: "test-results/calendar-ready-glow.png" });
+    await primary.evaluate((button) =>
+      button
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .play(),
+    );
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(hint).toHaveText(completeHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await panel.evaluate(() => window.__calendarCues.length)).toBe(1);
+
+    await panel.locator("#field-details").click();
+    await expect(hint).toHaveText(initialHint);
+    await source.locator("#description").click();
+    await expect(primary).toHaveClass(/calendar-ready/);
+    await panel.locator("#field-details").click();
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    await expect(hint).toHaveText(initialHint);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await clickOverlay(source, "スキップ");
+    await expect(hint).toHaveText(completeHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await panel.evaluate(() => window.__calendarCues.length)).toBe(1);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(hint).toHaveText(initialHint);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("完了の光は10秒の間隔で追加2回まで繰り返し、待機中の設定操作で止まる", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__calendarCues = [];
+    document.addEventListener("animationstart", (event) => {
+      if (event.animationName !== "calendar-ready-glow") return;
+      window.__calendarCues.push(performance.now());
+      event.target
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .pause();
+    });
+  });
+  const primary = panel.locator("#open-calendar");
+  const count = () => panel.evaluate(() => window.__calendarCues.length);
+  async function finishGlow() {
+    await primary.evaluate((button) =>
+      button
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .finish(),
+    );
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+  }
+  try {
+    await panel.clock.install();
+    await panel.clock.pauseAt(new Date());
+    await select(panel);
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect.poll(count).toBe(1);
+    await finishGlow();
+    for (const expected of [2, 3]) {
+      await panel.clock.fastForward(9999);
+      await expect(primary).not.toHaveClass(/calendar-ready/);
+      expect(await count()).toBe(expected - 1);
+      await panel.clock.fastForward(1);
+      await expect.poll(count).toBe(expected);
+      await finishGlow();
+    }
+    await panel.clock.fastForward(30_000);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await count()).toBe(3);
+
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect.poll(count).toBe(4);
+    await finishGlow();
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await panel.clock.fastForward(30_000);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await count()).toBe(4);
+  } finally {
+    // Playwright's page.clock controls the shared browser context, including future
+    // pages. Restore wall time and resume timers before later tests use hover delays.
+    await panel.clock.setSystemTime(new Date());
+    await panel.clock.resume();
+    await panel.close();
+    await source.close();
+  }
 });
 
 test("未取得で開く・スキップ・戻る・選び直しとEscape", async () => {
@@ -1263,7 +1762,7 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   await source.locator("#venue").click();
   await source.locator("#description").click();
   await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
-  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
   await panel.locator("#field-location").focus();
   await panel.keyboard.press("Tab");
   await expect(panel.locator("#field-details")).toBeFocused();
@@ -1288,25 +1787,314 @@ test("取得結果の行からクリック・キーボードで選び直し、�
   );
   await source.keyboard.press("Escape");
   await expect(panel.locator("#resume")).toBeVisible();
-  await expect(panel.locator(".field-status:visible")).toHaveCount(0);
+  await expect(panel.locator('.field-row[aria-current="step"]')).toHaveCount(0);
   await panel.locator("#field-location").focus();
   await panel.keyboard.press("Space");
   await expect(panel.locator("#resume")).toBeHidden();
-  await expect(panel.locator("#field-location .field-status")).toBeVisible();
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#picked-location")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await source.locator("#venue").click();
-  await expect(panel.locator("#field-details .field-status")).toBeVisible();
+  await expect(panel.locator("#field-details .field-label")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#field-location .field-label")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
   await panel.close();
   await source.close();
+});
+
+test("内容の選び直しでは値を保持し、日時を選び直すと初期値に戻る", async () => {
+  const { source, panel } = await open();
+  const values = panel.locator(".field-value");
+  try {
+    await select(panel);
+    const initial = await values.allTextContents();
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    const completed = await values.allTextContents();
+    expect(completed.every((value, index) => value !== initial[index])).toBe(
+      true,
+    );
+    for (const field of ["title", "location", "details"]) {
+      await panel.locator(`#field-${field}`).click();
+      await expect(panel.locator(`#field-${field}`)).toHaveAttribute(
+        "aria-current",
+        "step",
+      );
+      await expect(values).toHaveText(completed);
+      await source.keyboard.press("Escape");
+      await expect(source.locator("sche10le-picker")).toHaveCount(0);
+      await expect(values).toHaveText(completed);
+    }
+    await panel.locator("#field-title").click();
+    await source.locator("#event-link").click();
+    await expect(panel.locator("#picked-title")).toContainText(
+      "活版印刷について詳しく",
+    );
+    await expect(panel.locator("#field-location")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    const revised = await values.allTextContents();
+    expect(revised[0]).not.toBe(completed[0]);
+    expect(revised.slice(1)).toEqual(completed.slice(1));
+    await clickOverlay(source, "戻る");
+    await expect(values).toHaveText(revised);
+    await clickOverlay(source, "スキップ");
+    await clickOverlay(source, "スキップ");
+    await clickOverlay(source, "スキップ");
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await expect(values).toHaveText(revised);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(values).toHaveText(initial);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("取得バーは開始・再開時だけ下から現れ、動きを減らす設定では省略する", async () => {
+  const { source, panel } = await open();
+  const session = await context.newCDPSession(source);
+  async function guideAnimation(action) {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    function find(node) {
+      const attributes = node.attributes ?? [];
+      if (
+        attributes[attributes.indexOf("class") + 1]
+          ?.split(" ")
+          .includes("guide")
+      )
+        return node;
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ]) {
+        const found = find(child);
+        if (found) return found;
+      }
+    }
+    const guide = find(root);
+    expect(guide).toBeTruthy();
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: guide.nodeId,
+    });
+    const { result } = await session.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      arguments: [{ value: action }],
+      returnByValue: true,
+      functionDeclaration: `function(action) {
+        if (action === 'measure') return {top:this.getBoundingClientRect().top, opacity:getComputedStyle(this).opacity, visibility:getComputedStyle(this).visibility};
+        const animation = this.getAnimations().find(item => item.animationName === 'picker-enter');
+        if (!animation) return false;
+        if (action === 'pause') { animation.pause(); animation.currentTime = 0; }
+        if (action === 'duration') return animation.effect.getTiming().duration;
+        if (action === 'delay') return animation.effect.getTiming().delay;
+        if (action === 'middle') animation.currentTime = animation.effect.getTiming().delay + animation.effect.getTiming().duration / 2;
+        if (action === 'finish') animation.finish();
+        return true;
+      }`,
+    });
+    return result.value;
+  }
+  try {
+    await select(panel);
+    expect(await guideAnimation("pause")).toBe(true);
+    expect(await guideAnimation("duration")).toBe(650);
+    expect(await guideAnimation("delay")).toBe(0);
+    const start = await guideAnimation("measure");
+    expect(start.opacity).toBe("0");
+    expect(start.visibility).toBe("visible");
+    await guideAnimation("middle");
+    await source.screenshot({ path: "test-results/picker-arrival.png" });
+    expect(await guideAnimation("finish")).toBe(true);
+    const end = await guideAnimation("measure");
+    expect(end.opacity).toBe("1");
+    expect(start.top - end.top).toBeCloseTo(12, 1);
+    await clickOverlay(source, "スキップ");
+    expect(await guideAnimation("inspect")).toBe(false);
+    await clickOverlay(source, "戻る");
+    expect(await guideAnimation("inspect")).toBe(false);
+    await clickOverlay(source, "選択モードを閉じる");
+    await panel.locator("#resume").click();
+    expect(await guideAnimation("pause")).toBe(true);
+    expect(await guideAnimation("delay")).toBe(0);
+    await guideAnimation("finish");
+    await clickOverlay(source, "選択モードを閉じる");
+    await source.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#resume").click();
+    expect(await guideAnimation("inspect")).toBe(false);
+  } finally {
+    await session.detach();
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("取得バーを上下に移動し、下端で初期位置に戻せる", async () => {
+  const { source, panel } = await open();
+  const session = await context.newCDPSession(source);
+  async function bar(focus = false) {
+    const { root } = await session.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    function find(node) {
+      const attributes = node.attributes ?? [];
+      if (
+        attributes[attributes.indexOf("aria-label") + 1] ===
+        "取得バーの位置を調整"
+      )
+        return node;
+      for (const child of [
+        ...(node.children ?? []),
+        ...(node.shadowRoots ?? []),
+      ]) {
+        const found = find(child);
+        if (found) return found;
+      }
+    }
+    const node = find(root);
+    expect(node).toBeTruthy();
+    if (focus) await session.send("DOM.focus", { nodeId: node.nodeId });
+    const { object } = await session.send("DOM.resolveNode", {
+      nodeId: node.nodeId,
+    });
+    const { result } = await session.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      returnByValue: true,
+      functionDeclaration: `function() {
+        const guide = this.closest('.guide');
+        const rect = guide.getBoundingClientRect();
+        return {top: rect.top, bottom: rect.bottom, left: rect.left, width: rect.width,
+          dragging: guide.classList.contains('is-dragging'), scroll: window.scrollY,
+          cursor: getComputedStyle(this).cursor};
+      }`,
+    });
+    return result.value;
+  }
+  async function dragBy(x, y) {
+    const initial = await bar();
+    await source.mouse.move(initial.left + 50, initial.top + 25);
+    await source.mouse.down();
+    await expect.poll(async () => (await bar()).dragging).toBe(true);
+    await source.mouse.move(initial.left + 50 + x, initial.top + 25 + y, {
+      steps: 8,
+    });
+    await source.mouse.up();
+    await expect.poll(async () => (await bar()).dragging).toBe(false);
+    return bar();
+  }
+  try {
+    await source.emulateMedia({ reducedMotion: "reduce" });
+    await select(panel);
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    const initial = await bar();
+    expect(initial.bottom).toBe(850 - 24);
+    expect(initial.cursor).toBe("grab");
+    await source.evaluate(() => {
+      const text = document.createElement("p");
+      text.id = "covered-title";
+      text.textContent = "ページ下端のタイトル";
+      text.style.cssText = "position:fixed;bottom:50px;left:40%;margin:0";
+      document.body.append(text);
+    });
+    const covered = await source.locator("#covered-title").boundingBox();
+    expect(covered.y).toBeGreaterThan(initial.top);
+    expect(covered.y + covered.height).toBeLessThan(initial.bottom);
+    const moved = await dragBy(100, -240);
+    expect(moved.top).toBe(initial.top - 240);
+    expect(moved.left).toBe(initial.left);
+    expect(moved.scroll).toBe(initial.scroll);
+    await expect(panel.locator("#field-title")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    await source.locator("#covered-title").click();
+    await expect(panel.locator("#picked-title")).toContainText(
+      "ページ下端のタイトル",
+    );
+    await expect(panel.locator("#field-location")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    expect((await bar()).top).toBe(moved.top);
+    await source.screenshot({
+      path: "test-results/picker-moved.png",
+      animations: "disabled",
+    });
+    await clickOverlay(source, "選択モードを閉じる");
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await panel.locator("#resume").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).top).toBe(moved.top);
+    // A real drag down to the screen edge stops exactly at the initial position.
+    expect((await dragBy(-100, 290)).bottom).toBe(initial.bottom);
+    await bar(true);
+    await source.keyboard.press("ArrowUp");
+    expect((await bar()).top).toBe(initial.top - 16);
+    await source.keyboard.press("ArrowDown");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("Home");
+    expect((await bar()).top).toBe(24);
+    await source.keyboard.press("ArrowUp");
+    expect((await bar()).top).toBe(24);
+    await source.keyboard.press("End");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("ArrowDown");
+    expect((await bar()).bottom).toBe(initial.bottom);
+    await source.keyboard.press("Home");
+    await source.setViewportSize({ width: 280, height: 500 });
+    await expect.poll(async () => (await bar()).top).toBe(24);
+    const narrow = await bar();
+    expect(narrow.left).toBeGreaterThanOrEqual(16);
+    expect(narrow.left + narrow.width).toBeLessThanOrEqual(280 - 16);
+    expect(narrow.bottom).toBeLessThanOrEqual(500 - 24);
+    await panel.locator("#deselect").click();
+    await select(panel);
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).bottom).toBe(500 - 24);
+    // Escape also cancels an in-progress drag and restores ordinary page input.
+    const beforeCancel = await bar();
+    await source.mouse.move(beforeCancel.left + 50, beforeCancel.top + 25);
+    await source.mouse.down();
+    await source.mouse.move(beforeCancel.left + 50, beforeCancel.top - 50);
+    await source.keyboard.press("Escape");
+    await source.mouse.up();
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await panel.locator("#resume").click();
+    await expect(source.locator("sche10le-picker")).toHaveCount(1);
+    expect((await bar()).dragging).toBe(false);
+  } finally {
+    await session.detach();
+    await panel.close();
+    await source.close();
+  }
 });
 
 test("操作バーは手順間で大きさとボタン位置を保ち、閉じる操作でページ操作へ戻れる", async () => {
   const { source, panel } = await open();
   await source.emulateMedia({ reducedMotion: "reduce" });
   await select(panel);
-  for (const width of [1000, 390, 320]) {
+  for (const width of [1000, 390, 320, 280]) {
     await source.setViewportSize({ width, height: 850 });
-    await clickOverlay(source, "タイトルを選び直す");
+    await panel.locator("#field-title").click();
     await expect(panel.locator("#field-title")).toHaveAttribute(
       "aria-current",
       "step",
@@ -1318,7 +2106,7 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
       "aria-current",
       "step",
     );
-    for (let step = 1; step <= 3; step++) {
+    for (let step = 1; step <= 2; step++) {
       await clickOverlay(source, "スキップ");
       await expect(panel.locator("#pick-status")).toHaveText(
         step === 3
@@ -1327,17 +2115,19 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
       );
       expect(await expectPickerActionsOnly(source, step)).toEqual(initial);
     }
-    await clickOverlay(source, "スキップ");
-    await expect(panel.locator("#pick-status")).toHaveText(
-      "カレンダーへ進めます",
-    );
     await source.screenshot({
       path: `test-results/picker-stable-${width}.png`,
       animations: "disabled",
     });
+    await clickOverlay(source, "スキップ");
+    await expect(panel.locator("#pick-status")).toHaveText(
+      "カレンダーへ進めます",
+    );
+    await expect(source.locator("sche10le-picker")).toHaveCount(0);
+    await expect(panel.locator("#resume")).toBeHidden();
   }
   await source.setViewportSize({ width: 1000, height: 850 });
-  await clickOverlay(source, "タイトルを選び直す");
+  await panel.locator("#field-title").click();
   await source.locator("#event-title").click();
   const title = await panel.locator("#picked-title").textContent();
   await clickOverlay(source, "選択モードを閉じる");
@@ -1365,6 +2155,10 @@ test("操作バーは手順間で大きさとボタン位置を保ち、閉じ�
   await source.locator("#venue").click();
   await source.locator("#description").click();
   const values = await panel.locator(".field-value").allTextContents();
+  await expect(source.locator("sche10le-picker")).toHaveCount(0);
+  await panel.locator("#field-details").focus();
+  await panel.keyboard.press("Enter");
+  await expect(source.locator("sche10le-picker")).toHaveCount(1);
   await clickOverlay(source, "選択モードを閉じる", "Enter");
   await expect(source.locator("sche10le-picker")).toHaveCount(0);
   expect(await panel.locator(".field-value").allTextContents()).toEqual(values);
@@ -2036,6 +2830,13 @@ test("日程カードは自動で開閉し、クリックやEnterでは切り替
     await expect(region).toHaveJSProperty("inert", false);
     await panel.locator("#settings-toggle").focus();
     await expect(card).not.toHaveClass(/expanded/);
+    await expect(card.locator(".candidate-arrow")).toBeVisible();
+    await select(panel);
+    await expect(
+      panel.locator(".candidate.selected .candidate-arrow"),
+    ).toBeHidden();
+    await panel.locator("#deselect").click();
+    await expect(panel.locator(".candidate-arrow").first()).toBeVisible();
   } finally {
     await panel.close();
     await source.close();

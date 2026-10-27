@@ -201,6 +201,30 @@ main {
   color: var(--green);
   font-weight: 600;
 }
+.stage-label.is-completing,
+.field-label.is-completing {
+  background-image: linear-gradient(
+    110deg,
+    var(--muted) 38%,
+    #b49b66 46%,
+    #fff5d4 50%,
+    #b49b66 54%,
+    var(--muted) 62%
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  animation: stage-shine 550ms ease-out;
+}
+@keyframes stage-shine {
+  from {
+    color: transparent;
+    background-position: 100% 0;
+  }
+  to {
+    color: transparent;
+    background-position: 0 0;
+  }
+}
 .stage-check {
   display: inline-block;
   flex: 0 0 12px;
@@ -356,7 +380,6 @@ main {
   box-shadow: 0 4px 14px #26472c07;
 }
 .candidate.selected {
-  border-color: var(--green);
   background: #f1f5ed;
 }
 .candidate-heading {
@@ -438,6 +461,9 @@ main {
   font-size: 15px;
   color: var(--muted);
   transition: transform 180ms;
+}
+.candidate.selected .candidate-arrow {
+  display: none;
 }
 .expanded .candidate-arrow {
   transform: rotate(90deg);
@@ -600,11 +626,15 @@ main {
   scroll-margin-bottom: 16px;
 }
 .field-row:hover {
-  background: var(--wash);
+  background: #ffffff8c;
+}
+.field-row[data-complete="true"] {
+  background: #f1f5ed;
+  border-color: var(--line);
 }
 .field-row[aria-current="step"] {
-  background: #fbf1dc;
-  border-color: #d9bd87;
+  background: #ffffff8c;
+  border-color: var(--green);
 }
 .field-heading {
   display: flex;
@@ -613,14 +643,26 @@ main {
   min-height: 18px;
   margin-bottom: 5px;
   color: var(--muted);
+  font-size: 11px;
+}
+.field-check {
+  color: var(--muted);
   font-size: 10px;
 }
-.field-status {
-  padding: 1px 6px;
-  border-radius: 4px;
-  color: #785825;
-  background: #f5e4bc;
-  font-size: 9px;
+.field-number {
+  margin-right: 4px;
+  font-size: 10px;
+}
+.field-label {
+  font-weight: 400;
+}
+.field-row[aria-current="step"] .field-label {
+  color: var(--green);
+  font-weight: 600;
+}
+.field-row[data-complete="true"]:hover .field-label,
+.field-row[data-complete="true"]:focus-visible .field-label {
+  color: var(--green);
 }
 .field-edit {
   margin-left: auto;
@@ -645,7 +687,7 @@ main {
 .source-note {
   display: flex;
   gap: 6px;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 11px;
 }
@@ -706,6 +748,7 @@ main {
   border-color: var(--green);
 }
 .primary-button {
+  position: relative;
   background: var(--green);
   color: #fff;
   border: 1px solid var(--green);
@@ -722,6 +765,44 @@ main {
   line-height: 1.5;
   box-shadow: 0 3px 5px #243e3210;
 }
+.primary-button.calendar-ready::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    110deg,
+    transparent 38%,
+    #fff5d42e 46%,
+    #fff5d45c 50%,
+    #fff5d42e 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  box-shadow:
+    0 0 0 2px #8fb79599,
+    0 0 16px #8fb79566;
+  opacity: 0;
+  animation: calendar-ready-glow 1300ms ease-in-out 650ms;
+}
+.primary-button.calendar-ready.calendar-repeat::after {
+  animation-delay: 0ms;
+}
+@keyframes calendar-ready-glow {
+  from {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  to {
+    background-position: 0 0;
+    opacity: 0;
+  }
+}
 .primary-button:hover {
   background: #1c4934;
 }
@@ -729,7 +810,7 @@ main {
   font-size: 17px;
 }
 .footer-hint {
-  font-size: 9px;
+  font-size: 11px;
   text-align: center;
   margin-top: 8px;
   color: var(--muted);
@@ -960,20 +1041,6 @@ main {
   background: none;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-.picked-confirmation {
-  position: absolute;
-  right: 0;
-  top: -8px;
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--green);
-  color: white;
-  font-size: 12px;
-  pointer-events: none;
 }
 .format-input {
   display: block;

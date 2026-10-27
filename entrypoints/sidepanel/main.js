@@ -123,6 +123,36 @@ function showSource(label, title = "") {
   el("source-domain").title = title;
 }
 
+/** @param {Element | null} label @param {boolean} complete @param {boolean} wasComplete */
+function updateCompletionEffect(label, complete, wasComplete) {
+  if (!complete) label?.classList.remove("is-completing");
+  else if (
+    !wasComplete &&
+    !matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    label?.classList.add("is-completing");
+  }
+}
+
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let calendarCueTimer;
+let calendarCueRepeats = 0;
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+function stopCalendarCue() {
+  clearTimeout(calendarCueTimer);
+  calendarCueTimer = undefined;
+  calendarCueRepeats = 0;
+  button("open-calendar").classList.remove("calendar-ready", "calendar-repeat");
+}
+
+function startCalendarCue() {
+  stopCalendarCue();
+  if (reducedMotion.matches) return;
+  calendarCueRepeats = 2;
+  button("open-calendar").classList.add("calendar-ready");
+}
+
 /** Reflect the existing workflow without introducing another progress state. */
 function renderSectionProgress() {
   /** @type {Array<[string, 'active' | 'complete' | 'waiting']>} */
@@ -139,6 +169,19 @@ function renderSectionProgress() {
   ];
   for (const [id, state] of sections) {
     const heading = el(id);
+    if (id === "content-title") {
+      const complete = state === "complete";
+      if (!complete) stopCalendarCue();
+      else if (heading.dataset.state !== "complete") startCalendarCue();
+      el("calendar-hint").textContent = complete
+        ? "Google カレンダーで修正してから保存できます。"
+        : "情報の取得は途中でもOK。保存は Google カレンダーで。";
+    }
+    updateCompletionEffect(
+      heading.querySelector(".stage-label"),
+      state === "complete",
+      !heading.dataset.state || heading.dataset.state === "complete",
+    );
     heading.dataset.state = state;
     if (state === "active") heading.setAttribute("aria-current", "step");
     else heading.removeAttribute("aria-current");
@@ -393,7 +436,7 @@ function receive(message, run) {
     const pickedStep = draft.step;
     draft = pickField(draft, message.text);
     syncPicker();
-    if (draft.step !== pickedStep) flashPickedField(pickedStep);
+    if (draft.step !== pickedStep) scrollToPickedField(pickedStep);
   } else if (message.type === "skip") advance();
   else if (message.type === "choose-field") chooseField(message.fieldIndex);
   else if (message.type === "back") back();
@@ -658,7 +701,7 @@ function selectCandidate(candidate, variant) {
   document.body.classList.add("is-selected");
   el("selection").hidden = false;
   el("open-area").hidden = false;
-  syncPicker();
+  syncPicker(true);
   button("open-calendar").focus({ preventScroll: true });
 }
 
@@ -669,7 +712,15 @@ function renderDraft() {
   PICK_FIELDS.forEach((field, index) => {
     const row = el(`field-${field}`);
     const active = !paused && index === draft?.step;
-    row.querySelector(".field-status")?.toggleAttribute("hidden", !active);
+    const done = index < (draft?.step ?? 0);
+    updateCompletionEffect(
+      row.querySelector(".field-label"),
+      done,
+      row.dataset.complete === "true",
+    );
+    row.dataset.complete = String(done);
+    row.querySelector(".field-check")?.toggleAttribute("hidden", !done);
+    el(`field-${field}-completion`).textContent = done ? "設定済み" : "";
     if (active) row.setAttribute("aria-current", "step");
     else row.removeAttribute("aria-current");
   });
@@ -699,48 +750,30 @@ function chooseField(index) {
 }
 
 /** @param {number} index */
-function flashPickedField(index) {
+function scrollToPickedField(index) {
   const row = el(`field-${PICK_FIELDS[index]}`);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  row.getAnimations().forEach((animation) => animation.cancel());
-  row.querySelector(".picked-confirmation")?.remove();
-  const check = node("span", "picked-confirmation", "✓");
-  check.setAttribute("aria-hidden", "true");
-  row.append(check);
   row.scrollIntoView({
     block: "nearest",
     behavior: reduced ? "instant" : "smooth",
   });
-  row.animate(
-    [
-      { backgroundColor: "#d6ead1", boxShadow: "0 0 0 3px #b9d9b4" },
-      { backgroundColor: "transparent", boxShadow: "0 0 0 0 #b9d9b400" },
-    ],
-    { duration: reduced ? 0 : 800, easing: "ease-out" },
-  );
-  const animation = check.animate(
-    reduced
-      ? [{ opacity: 1 }, { opacity: 1 }]
-      : [
-          { opacity: 0, transform: "translateY(5px) scale(.75)" },
-          { opacity: 1, transform: "translateY(0) scale(1.1)", offset: 0.25 },
-          { opacity: 1, transform: "translateY(0) scale(1)", offset: 0.75 },
-          { opacity: 0, transform: "translateY(-5px) scale(1)" },
-        ],
-    { duration: 900, easing: "ease-out" },
-  );
-  void animation.finished.then(
-    () => check.remove(),
-    () => check.remove(),
-  );
 }
 
-function syncPicker() {
+function syncPicker(resetPosition = false) {
   if (!draft) return;
   paused = false;
   // Rotate the token after every step so delayed clicks cannot advance twice.
   selectionToken = crypto.randomUUID();
-  send({ type: "pick", step: draft.step, token: selectionToken });
+  send(
+    draft.step >= PICK_FIELDS.length
+      ? { type: "stop" }
+      : {
+          type: "pick",
+          step: draft.step,
+          token: selectionToken,
+          resetPosition,
+        },
+  );
   renderDraft();
 }
 function advance() {
@@ -763,6 +796,7 @@ function pausePicking() {
 
 async function openCalendar() {
   if (!draft || !selectedVariant || opening) return;
+  stopCalendarCue();
   opening = true;
   button("open-calendar").disabled = true;
   const url = calendarUrl(selectedVariant, draft, titleFormat);
@@ -780,6 +814,7 @@ async function openCalendar() {
 
 function downloadCalendar() {
   if (!draft || !selectedVariant) return;
+  stopCalendarCue();
   const errorMessage =
     "予定ファイルを作成できませんでした。もう一度お試しください。";
   try {
@@ -892,6 +927,14 @@ async function runAI(run) {
   }
 }
 
+for (const label of document.querySelectorAll(".stage-label, .field-label")) {
+  label.addEventListener("animationend", () => {
+    label.classList.remove("is-completing");
+  });
+  label.addEventListener("animationcancel", () => {
+    label.classList.remove("is-completing");
+  });
+}
 button("rescan").addEventListener("click", () => void scan());
 el("candidate-order").addEventListener("change", (event) => {
   const value = /** @type {HTMLSelectElement} */ (event.target).value;
@@ -900,9 +943,26 @@ el("candidate-order").addEventListener("change", (event) => {
   if (!draft) renderCandidates();
   saveSetting("order", candidateOrder);
 });
+button("open-calendar").addEventListener("animationend", (event) => {
+  if (event.animationName !== "calendar-ready-glow") return;
+  button("open-calendar").classList.remove("calendar-ready");
+  if (calendarCueRepeats === 0) return;
+  calendarCueTimer = setTimeout(() => {
+    calendarCueTimer = undefined;
+    if (reducedMotion.matches) {
+      stopCalendarCue();
+      return;
+    }
+    calendarCueRepeats -= 1;
+    button("open-calendar").classList.add("calendar-ready", "calendar-repeat");
+  }, 10_000);
+});
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) stopCalendarCue();
+});
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("download-calendar").addEventListener("click", downloadCalendar);
-button("resume").addEventListener("click", syncPicker);
+button("resume").addEventListener("click", () => syncPicker());
 document
   .querySelector(".picked-values")
   ?.querySelectorAll("button")
@@ -920,6 +980,7 @@ button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
   if (settings.hidden) {
+    stopCalendarCue();
     panelScroll = window.scrollY;
     settingsReturnTarget = "settings-toggle";
   }
