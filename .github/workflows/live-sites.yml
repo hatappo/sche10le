@@ -26,20 +26,36 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LIVE_SITES: ${{ inputs.sites || 'all' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run build
-      - run: npm run test:live
+          persist-credentials: false
+      - name: Pull prepared Playwright environment
+        timeout-minutes: 5
+        run: docker pull "$(cat scripts/ci/playwright-image.txt)"
+      - name: Install project dependencies
+        timeout-minutes: 3
+        run: bash scripts/ci/run-playwright.sh npm ci
+      - name: Check image compatibility and build
+        timeout-minutes: 2
+        run: |
+          bash scripts/ci/run-playwright.sh npm test
+          bash scripts/ci/run-playwright.sh npm run build
+      - name: Check extension in sandbox with a local fixture
+        timeout-minutes: 2
+        run: bash scripts/ci/run-playwright.sh npx playwright test tests/e2e/live-harness.spec.js --reporter=line
+      - name: Verify live event sites
+        run: bash scripts/ci/run-playwright.sh npm run test:live
+      - name: Publish date-only summary
+        if: always()
+        run: |
+          if [ -f test-results/live/summary.md ]; then
+            cat test-results/live/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Upload date-only report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

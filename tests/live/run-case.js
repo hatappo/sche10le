@@ -54,6 +54,7 @@ export async function runLiveCase(
       {
         channel: "chromium",
         headless: true,
+        chromiumSandbox: process.env.LIVE_CHROMIUM_SANDBOX === "1",
         args: [
           `--disable-extensions-except=${extension}`,
           `--load-extension=${extension}`,
