@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sche10le サンプル更新"
+  short_description: "Sche10leのライブ検証用イベントを少ないアクセスで見直し、更新する"
+  default_prompt: "$sche10le-refresh-live-samples で、Sche10leの見直し対象のイベントページを確認して更新してください。"

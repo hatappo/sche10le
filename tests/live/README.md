@@ -115,7 +115,7 @@ LIVE_SITES=luma npm run test:live
 5. `npm run check` を実行し、`LIVE_SITES=<更新したIDのカンマ区切り> npm run test:live` で変更対象だけ1回検証する。失敗したら分類と結果を報告し、自動リトライや期待値のすり替えをしない。既存のHTMLや本文を保存しない方針は維持する。
 6. 更新PRに旧・新URL、画面で確認した開始・終了日時と時差、確認日、更新理由、検証結果を記載する。変更差分から独立した確認の根拠を追えるようにし、PRのマージやWF再実行は依頼の範囲に従う。マージ後は通常の全サイトWFが実行される。
 
-この手順は手動でも使える。Codexに更新用Skill `sche10le-refresh-live-samples` を導入した環境では「`$sche10le-refresh-live-samples` で見直し対象を更新して」と依頼できる。Skill本体はユーザーのスキルディレクトリに置き、運用ルールの正本はこの節とする。Skillの実行自体はスケジュールされない。
+この手順は手動でも使える。更新用Skill [sche10le-refresh-live-samples](../../.agents/skills/sche10le-refresh-live-samples/SKILL.md) をリポジトリの `.agents/skills/` に同梱している。このリポジトリを開いたCodexで「`$sche10le-refresh-live-samples` で見直し対象を更新して」と依頼できる。運用ルールの正本はこの節とする。Skillの実行自体はスケジュールされない。
 
 初期6ケースは2026年10月27日に確認。connpass・Peatix・こくちーずプロは本文、Doorkeeper・TECH PLAY・Meetupは構造化データ経由の候補も検証できる代表ページを登録している。ただし合否は経路ではなく期待日時の一致で決める。
 
