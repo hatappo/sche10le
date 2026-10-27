@@ -771,6 +771,9 @@ main {
   opacity: 0;
   animation: calendar-ready-glow 1300ms ease-in-out 650ms;
 }
+.primary-button.calendar-ready.calendar-repeat::after {
+  animation-delay: 0ms;
+}
 @keyframes calendar-ready-glow {
   from {
     background-position: 100% 0;

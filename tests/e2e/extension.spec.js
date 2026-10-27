@@ -531,7 +531,7 @@ test("内容の各ラベルは取得・スキップで光ってチェックを�
   }
 });
 
-test("内容完了後は補足文を切り替え、項目の光の後に主操作を一度だけ案内する", async () => {
+test("内容完了後は補足文を切り替え、項目の光の後に主操作を案内する", async () => {
   const { source, panel } = await open(undefined, () => {
     window.__calendarCues = [];
     document.addEventListener("animationstart", (event) => {
@@ -611,6 +611,65 @@ test("内容完了後は補足文を切り替え、項目の光の後に主操�
     await select(panel);
     await expect(hint).toHaveText(initialHint);
     await expect(primary).not.toHaveClass(/calendar-ready/);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
+test("完了の光は10秒の間隔で追加2回まで繰り返し、待機中の設定操作で止まる", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__calendarCues = [];
+    document.addEventListener("animationstart", (event) => {
+      if (event.animationName !== "calendar-ready-glow") return;
+      window.__calendarCues.push(performance.now());
+      event.target
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .pause();
+    });
+  });
+  const primary = panel.locator("#open-calendar");
+  const count = () => panel.evaluate(() => window.__calendarCues.length);
+  async function finishGlow() {
+    await primary.evaluate((button) =>
+      button
+        .getAnimations({ subtree: true })
+        .find((animation) => animation.animationName === "calendar-ready-glow")
+        .finish(),
+    );
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+  }
+  try {
+    await panel.clock.install();
+    await panel.clock.pauseAt(new Date());
+    await select(panel);
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect.poll(count).toBe(1);
+    await finishGlow();
+    for (const expected of [2, 3]) {
+      await panel.clock.fastForward(9999);
+      await expect(primary).not.toHaveClass(/calendar-ready/);
+      expect(await count()).toBe(expected - 1);
+      await panel.clock.fastForward(1);
+      await expect.poll(count).toBe(expected);
+      await finishGlow();
+    }
+    await panel.clock.fastForward(30_000);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await count()).toBe(3);
+
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect.poll(count).toBe(4);
+    await finishGlow();
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await panel.clock.fastForward(30_000);
+    await expect(primary).not.toHaveClass(/calendar-ready/);
+    expect(await count()).toBe(4);
   } finally {
     await panel.close();
     await source.close();

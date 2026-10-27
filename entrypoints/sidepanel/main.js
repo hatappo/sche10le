@@ -134,6 +134,25 @@ function updateCompletionEffect(label, complete, wasComplete) {
   }
 }
 
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let calendarCueTimer;
+let calendarCueRepeats = 0;
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+function stopCalendarCue() {
+  clearTimeout(calendarCueTimer);
+  calendarCueTimer = undefined;
+  calendarCueRepeats = 0;
+  button("open-calendar").classList.remove("calendar-ready", "calendar-repeat");
+}
+
+function startCalendarCue() {
+  stopCalendarCue();
+  if (reducedMotion.matches) return;
+  calendarCueRepeats = 2;
+  button("open-calendar").classList.add("calendar-ready");
+}
+
 /** Reflect the existing workflow without introducing another progress state. */
 function renderSectionProgress() {
   /** @type {Array<[string, 'active' | 'complete' | 'waiting']>} */
@@ -152,14 +171,8 @@ function renderSectionProgress() {
     const heading = el(id);
     if (id === "content-title") {
       const complete = state === "complete";
-      const primary = button("open-calendar");
-      if (!complete) primary.classList.remove("calendar-ready");
-      else if (
-        heading.dataset.state !== "complete" &&
-        !matchMedia("(prefers-reduced-motion: reduce)").matches
-      ) {
-        primary.classList.add("calendar-ready");
-      }
+      if (!complete) stopCalendarCue();
+      else if (heading.dataset.state !== "complete") startCalendarCue();
       el("calendar-hint").textContent = complete
         ? "Google カレンダーで修正してから保存できます。"
         : "情報の取得は途中でもOK。保存は Google カレンダーで。";
@@ -774,7 +787,7 @@ function pausePicking() {
 
 async function openCalendar() {
   if (!draft || !selectedVariant || opening) return;
-  button("open-calendar").classList.remove("calendar-ready");
+  stopCalendarCue();
   opening = true;
   button("open-calendar").disabled = true;
   const url = calendarUrl(selectedVariant, draft, titleFormat);
@@ -792,7 +805,7 @@ async function openCalendar() {
 
 function downloadCalendar() {
   if (!draft || !selectedVariant) return;
-  button("open-calendar").classList.remove("calendar-ready");
+  stopCalendarCue();
   const errorMessage =
     "予定ファイルを作成できませんでした。もう一度お試しください。";
   try {
@@ -921,11 +934,23 @@ el("candidate-order").addEventListener("change", (event) => {
   if (!draft) renderCandidates();
   saveSetting("order", candidateOrder);
 });
-for (const event of ["animationend", "animationcancel"]) {
-  button("open-calendar").addEventListener(event, () => {
-    button("open-calendar").classList.remove("calendar-ready");
-  });
-}
+button("open-calendar").addEventListener("animationend", (event) => {
+  if (event.animationName !== "calendar-ready-glow") return;
+  button("open-calendar").classList.remove("calendar-ready");
+  if (calendarCueRepeats === 0) return;
+  calendarCueTimer = setTimeout(() => {
+    calendarCueTimer = undefined;
+    if (reducedMotion.matches) {
+      stopCalendarCue();
+      return;
+    }
+    calendarCueRepeats -= 1;
+    button("open-calendar").classList.add("calendar-ready", "calendar-repeat");
+  }, 10_000);
+});
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) stopCalendarCue();
+});
 button("open-calendar").addEventListener("click", () => void openCalendar());
 button("download-calendar").addEventListener("click", downloadCalendar);
 button("resume").addEventListener("click", syncPicker);
@@ -946,7 +971,7 @@ button("ai-download").addEventListener("click", () => void runAI(generation));
 function toggleSettings() {
   const settings = el("settings");
   if (settings.hidden) {
-    button("open-calendar").classList.remove("calendar-ready");
+    stopCalendarCue();
     panelScroll = window.scrollY;
     settingsReturnTarget = "settings-toggle";
   }
