@@ -649,13 +649,17 @@ main {
 .field-number {
   margin-right: 4px;
   font-size: 9px;
-  font-weight: 400;
 }
 .field-label {
   font-weight: 400;
 }
 .field-row[aria-current="step"] .field-label {
+  color: var(--green);
   font-weight: 600;
+}
+.field-row[data-complete="true"]:hover .field-label,
+.field-row[data-complete="true"]:focus-visible .field-label {
+  color: var(--green);
 }
 .field-edit {
   margin-left: auto;

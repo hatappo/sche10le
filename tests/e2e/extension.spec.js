@@ -248,6 +248,10 @@ async function expectPickerActionsOnly(source, step = 0) {
             fits: numberBounds.left >= bounds.left && right <= bounds.right && (!visible || textBounds.right <= checkBounds.left),
             current: this.getAttribute('aria-current'),
             weight: getComputedStyle(label).fontWeight,
+            numberWeight: getComputedStyle(number).fontWeight,
+            color: getComputedStyle(label).color,
+            numberColor: getComputedStyle(number).color,
+            interacting: this.matches(':hover, :focus-visible'),
             shadow: getComputedStyle(this).boxShadow,
             position: [bounds.x, bounds.y, bounds.width, bounds.height]
           };
@@ -261,6 +265,14 @@ async function expectPickerActionsOnly(source, step = 0) {
       expect(state.fits).toBe(true);
       expect(state.current).toBe(index === step ? "step" : null);
       expect(state.weight).toBe(index === step ? "600" : "400");
+      expect(state.numberWeight).toBe(state.weight);
+      expect(state.numberColor).toBe(state.color);
+      if (index < step) {
+        expect(state.color).toBe(
+          state.interacting ? "rgb(44, 96, 69)" : "rgb(120, 129, 113)",
+        );
+      }
+      if (index === step) expect(state.color).toBe("rgb(44, 96, 69)");
       expect(state.shadow).toBe("none");
       positions.push(state.position);
     }
@@ -380,6 +392,25 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await expect(panel.locator("#field-location .field-label")).toHaveCSS(
     "font-weight",
     "600",
+  );
+  await expect(panel.locator("#field-location .field-number")).toHaveCSS(
+    "font-weight",
+    "600",
+  );
+  await expect(panel.locator("#field-location .field-number")).toHaveCSS(
+    "color",
+    "rgb(44, 96, 69)",
+  );
+  await expect(panel.locator("#field-title .field-label")).not.toHaveClass(
+    /is-completing/,
+  );
+  await expect(panel.locator("#field-title .field-number")).toHaveCSS(
+    "font-weight",
+    "400",
+  );
+  await expect(panel.locator("#field-title .field-number")).toHaveCSS(
+    "color",
+    "rgb(120, 129, 113)",
   );
   await expect(panel.locator("#picked-location")).toHaveCSS(
     "font-weight",
