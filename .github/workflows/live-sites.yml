@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       sites:
-        description: "all、またはサイトIDのカンマ区切り（connpass,doorkeeper,peatix,techplay,kokuchpro,meetup）"
+        description: "all、またはサイトIDのカンマ区切り（connpass,doorkeeper,peatix,techplay,kokuchpro,meetup,luma）"
         required: true
         default: all
         type: string

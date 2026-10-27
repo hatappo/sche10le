@@ -114,7 +114,7 @@ Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0
 
 ## 公開前のライブサイト検証
 
-connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetupの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
+connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetup・Lumaの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
 
 PRが **mainにマージされたとき** に、登録した全サイトを自動検証します。PRの作成・更新中、マージせずに閉じた場合、mainへの直接pushでは検証しません。必要なときはGitHub Actionsの **Live event sites → Run workflow → main** から手動実行でき、対象サイトも絞れます。ストア更新前にはアップロード対象コミットの結果を確認してください。週次実行は運用が安定してから検討します。
 
