@@ -25,6 +25,8 @@ npm run test:live
 
 ```sh
 LIVE_SITES=connpass,meetup npm run test:live
+# Lumaだけを確認する場合
+LIVE_SITES=luma npm run test:live
 ```
 
 未登録のIDはブラウザを開く前に拒否する。テストはビルド済みの `.output/chrome-mv3` を利用するため、必ず先にビルドする。実行中のブランチ切り替え・ビルドは避ける。各ケースはビルドを一時ディレクトリへコピーして利用し、終了時に削除する。
@@ -89,3 +91,5 @@ LIVE_SITES=connpass,meetup npm run test:live
 - 最新イベントを自動選定する方式は、正解日時の独立した判定や追加アクセスが必要になるため、現段階では採用しない。
 
 初期6ケースは2026年10月27日に確認。connpass・Peatix・こくちーずプロは本文、Doorkeeper・TECH PLAY・Meetupは構造化データ経由の候補も検証できる代表ページを登録している。ただし合否は経路ではなく期待日時の一致で決める。
+
+2026年10月28日にLumaを追加（計7サイト）。[Global Innovators Mixer](https://luma.com/m5yc8qe3?locale=ja) の日本語表示で、本文の開催日時「2026年10月16日 18:30〜22:00」（日本時間）を確認して期待値に登録した。終了済みだが公開されているイベントページを使い、今後も一覧ページからの自動探索は行わない。

@@ -1,6 +1,6 @@
 // Human-reviewed expectations, not values produced by the extractor under test.
 // Keep only public event URLs and dates here; never store a copy of a site's HTML.
-// Initial event dates reviewed on 2026-10-27 (Asia/Tokyo).
+// Initial six event dates reviewed on 2026-10-27; Luma on 2026-10-28 (Asia/Tokyo).
 export const sites = [
   {
     id: "connpass",
@@ -60,6 +60,16 @@ export const sites = [
     expected: {
       start: "2026-11-21T10:00:00+09:00",
       end: "2026-11-21T16:00:00+09:00",
+    },
+  },
+  {
+    id: "luma",
+    name: "Luma",
+    url: "https://luma.com/m5yc8qe3?locale=ja",
+    identity: "Global Innovators Mixer",
+    expected: {
+      start: "2026-10-16T18:30:00+09:00",
+      end: "2026-10-16T22:00:00+09:00",
     },
   },
 ];

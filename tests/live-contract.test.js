@@ -88,7 +88,7 @@ test("アクセス制限・消失・障害を区別し、通常ページのロ�
 test("レポートは実行されなかったサイトを残し、後処理の失敗も合格にしない", () => {
   const reporter = new LiveReporter();
   reporter.onBegin({}, { allTests: () => sites.map((s) => ({ title: s.id })) });
-  assert.equal(reporter.results.size, 6);
+  assert.equal(reporter.results.size, sites.length);
   assert.equal(reporter.results.get("meetup").category, "NOT_RUN");
   reporter.onTestEnd(
     { title: sample.id },
