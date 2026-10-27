@@ -462,6 +462,9 @@ main {
   color: var(--muted);
   transition: transform 180ms;
 }
+.candidate.selected .candidate-arrow {
+  display: none;
+}
 .expanded .candidate-arrow {
   transform: rotate(90deg);
   color: var(--green);

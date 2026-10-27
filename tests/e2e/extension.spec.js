@@ -2632,6 +2632,13 @@ test("日程カードは自動で開閉し、クリックやEnterでは切り替
     await expect(region).toHaveJSProperty("inert", false);
     await panel.locator("#settings-toggle").focus();
     await expect(card).not.toHaveClass(/expanded/);
+    await expect(card.locator(".candidate-arrow")).toBeVisible();
+    await select(panel);
+    await expect(
+      panel.locator(".candidate.selected .candidate-arrow"),
+    ).toBeHidden();
+    await panel.locator("#deselect").click();
+    await expect(panel.locator(".candidate-arrow").first()).toBeVisible();
   } finally {
     await panel.close();
     await source.close();
