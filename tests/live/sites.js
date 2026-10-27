@@ -1,9 +1,10 @@
 // Human-reviewed expectations, not values produced by the extractor under test.
 // Keep only public event URLs and dates here; never store a copy of a site's HTML.
-// Initial six event dates reviewed on 2026-10-27; Luma on 2026-10-28 (Asia/Tokyo).
+// reviewedOn records an independent page review, not a passing test (Asia/Tokyo).
 export const sites = [
   {
     id: "connpass",
+    reviewedOn: "2026-10-27",
     name: "connpass",
     url: "https://connpass.com/event/411140/",
     identity: "黙々と作業を進めるオンライン自習室",
@@ -14,6 +15,7 @@ export const sites = [
   },
   {
     id: "doorkeeper",
+    reviewedOn: "2026-10-27",
     name: "Doorkeeper",
     url: "https://web-mining.doorkeeper.jp/events/200100",
     identity: "中小企業のウェブサイト管理とセキュリティ対策講座",
@@ -24,6 +26,7 @@ export const sites = [
   },
   {
     id: "peatix",
+    reviewedOn: "2026-10-28",
     name: "Peatix",
     url: "https://peatix.com/event/5222594",
     identity: "第8回OIV登録品種サミット",
@@ -36,6 +39,7 @@ export const sites = [
   },
   {
     id: "techplay",
+    reviewedOn: "2026-10-27",
     name: "TECH PLAY",
     url: "https://techplay.jp/event/999947",
     identity: "Engineering Leaders Day 2026",
@@ -46,6 +50,7 @@ export const sites = [
   },
   {
     id: "kokuchpro",
+    reviewedOn: "2026-10-27",
     name: "こくちーずプロ",
     url: "https://www.kokuchpro.com/event/496889c04454868921221036b4ffdded/",
     identity: "第30回東神戸マラソン",
@@ -56,6 +61,7 @@ export const sites = [
   },
   {
     id: "meetup",
+    reviewedOn: "2026-10-27",
     name: "Meetup",
     url: "https://www.meetup.com/ja/joy-tennis-tokyo/events/316967295/",
     identity: "Joy Tennis Tokyo one day tennis camp",
@@ -66,6 +72,7 @@ export const sites = [
   },
   {
     id: "luma",
+    reviewedOn: "2026-10-28",
     name: "Luma",
     url: "https://luma.com/m5yc8qe3?locale=ja",
     identity: "Global Innovators Mixer",

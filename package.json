@@ -17,7 +17,8 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "postinstall": "wxt prepare",
     "icons": "node scripts/generate-icons.js",
-    "test:live": "playwright test --config playwright.live.config.js"
+    "test:live": "playwright test --config playwright.live.config.js",
+    "check:live-samples": "node scripts/check-live-samples.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

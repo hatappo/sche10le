@@ -120,7 +120,7 @@ PRが **mainにマージされたとき** に、登録した全サイトを自�
 
 ローカルでは `npm run build` の後に `npm run test:live`。対象を絞る場合は `LIVE_SITES=connpass,meetup npm run test:live` を使います。開始・終了日時の両方を検証し、結果は `test-results/live/report.json` と `summary.md` に出力します。CIでは実行サマリーと14日間保存するArtifactから確認できます。アクセス制限やページ消失も未検証として失敗させ、抽出日時の不一致と区別します。
 
-サイトの追加は原則として [tests/live/sites.js](tests/live/sites.js) にURL・識別文・期待日時を1項目追加するだけです。負荷の制限、結果の読み方、追加・更新方法は [ライブテストの運用手順](tests/live/README.md) を参照してください。
+サイトの追加は原則として [tests/live/sites.js](tests/live/sites.js) にURL・識別文・期待日時・最終確認日を1項目追加するだけです。`npm run check:live-samples` で外部アクセスなしに見直し時期を確認できます。負荷の制限、結果の読み方、追加・更新方法は [ライブテストの運用手順](tests/live/README.md) を参照してください。
 
 ## 日付・時刻の対応範囲
 

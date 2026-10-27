@@ -40,6 +40,9 @@ jobs:
       - name: Install project dependencies
         timeout-minutes: 3
         run: bash scripts/ci/run-playwright.sh npm ci
+      - name: Review sample age without accessing sites
+        shell: bash
+        run: bash scripts/ci/run-playwright.sh node scripts/check-live-samples.js | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Check image compatibility and build
         timeout-minutes: 2
         run: |
