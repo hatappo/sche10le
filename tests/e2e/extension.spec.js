@@ -353,6 +353,83 @@ test("候補→パターン→ページから順次取得→カレンダーへ�
   await source.close();
 });
 
+test("工程見出しは完了時だけ一度光り、再描画や動きを減らす設定では繰り返さない", async () => {
+  const { source, panel } = await open(undefined, () => {
+    window.__stageShines = [];
+    document.addEventListener("animationstart", (event) => {
+      if (event.animationName === "stage-shine") {
+        window.__stageShines.push(event.target.closest(".stage-title").id);
+        if (event.target.closest("#candidates-title")) {
+          event.target.getAnimations()[0].pause();
+        }
+      }
+    });
+  });
+  const shines = () => panel.evaluate(() => window.__stageShines);
+  try {
+    await expect.poll(shines).toEqual(["scan-title"]);
+    await select(panel);
+    await expect.poll(shines).toEqual(["scan-title", "candidates-title"]);
+    const label = panel.locator("#candidates-title .stage-label");
+    await label.evaluate((element) => {
+      const animation = element.getAnimations()[0];
+      animation.pause();
+      animation.currentTime = 200;
+    });
+    await panel.screenshot({
+      path: "test-results/section-completion-shine.png",
+    });
+    await label.evaluate((element) => element.getAnimations()[0].play());
+    await source.locator("#event-title").click();
+    await source.locator("#venue").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual(["scan-title", "candidates-title", "content-title"]);
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    await expect(label).toHaveCSS(
+      "color",
+      await panel
+        .locator("#candidates-title")
+        .evaluate((element) => getComputedStyle(element).color),
+    );
+    await panel.locator("#settings-toggle").click();
+    await panel.getByRole("button", { name: "閉じる", exact: true }).click();
+    await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+    expect(await shines()).toEqual([
+      "scan-title",
+      "candidates-title",
+      "content-title",
+    ]);
+
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect
+      .poll(shines)
+      .toEqual([
+        "scan-title",
+        "candidates-title",
+        "content-title",
+        "content-title",
+      ]);
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    await panel.emulateMedia({ reducedMotion: "reduce" });
+    await panel.locator("#field-details").click();
+    await source.locator("#description").click();
+    await expect(panel.locator("#content-title .stage-check")).toBeVisible();
+    await expect(panel.locator(".stage-label.is-completing")).toHaveCount(0);
+    expect(await shines()).toEqual([
+      "scan-title",
+      "candidates-title",
+      "content-title",
+      "content-title",
+    ]);
+  } finally {
+    await panel.close();
+    await source.close();
+  }
+});
+
 test("未取得で開く・スキップ・戻る・選び直しとEscape", async () => {
   const { source, panel } = await open();
   await select(panel, "終日");

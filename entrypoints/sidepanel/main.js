@@ -139,6 +139,15 @@ function renderSectionProgress() {
   ];
   for (const [id, state] of sections) {
     const heading = el(id);
+    const label = heading.querySelector(".stage-label");
+    if (state !== "complete") label?.classList.remove("is-completing");
+    else if (
+      heading.dataset.state &&
+      heading.dataset.state !== "complete" &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      label?.classList.add("is-completing");
+    }
     heading.dataset.state = state;
     if (state === "active") heading.setAttribute("aria-current", "step");
     else heading.removeAttribute("aria-current");
@@ -892,6 +901,14 @@ async function runAI(run) {
   }
 }
 
+for (const label of document.querySelectorAll(".stage-label")) {
+  label.addEventListener("animationend", () => {
+    label.classList.remove("is-completing");
+  });
+  label.addEventListener("animationcancel", () => {
+    label.classList.remove("is-completing");
+  });
+}
 button("rescan").addEventListener("click", () => void scan());
 el("candidate-order").addEventListener("change", (event) => {
   const value = /** @type {HTMLSelectElement} */ (event.target).value;
