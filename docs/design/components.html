@@ -350,6 +350,8 @@
         );
       window.addEventListener("message", (e) => {
         if (e.source !== parent) return;
+        if ({{THEME_IDS}}.includes(e.data?.theme))
+          document.documentElement.dataset.theme = e.data.theme;
         if (["list", "pick", "settings"].includes(e.data?.view))
           view(e.data.view);
         if (e.data?.action === "error") {

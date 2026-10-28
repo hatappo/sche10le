@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium, expect } from "@playwright/test";
+import { THEMES } from "../lib/themes.js";
 
 const root = new URL("../", import.meta.url);
 const html = new URL("docs/design/design-system.html", root).href;
@@ -47,6 +48,12 @@ try {
     path: fileURLToPath(new URL("desktop.png", output)),
   });
   const frame = page.frameLocator("#panel-demo");
+  for (const theme of THEMES) {
+    await page.locator("#demo-theme").selectOption(theme.id);
+    await expect(frame.locator("html")).toHaveAttribute("data-theme", theme.id);
+    await expect(page.frameLocator("#overlay-demo").locator("html")).toHaveAttribute("data-theme", theme.id);
+  }
+  await page.locator("#demo-theme").selectOption("chitosemidori");
   assert.ok(
     await frame
       .locator(".brand img")
@@ -59,7 +66,8 @@ try {
   await expect(frame.locator('[data-view="list"] .candidate')).toHaveClass(
     /expanded/,
   );
-  await frame.getByRole("button", { name: /移動込み/ }).click();
+  // Continue the keyboard flow without changing to pointer input mid-expansion.
+  await frame.getByRole("button", { name: /移動込み/ }).press("Enter");
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "pick");
   await expect(page.locator('[data-view="pick"]')).toHaveAttribute(
     "aria-pressed",

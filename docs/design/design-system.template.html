@@ -1009,7 +1009,7 @@
           <h2>色と状態</h2>
         </div>
         <p class="intro">
-          基礎になる7色は実装のCSS変数から取得。暖かな背景と落ち着いた緑を基調に、色・枠・文字の太さ・チェックで操作と状態を区別する。
+          基本の7色は標準テーマ「千歳緑」のCSS変数から取得。銀鼠・水浅葱・藍鉄でも、色・枠・文字の太さ・チェックの役割を揃える。下のUI見本で4テーマを切り替えられる。
         </p>
         <div class="swatches">{{SWATCHES}}</div>
         <div class="state-strips">
@@ -1096,6 +1096,7 @@
           ><button class="control" data-view="settings" aria-pressed="false">
             設定</button
           ><button class="control" data-error>書式エラー</button>
+          <select id="demo-theme" class="control" aria-label="見本のカラーテーマ">{{THEME_OPTIONS}}</select>
         </div>
         <div class="demo-layout">
           <iframe
@@ -1152,7 +1153,7 @@
           class="overlay-frame"
           id="overlay-demo"
           title="ページ下部の取得操作バーの見本"
-          sandbox=""
+          sandbox="allow-scripts"
           srcdoc="{{OVERLAY}}"
         ></iframe>
         <p class="small-note" style="margin-top: 12px">
@@ -1362,6 +1363,11 @@
           }
         });
       const frame = document.getElementById("panel-demo");
+      document.getElementById("demo-theme").addEventListener("change", (event) => {
+        const theme = event.target.value;
+        frame.contentWindow.postMessage({ theme }, "*");
+        document.getElementById("overlay-demo").contentWindow.postMessage({ theme }, "*");
+      });
       document.querySelectorAll("[data-view]").forEach((button) =>
         button.addEventListener("click", () => {
           document

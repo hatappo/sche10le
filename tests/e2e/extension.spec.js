@@ -4,6 +4,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:http";
+import { THEMES } from "../../lib/themes.js";
 
 let context;
 let server;
@@ -2967,5 +2968,195 @@ test("ICSを取得途中でもダウンロードし、書式・移動時間を�
   } finally {
     await panel.close();
     await source.close();
+  }
+});
+
+async function readPickerTheme(source) {
+  const session = await context.newCDPSession(source);
+  try {
+    const { root } = await session.send("DOM.getDocument", { depth: -1, pierce: true });
+    function find(node) {
+      const attrs = node.attributes ?? [];
+      if (attrs[attrs.indexOf("class") + 1]?.split(" ").includes("guide")) return node;
+      for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])]) {
+        const result = find(child);
+        if (result) return result;
+      }
+    }
+    const guide = find(root);
+    if (!guide) return null;
+    const { object } = await session.send("DOM.resolveNode", { nodeId: guide.nodeId });
+    const { result } = await session.send("Runtime.callFunctionOn", {
+      objectId: object.objectId,
+      returnByValue: true,
+      functionDeclaration: `function() {
+        return {
+          theme: this.getRootNode().host.dataset.theme,
+          background: getComputedStyle(this).backgroundColor,
+          heading: getComputedStyle(this.querySelector('.instruction-row')).backgroundColor,
+          headingText: getComputedStyle(this.querySelector('.instruction-row')).color,
+          controlBackground: getComputedStyle(this.querySelector('.controls button:not(:disabled)')).backgroundColor,
+          controlText: getComputedStyle(this.querySelector('.controls button:not(:disabled)')).color,
+          current: this.querySelector('[aria-current="step"] .step-label').textContent,
+          completed: this.querySelectorAll('.done').length,
+        };
+      }`,
+    });
+    return result.value;
+  } finally { await session.detach(); }
+}
+
+function contrast(foreground, background) {
+  const luminance = (color) => {
+    const rgb = color.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => {
+      const channel = v / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+  };
+  const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+test("伝統色4テーマを即時反映し、取得内容とバーの手順を保ち、再表示でも復元する", async () => {
+  await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.remove("themeId"));
+  const { source, panel } = await open();
+  let reopened;
+  try {
+    await expect(panel.locator("html")).toHaveAttribute("data-theme", "chitosemidori");
+    await select(panel);
+    await source.locator("#event-title").click();
+    const title = await panel.locator("#picked-title").textContent();
+    await source.evaluate(() => {
+      document.documentElement.style.setProperty("--accent", "hotpink");
+      document.documentElement.style.setProperty("--bar-surface", "hotpink");
+    });
+    const pageStyle = await source.locator("html").getAttribute("style");
+    await panel.locator("#settings-toggle").click();
+    const backgrounds = new Set();
+    const barBackgrounds = new Set();
+    for (const theme of THEMES) {
+      await panel.locator(`label[for="theme-${theme.id}"]`).click();
+      await expect(panel.locator("html")).toHaveAttribute("data-theme", theme.id);
+      await expect(panel.locator(`#theme-${theme.id}`)).toBeChecked();
+      await expect.poll(async () => (await readPickerTheme(source))?.theme).toBe(theme.id);
+      const picker = await readPickerTheme(source);
+      expect(picker.current).toBe("場所");
+      expect(picker.completed).toBe(1);
+      barBackgrounds.add(picker.background);
+      expect(contrast(picker.headingText, picker.heading)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(picker.controlText, picker.controlBackground)).toBeGreaterThanOrEqual(4.5);
+      await expect(panel.locator("#picked-title")).toHaveText(title);
+      expect(await source.locator("html").getAttribute("style")).toBe(pageStyle);
+      await expect(source.locator("html")).not.toHaveAttribute("data-theme");
+      const colors = await panel.evaluate(() => {
+        const root = getComputedStyle(document.documentElement);
+        const primary = getComputedStyle(document.querySelector("#open-calendar"));
+        return { background: root.backgroundColor, text: root.color, scheme: root.colorScheme,
+          action: primary.backgroundColor, onAction: primary.color };
+      });
+      backgrounds.add(colors.background);
+      expect(colors.scheme).toBe(theme.id === "aitetsu" ? "dark" : "light");
+      expect(contrast(colors.text, colors.background)).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors.onAction, colors.action)).toBeGreaterThanOrEqual(4.5);
+      if (theme.id !== "chitosemidori")
+        await expect(panel.locator("#theme-status")).toHaveText("自動保存しました");
+      await panel.screenshot({ path: `test-results/theme-${theme.id}-settings.png` });
+      await panel.locator("#settings-close").click();
+      await expect(panel.locator(".candidate.selected")).toHaveCSS("opacity", "1");
+      await expect(panel.locator("#picked-title")).toBeVisible();
+      await panel.screenshot({ path: `test-results/theme-${theme.id}-panel.png`, animations: "disabled" });
+      await source.screenshot({ path: `test-results/theme-${theme.id}-picker.png` });
+      await panel.locator("#settings-toggle").click();
+    }
+    expect(backgrounds.size).toBe(4);
+    expect(barBackgrounds.size).toBe(4);
+    await panel.setViewportSize({ width: 280, height: 700 });
+    expect(await panel.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const option of await panel.locator(".theme-option").all())
+      expect(await option.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    // Native radio navigation keeps the selected theme and keyboard focus together.
+    await panel.locator("#theme-aitetsu").focus();
+    await panel.keyboard.press("ArrowLeft");
+    await expect(panel.locator("#theme-mizuasagi")).toBeChecked();
+    await expect(panel.locator("#theme-mizuasagi")).toBeFocused();
+    await expect(panel.locator("#theme-status")).toHaveText("自動保存しました");
+    await panel.close();
+    reopened = await context.newPage();
+    await reopened.goto(`chrome-extension://${extensionId}/sidepanel.html`);
+    await expect(reopened.locator("html")).toHaveAttribute("data-theme", "mizuasagi");
+    await expect(reopened.locator("#theme-mizuasagi")).toBeChecked();
+    // A new content-script connection receives the saved theme before scanning/picking.
+    await source.bringToFront();
+    await reopened.getByRole("button", { name: "スキャン", exact: true }).click();
+    await select(reopened);
+    await expect.poll(async () => (await readPickerTheme(source))?.theme).toBe("mizuasagi");
+  } finally {
+    await reopened?.close();
+    await panel.close();
+    await source.close();
+    await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.remove("themeId"));
+  }
+});
+
+test("テーマ保存の失敗は見た目を保って再試行でき、連続変更でも最後のテーマを保存する", async () => {
+  const { source, panel } = await open();
+  try {
+    await panel.locator("#settings-toggle").click();
+    await panel.evaluate(() => {
+      const save = chrome.storage.local.set.bind(chrome.storage.local);
+      window.__themeSave = save;
+      chrome.storage.local.set = async (items) => {
+        if (Object.hasOwn(items, "themeId")) throw new Error("Storage temporarily unavailable");
+        return save(items);
+      };
+    });
+    await panel.locator('label[for="theme-aitetsu"]').click();
+    await expect(panel.locator("html")).toHaveAttribute("data-theme", "aitetsu");
+    await expect(panel.locator("#theme-status")).toHaveClass(/error/);
+    await expect(panel.locator("#retry-theme")).toBeVisible();
+    const errorColors = await panel.evaluate(() => ({
+      text: getComputedStyle(document.querySelector("#theme-status")).color,
+      background: getComputedStyle(document.querySelector("#theme-settings-group")).backgroundColor,
+    }));
+    expect(contrast(errorColors.text, errorColors.background)).toBeGreaterThanOrEqual(4.5);
+    await panel.evaluate(() => { chrome.storage.local.set = window.__themeSave; });
+    await panel.locator("#retry-theme").click();
+    await expect(panel.locator("#theme-status")).toHaveText("自動保存しました");
+    await expect(panel.locator("#retry-theme")).toBeHidden();
+    await panel.evaluate(() => {
+      window.__themeWrites = [];
+      chrome.storage.local.set = async (items) => {
+        if (Object.hasOwn(items, "themeId")) {
+          window.__themeWrites.push(items.themeId);
+          if (window.__themeWrites.length === 1)
+            await new Promise((resolve) => { window.__releaseThemeWrite = resolve; });
+        }
+        return window.__themeSave(items);
+      };
+    });
+    await panel.locator('label[for="theme-ginnezu"]').click();
+    await panel.locator('label[for="theme-mizuasagi"]').click();
+    await expect(panel.locator("html")).toHaveAttribute("data-theme", "mizuasagi");
+    await panel.evaluate(() => {
+      window.__themeChanges = [];
+      new MutationObserver(() => window.__themeChanges.push(document.documentElement.dataset.theme))
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+      window.__releaseThemeWrite();
+    });
+    await expect.poll(() => panel.evaluate(async () => (await chrome.storage.local.get("themeId")).themeId)).toBe("mizuasagi");
+    await expect(panel.locator("#theme-status")).toHaveText("自動保存しました");
+    expect(await panel.evaluate(() => window.__themeWrites)).toEqual(["ginnezu", "mizuasagi"]);
+    expect(await panel.evaluate(() => window.__themeChanges.every((id) => id === "mizuasagi"))).toBe(true);
+    // Changes from another extension context update the panel; invalid saved IDs use the default.
+    await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.set({ themeId: "unknown-theme" }));
+    await expect(panel.locator("html")).toHaveAttribute("data-theme", "chitosemidori");
+    await panel.reload();
+    await expect(panel.locator("html")).toHaveAttribute("data-theme", "chitosemidori");
+    await expect(panel.locator("#theme-chitosemidori")).toBeChecked();
+  } finally {
+    await panel.close();
+    await source.close();
+    await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.remove("themeId"));
   }
 });

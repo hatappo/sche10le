@@ -1,6 +1,7 @@
 // Build a self-contained design reference from checked-in sources and assets.
 import { readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { THEMES } from "../lib/themes.js";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
@@ -28,29 +29,31 @@ const sidebar = (await read("entrypoints/sidepanel/style.css")).replace(
 const components = (await read("docs/design/components.html"))
   .replace("{{THEME}}", theme)
   .replace("{{PANEL_CSS}}", sidebar)
+  .replace("{{THEME_IDS}}", JSON.stringify(THEMES.map((theme) => theme.id)))
   .replace("{{BRAND_ICON}}", await dataImage("public/icons/32.png"));
 const picker = await read("lib/picker.js");
-const pickerStyle = picker.match(/style\.textContent = `([\s\S]*?)`;/)?.[1];
+const pickerStyle = picker.match(/style\.textContent = `([\s\S]*?)`;/)?.[1].replace("${themeCss}", theme);
 if (!pickerStyle) throw new Error("取得バーのCSSを読み取れません");
 const overlay = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><style>${pickerStyle}
 html,body {margin:0;background:#e9ede4} .guide {animation:none} </style></head><body>
 <div class="guide" role="region" aria-label="取得バーの静的見本"><div class="instruction-row"><div class="instruction"><strong>ページ上の文字をクリック</strong><span class="hint">タイトルにする文字を選択してください</span></div><button class="close-button" title="選択モードを閉じる（Esc）" aria-label="選択モードを閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-<div class="toolbar"><div class="step-list"><button aria-current="step"><span class="step-number" aria-hidden="true">1</span><span class="step-label">タイトル</span><span class="step-check" aria-hidden="true">✓</span></button><button><span class="step-number" aria-hidden="true">2</span><span class="step-label">場所</span><span class="step-check" aria-hidden="true">✓</span></button><button><span class="step-number" aria-hidden="true">3</span><span class="step-label">詳細</span><span class="step-check" aria-hidden="true">✓</span></button></div><div class="controls"><button disabled>戻る</button><button>スキップ</button></div></div></div></body></html>`;
-const colors = Object.fromEntries(
-  [...theme.matchAll(/--(\w+):\s*(#[\da-f]+)/gi)].map((match) => [
-    match[1],
-    match[2],
-  ]),
-);
+<div class="toolbar"><div class="step-list"><button aria-current="step"><span class="step-number" aria-hidden="true">1</span><span class="step-label">タイトル</span><span class="step-check" aria-hidden="true">✓</span></button><button><span class="step-number" aria-hidden="true">2</span><span class="step-label">場所</span><span class="step-check" aria-hidden="true">✓</span></button><button><span class="step-number" aria-hidden="true">3</span><span class="step-label">詳細</span><span class="step-check" aria-hidden="true">✓</span></button></div><div class="controls"><button disabled>戻る</button><button>スキップ</button></div></div></div><script>window.addEventListener('message', (event) => { if(event.source === parent && ${JSON.stringify(THEMES.map((theme) => theme.id))}.includes(event.data?.theme)) document.documentElement.dataset.theme = event.data.theme; });</script></body></html>`;
 const descriptions = {
   paper: "基本背景",
   ink: "主文と見出し",
-  green: "ブランドと主操作",
+  accent: "操作中の文字と枠",
   muted: "補足とメタ情報",
   line: "罫線と通常の境界",
   wash: "ホバーの淡い面",
-  ochre: "点とフォーカス",
+  focus: "キーボードのフォーカス",
 };
+// Show the default palette only, not the final theme override in this stylesheet.
+const defaults = Object.fromEntries(
+  [...theme.slice(0, theme.indexOf("\n}"))
+    .matchAll(/--([\w-]+):\s*(#[\da-f]+)/gi)]
+    .map((match) => [match[1], match[2]]),
+);
+const colors = Object.fromEntries(Object.keys(descriptions).map((name) => [name, defaults[name]]));
 const swatches = Object.entries(colors)
   .map(
     ([name, value]) =>
@@ -88,6 +91,7 @@ const values = {
   INK_CONTRAST: contrast(colors.ink, colors.paper),
   MUTED_CONTRAST: contrast(colors.muted, colors.paper),
   COMPONENTS: escape(components.replace(/[\t ]+$/gm, "")),
+  THEME_OPTIONS: THEMES.map((theme) => `<option value="${theme.id}">${theme.name}（${theme.reading}）</option>`).join(""),
   OVERLAY: escape(overlay.replace(/[\t ]+$/gm, "")),
   MD_LINES: String(markdown.trimEnd().split("\n").length),
   MARKDOWN: escape(markdown),
