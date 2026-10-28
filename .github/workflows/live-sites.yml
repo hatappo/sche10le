@@ -1,4 +1,5 @@
 name: Live event sites
+run-name: "Live event sites · ${{ inputs.sites || 'all' }}"
 
 # Run after merging into main, never while a PR is being developed.
 on:
@@ -8,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       sites:
-        description: "all、またはサイトIDのカンマ区切り（connpass,doorkeeper,peatix,techplay,kokuchpro,meetup,luma）"
+        description: "対象ID（例: kokuchpro）。全件はall、複数はカンマ区切り。ID一覧はtests/live/sites.js"
         required: true
         default: all
         type: string

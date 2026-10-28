@@ -8,6 +8,26 @@ main宛てのPRがマージされたときに、登録済みの全サイトを1�
 
 手動実行も残す。GitHub Actionsの「Live event sites」から「Run workflow」を選び、ブランチは `main`、通常は `sites: all` にする。ストア更新前にはアップロード対象コミットでの検証結果を確認し、必要な場合だけ再実行する。main以外の手動実行はスキップする。
 
+### 1サイトだけ手動実行する
+
+「Run workflow」の `sites` に、`sites.js` の各要素の `id` を指定する。配列の位置や表示名ではなく、安定したIDで選択する。こくちーずプロだけなら `kokuchpro`。現在のIDは `connpass`, `doorkeeper`, `peatix`, `techplay`, `kokuchpro`, `meetup`, `luma`。
+
+GitHub CLIの場合（外部サイトへの実際の検証を開始する）：
+
+```sh
+gh workflow run live-sites.yml --ref main -f sites=kokuchpro
+```
+
+複数なら `sites=peatix,kokuchpro`、全サイトなら `sites=all`。既存のrunの再実行では入力を変更できないため、対象を変える場合は手動実行を新しく開始する。WFの実行名にも対象IDを表示する。マージによる自動実行は従来どおり `all`。
+
+以下はブラウザを起動せず、選ばれるテスト名だけを確認する方法：
+
+```sh
+LIVE_SITES=kokuchpro npm run test:live -- --list --reporter=list
+```
+
+### 自動実行とCI環境
+
 トリガーは `pull_request` の `closed`（対象main）と `workflow_dispatch`。ジョブの条件でもマージ済みかを確認する。マージ時は入力欄がないため `sites` を `all` に補う。scheduleは未設定で、週次実行は運用が安定してから明示的に追加する。
 
 このワークフローはmainにマージ後に利用できる。テスト開始時のコミットSHAをCIのレポートに記録する。テスト後にコードを変更した場合、その結果を変更後の配布物の検証結果として扱わない。
@@ -45,6 +65,7 @@ LIVE_SITES=luma npm run test:live
 - 本文とJSON-LDの変化が750ms落ち着き、対象イベントの識別文が見つかってから1回スキャンする。待ち時間は最大15秒。期待日時や抽出成功を読み込み待ちの条件には使わない。
 - `readySelector` があるサイトでは、その領域が表示され、空でない本文が入るまで待つ。Peatixは文書タイトル・ヘッダ・フッタが本文より先に完成するため、イベント説明領域 `#field-event-description` を指定している。領域が描画されなければ `PAGE_NOT_READY`、描画後に期待日時が見つからなければ `DATE_MISMATCH` とする。
 - 診断用のページ状態取得は2秒で打ち切る。ページのJavaScriptが応答しない場合でも、読み込み失敗の診断自体が待ち続けないようにする。状態が取得できなければ `healthUnavailable: true` を記録し、正常なページとは判定しない。
+- メインページのリクエスト・応答・リダイレクト先・通信失敗コード・DOMContentLoaded/loadの到達を、読み込み完了前から記録する。最大32件で、超えた場合は `network.truncated: true`。サブリソースやフレームの通信は記録しない。通信履歴のURLは認証情報・クエリ・フラグメントを除き、Cookie・ヘッダ全体・レスポンス本文・例外メッセージは保存しない。後処理でブラウザを閉じた際のキャンセルは記録から除く。
 - HTML・DOM・本文・スクリーンショット・動画・Playwright traceはレポートとして保存しない。一時ブラウザプロファイルは終了時に削除する。
 - レポートには対象URL、日時、HTTP状態、分類、所要時間、検証段階、候補の日時だけを記録する。CIではJSONとMarkdownだけを14日間保存する。
 
@@ -70,6 +91,14 @@ LIVE_SITES=luma npm run test:live
 エラーを自動的にskipして緑にしない。サーバーがHTTP 202を返しても、対象ページを正常に描画して日時を抽出できれば合格にする。本文の「ログインしてください」という案内だけでは認証画面と判定しない。
 
 途中段階の日時・HTTP状態・候補日時を `live-progress` として随時記録し、全体タイムアウトでも最後の状態をJSONレポートへ残す。サマリーには段階と所要時間も表示する。`phaseHistory` は開始からの経過ミリ秒と段階名のみ。`browser` / `extension` は検証環境の準備、`navigation` はページ遷移、`readiness` は本文の安定待ち、`navigation-health` / `readiness-health` / `health` はページ状態取得、`panel` / `scan` は拡張の操作、`compare` は日時照合、`cleanup` はブラウザ終了などの後処理を示す。進捗だけでは合格にせず、後処理のタイムアウトも失敗とする。
+
+`navigation`付近で失敗した場合は、JSONの `network.events` と `navigationError` を確認する。
+
+- `response` の `status` が403/429なら、その応答が返ったことを確認できる。403だけでボット判定と断定はしない。
+- 200を受信していても `domcontentloaded` がなければ、応答後の読み込みが完了していない。ページ内スクリプト等の待ちも候補になる。
+- `requestfailed` の `errorCode` は `net::ERR_CONNECTION_RESET` など、ブラウザが報告したコードだけを保存する。
+- `navigationError: TIMEOUT` は読み込みの制限時間到達を示す。応答の記録がないことだけでは、拒否やボット判定を断定できない。
+- `truncated: true` の場合は後半のイベントが省略されているため、記録がないイベントの未発生を断定しない。
 
 ## サイトを追加・更新する
 

@@ -25,6 +25,22 @@ test.beforeAll(async () => {
       res.end();
       return;
     }
+    if (req.url === "/incomplete-200" || req.url === "/incomplete-403") {
+      res.writeHead(Number(req.url.slice(-3)), { "Content-Type": "text/html; charset=utf-8" });
+      res.write(`<title>${identity}</title><main>読み込み中</main>`);
+      // Flush response headers but never finish the document/DOMContentLoaded.
+      res.flushHeaders();
+      return;
+    }
+    if (req.url === "/connection-reset") {
+      req.socket.destroy();
+      return;
+    }
+    if (req.url === "/same-origin-redirect") {
+      res.writeHead(302, { Location: "/event?token=private-query#private-fragment" });
+      res.end();
+      return;
+    }
     const code = Number(req.url.slice(1));
     if ([403, 429, 404].includes(code)) {
       res.writeHead(code, { "Content-Type": "text/html; charset=utf-8" });
@@ -82,6 +98,44 @@ test.beforeAll(async () => {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
+});
+
+for (const [status, category] of [[200, "NETWORK_ERROR"], [403, "ACCESS_BLOCKED"]]) {
+  test(`読み込み未完了でもHTTP ${status}を記録する`, async () => {
+    const progress = [];
+    const result = await runLiveCase(
+      { id: "fixture", name: "テスト", url: `${origin}/incomplete-${status}`, identity, expected },
+      { allowLocalhost: true, navigationTimeout: 1000, onProgress: async (p) => progress.push(p) },
+    );
+    expect(result.category).toBe(category);
+    expect(result.httpStatus).toBe(status);
+    expect(result.navigationError).toBe("TIMEOUT");
+    expect(result.network.events.some((e) => e.type === "response" && e.status === status)).toBe(true);
+    expect(result.network.events.some((e) => e.type === "domcontentloaded")).toBe(false);
+    expect(progress.some((p) => p.phase === "navigation" && p.httpStatus === status)).toBe(true);
+  });
+}
+
+test("転送先を記録し、通信診断からクエリとフラグメントを取り除く", async () => {
+  const result = await runLiveCase(
+    { id: "fixture", name: "テスト", url: `${origin}/same-origin-redirect`, identity, expected },
+    { allowLocalhost: true },
+  );
+  expect(result.category).toBe("PASS");
+  expect(result.network.events.find((e) => e.status === 302).redirectTo).toBe(`${origin}/event`);
+  expect(result.network.events.some((e) => e.type === "domcontentloaded")).toBe(true);
+  expect(JSON.stringify(result)).not.toMatch(/private-query|private-fragment/);
+});
+
+test("読み込み失敗時にもブラウザの通信エラーコードを残す", async () => {
+  const result = await runLiveCase(
+    { id: "fixture", name: "テスト", url: `${origin}/connection-reset`, identity, expected },
+    { allowLocalhost: true, navigationTimeout: 3000 },
+  );
+  expect(result.category).toBe("NETWORK_ERROR");
+  const failure = result.network.events.find((e) => e.type === "requestfailed");
+  expect(failure?.errorCode).toMatch(/^net::ERR_/);
+  expect(result.navigationError).toMatch(/^net::ERR_/);
 });
 
 test("ページが応答しなくても状態確認を打ち切り、検証段階を残す", async () => {

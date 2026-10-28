@@ -9,6 +9,7 @@ import {
   matchesExpected,
   validateSites,
 } from "./contract.js";
+import { navigationErrorCode, observeNavigation } from "./network.js";
 
 // Uses the real production build, content script, extraction, and sidepanel rendering.
 // Only the disposable test copy receives host access; activeTab toolbar gestures
@@ -18,6 +19,7 @@ export async function runLiveCase(
   {
     allowLocalhost = false,
     readinessTimeout = 15_000,
+    navigationTimeout = 25_000,
     onProgress = async () => {},
   } = {},
 ) {
@@ -33,16 +35,23 @@ export async function runLiveCase(
     category: "HARNESS_ERROR",
     phase: "setup",
     candidates: [],
+    network: { events: [], truncated: false },
   };
   let workspace;
   let context;
-  const publish = (phase = report.phase) =>
-    onProgress({
+  let stopNetwork = () => {};
+  let progressQueue = Promise.resolve();
+  const publish = (phase = report.phase) => {
+    const snapshot = {
       ...report,
       phase,
       candidates: [...report.candidates],
       durationMs: Date.now() - started,
-    });
+    };
+    // Network events and awaited checkpoints share one ordered attachment queue.
+    progressQueue = progressQueue.then(() => onProgress(snapshot));
+    return progressQueue;
+  };
   const checkpoint = async (phase) => {
     report.phase = phase;
     await publish();
@@ -91,6 +100,15 @@ export async function runLiveCase(
     // Fresh profiles already default to disabled, but make AI independence explicit.
     await worker.evaluate(() => chrome.storage.local.clear());
     const source = await context.newPage();
+    stopNetwork = observeNavigation(source, {
+      startedAt: started,
+      onEvent: (event, network) => {
+        report.network = network;
+        if (event.type === "response") report.httpStatus = event.status;
+        // Event callbacks cannot await. The next checkpoint surfaces any error.
+        void publish().catch(() => {});
+      },
+    });
     let unexpectedNavigation = false;
     // Redirected requests may bypass route handlers; record their origin as well.
     source.on("request", (request) => {
@@ -143,13 +161,14 @@ export async function runLiveCase(
     try {
       response = await source.goto(site.url, {
         waitUntil: "domcontentloaded",
-        timeout: 25_000,
+        timeout: navigationTimeout,
       });
-    } catch {
+    } catch (error) {
+      report.navigationError = navigationErrorCode(error);
       const state = await health("navigation-health");
       report.category = unexpectedNavigation
         ? "TARGET_CHANGED"
-        : (accessCategory(null, state?.title, state?.lead, source.url()) ??
+        : (accessCategory(report.httpStatus, state?.title, state?.lead, source.url()) ??
           "NETWORK_ERROR");
       return report;
     }
@@ -255,6 +274,8 @@ export async function runLiveCase(
     report.category = "HARNESS_ERROR";
     return report;
   } finally {
+    // Closing Chromium cancels pending requests; those are not site failures.
+    stopNetwork();
     try {
       // Preserve the failure phase in the final report; if close hangs, the
       // last progress attachment still tells the reporter it reached cleanup.
