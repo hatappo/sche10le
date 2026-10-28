@@ -13,6 +13,45 @@ import {
 import LiveReporter from "./live/reporter.js";
 
 const sample = sites[0];
+test("CI標準だけこくちーずプロを除外し、全件・個別指定では対象に残す", () => {
+  const selected = selectSites(sites, "ci");
+  assert.equal(selected.length, sites.length - 1);
+  assert.ok(selected.every((s) => s.id !== "kokuchpro"));
+  assert.equal(selectSites(sites).length, sites.length);
+  assert.equal(selectSites(sites, "all").length, sites.length);
+  assert.deepEqual(selectSites(sites, "kokuchpro").map((s) => s.id), ["kokuchpro"]);
+  assert.throws(() => selectSites([{ ...sample, ciExclusionReason: "対象外" }], "ci"));
+  assert.throws(() => validateSites([{ ...sample, ciExclusionReason: " " }]));
+  assert.throws(() => validateSites([{ ...sample, ciExclusionReason: true }]));
+  assert.throws(() => validateSites([{ ...sample, id: "ci" }]));
+  const newSite = { ...sample, id: "new-service" };
+  assert.deepEqual(selectSites([newSite, { ...sample, ciExclusionReason: "対象外" }], "ci"), [newSite]);
+});
+
+test("CI標準の除外理由を未検証として表示し、実行結果や合格件数に混ぜない", () => {
+  const reporter = new LiveReporter({ selection: "ci" });
+  const selected = selectSites(sites, "ci");
+  reporter.onBegin({}, { allTests: () => selected.map((s) => ({ title: s.id })) });
+  assert.equal(reporter.results.size, selected.length);
+  assert.equal(reporter.results.has("kokuchpro"), false);
+  assert.deepEqual(reporter.excludedSites.map((s) => s.id), ["kokuchpro"]);
+  assert.ok(reporter.excludedSites[0].reason.trim());
+  const reports = [...reporter.results.values()].map((r) => ({ ...r, status: "passed", category: "PASS" }));
+  const summary = summaryMarkdown(reports, "passed", reporter.excludedSites);
+  assert.match(summary, /標準対象外（未検証）/);
+  assert.match(summary, /kokuchpro/);
+  assert.equal(reportOutcome(reports, "passed"), "passed");
+  reports[0].status = "failed";
+  assert.equal(reportOutcome(reports, "passed"), "failed");
+  assert.equal(reportOutcome([], "passed"), "failed");
+  for (const selection of ["all", "kokuchpro"]) {
+    const explicit = new LiveReporter({ selection });
+    explicit.onBegin({}, { allTests: () => selectSites(sites, selection).map((s) => ({ title: s.id })) });
+    assert.deepEqual(explicit.excludedSites, []);
+    assert.ok(explicit.results.has("kokuchpro"));
+  }
+});
+
 test("ライブ対象は登録済みIDだけを選び、未知ID・重複・認証URL・曖昧な日時を拒否する", () => {
   assert.equal(validateSites(sites), sites);
   assert.deepEqual(selectSites(sites, "kokuchpro").map((s) => s.id), ["kokuchpro"]);

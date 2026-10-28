@@ -23,8 +23,14 @@ export function validateSites(sites, { allowLocalhost = false } = {}) {
   const ids = new Set();
   for (const site of sites) {
     assert.match(site.id, /^[a-z][a-z0-9-]*$/);
+    assert.ok(!["all", "ci"].includes(site.id), "allとciは対象選択の予約語です");
     assert.ok(!ids.has(site.id), `サイトIDが重複しています: ${site.id}`);
     ids.add(site.id);
+    if (site.ciExclusionReason !== undefined)
+      assert.ok(
+        typeof site.ciExclusionReason === "string" && site.ciExclusionReason.trim(),
+        "CI標準対象から除外する場合は理由が必要です",
+      );
     const url = new URL(site.url);
     assert.ok(
       url.protocol === "https:" ||
@@ -66,10 +72,15 @@ export function validateSites(sites, { allowLocalhost = false } = {}) {
 export function selectSites(sites, selection = "all") {
   validateSites(sites);
   if (selection === "all") return sites;
+  if (selection === "ci") {
+    const selected = sites.filter((site) => !site.ciExclusionReason);
+    assert.ok(selected.length, "CI標準対象を1件以上残してください");
+    return selected;
+  }
   const ids = selection.split(",").map((id) => id.trim());
   assert.ok(
     ids.length && ids.every((id) => sites.some((site) => site.id === id)),
-    "LIVE_SITESにはallか登録済みのIDをカンマ区切りで指定してください",
+    "LIVE_SITESにはci、all、または登録済みのIDをカンマ区切りで指定してください",
   );
   return sites.filter((site) => ids.includes(site.id));
 }
@@ -115,13 +126,19 @@ export function reportOutcome(reports, runnerStatus) {
     : "failed";
 }
 
-export function summaryMarkdown(reports, outcome) {
+export function summaryMarkdown(reports, outcome, excludedSites = []) {
   const cell = (value) => String(value ?? "—").replace(/[\r\n|`<>]/g, " ");
   return [
     `# ライブサイト検証: ${outcome}`,
     "",
     "HTML・DOM・ページ本文は保存していません。合格は対象イベントの開始・終了日時の一致を意味し、全候補の正確性を保証するものではありません。",
     "",
+    ...(excludedSites.length ? [
+      `標準対象外（未検証）: ${excludedSites.length}件。以下は実行結果・合格件数に含めません。`,
+      "",
+      ...excludedSites.map((site) => `- ${cell(site.name)} (${cell(site.id)}): ${cell(site.reason)}`),
+      "",
+    ] : []),
     "| サイト | 判定 | 段階 | 所要時間 | HTTP | 期待日時 | 候補数 |",
     "| --- | --- | --- | --- | --- | --- | --- |",
     ...reports.map(

@@ -50,6 +50,7 @@ export const sites = [
   },
   {
     id: "kokuchpro",
+    ciExclusionReason: "GitHub-hosted runnerからHTTP応答を確認できないため。ストア公開前にローカルで検証してください。",
     reviewedOn: "2026-10-27",
     name: "こくちーずプロ",
     url: "https://www.kokuchpro.com/event/496889c04454868921221036b4ffdded/",
