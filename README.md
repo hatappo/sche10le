@@ -101,16 +101,16 @@ E2Eはブラウザコンテキストを共有しています。`page.clock` に�
 
 ## 変更履歴と配布用ビルド
 
-バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.4.1` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。
+バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.5.0` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。
 
 ```sh
 git fetch --tags
-git switch --detach v0.4.1
+git switch --detach v0.5.0
 npm ci
 npm run zip
 ```
 
-Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0.4.1-chrome.zip`** です。ZIP内の `manifest.json` のバージョンも `0.4.1` になります。ビルド後に通常の開発へ戻る場合は `git switch main` を実行します。
+Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0.5.0-chrome.zip`** です。ZIP内の `manifest.json` のバージョンも `0.5.0` になります。ビルド後に通常の開発へ戻る場合は `git switch main` を実行します。
 
 変更してから配布する場合は、`npm run check` と `npm run test:e2e` も実行してください（ブラウザテストの初回準備は `npx playwright install chromium`）。ライブサイトの結果は配布するコミットに対応するものを確認します。バージョン更新時は `package.json`・`package-lock.json`・CHANGELOG・関連資料をそろえてからタグを作成します。
 
