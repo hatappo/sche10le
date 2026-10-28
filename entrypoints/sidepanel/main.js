@@ -1,5 +1,11 @@
 import "./style.css";
 import {
+  THEMES,
+  DEFAULT_THEME,
+  resolveTheme,
+  applyTheme,
+} from "../../lib/themes.js";
+import {
   extractStructuredEvents,
   extractTextEvents,
   mergeCandidates,
@@ -76,7 +82,16 @@ let scanTimer = 0;
 let travelMinutes = 30;
 let aiEnabled = false;
 let titleFormat = DEFAULT_TITLE_FORMAT;
+let themeId = DEFAULT_THEME;
+let themeRevision = 0;
+let pendingThemeSaves = 0;
 const settingStates = {
+  theme: {
+    key: "themeId",
+    status: "theme-status",
+    retry: "retry-theme",
+    revision: 0,
+  },
   travel: {
     key: "travelMinutes",
     status: "settings-status",
@@ -366,6 +381,7 @@ async function scan() {
     scanTimer = window.setTimeout(() => {
       if (scanning && run === generation) scanFailed();
     }, 8000);
+    connection.postMessage({ type: "theme", id: themeId });
     connection.postMessage({ type: "scan" });
   } catch (error) {
     if (run === generation) scanFailed(error);
@@ -1063,7 +1079,72 @@ function saveSetting(name, value) {
         );
     }
   });
+  return settingSave;
 }
+
+/** @param {unknown} value */
+function setTheme(value) {
+  themeRevision++;
+  themeId = resolveTheme(value);
+  applyTheme(document.documentElement, themeId);
+  for (const theme of THEMES)
+    input(`theme-${theme.id}`).checked = theme.id === themeId;
+  try {
+    port?.postMessage({ type: "theme", id: themeId });
+  } catch {
+    // A closing page must not stop local settings from applying or saving.
+  }
+}
+
+function saveTheme() {
+  pendingThemeSaves++;
+  void saveSetting("theme", themeId).finally(() => pendingThemeSaves--);
+}
+
+function renderThemes() {
+  for (const theme of THEMES) {
+    const choice = document.createElement("label");
+    choice.className = "theme-choice";
+    choice.htmlFor = `theme-${theme.id}`;
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "theme";
+    radio.id = choice.htmlFor;
+    radio.value = theme.id;
+    radio.className = "theme-radio sr-only";
+    radio.setAttribute(
+      "aria-label",
+      `${theme.name}（${theme.reading}）${theme.note ? `・${theme.note}` : ""}`,
+    );
+    radio.checked = theme.id === themeId;
+    const option = node("span", "theme-option");
+    const preview = node("span", "theme-swatch");
+    preview.dataset.themePreview = theme.id;
+    preview.setAttribute("aria-hidden", "true");
+    preview.append(node("i", ""), node("i", ""), node("i", ""));
+    const heading = node("span", "theme-name", theme.name);
+    const check = node("span", "theme-check", "✓");
+    check.setAttribute("aria-hidden", "true");
+    heading.append(check);
+    const reading = node("span", "theme-reading", theme.reading);
+    if (theme.note) reading.append(node("span", "theme-note", theme.note));
+    option.append(preview, heading, reading);
+    choice.append(radio, option);
+    el("theme-options").append(choice);
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      setTheme(radio.value);
+      saveTheme();
+    });
+  }
+}
+renderThemes();
+button("retry-theme").addEventListener("click", saveTheme);
+chrome.storage.onChanged.addListener((changes, area) => {
+  // Ignore intermediate writes from our ordered save queue during rapid switching.
+  if (area === "local" && changes.themeId && pendingThemeSaves === 0)
+    setTheme(changes.themeId.newValue);
+});
 
 function applyTitleFormat() {
   const template = input("title-format").value.trim();
@@ -1230,6 +1311,7 @@ const footerResize = new ResizeObserver(() => {
 footerResize.observe(el("footer"));
 
 async function initialize() {
+  const initialThemeRevision = themeRevision;
   const quote = pickFooterQuote();
   el("footer-quote").textContent = quote.text;
   el("footer-quote").title = `${quote.original}\n— ${quote.attribution}`;
@@ -1239,7 +1321,9 @@ async function initialize() {
       "aiEnabled",
       "titleFormat",
       "candidateOrder",
+      "themeId",
     ]);
+    if (themeRevision === initialThemeRevision) setTheme(saved.themeId);
     if (
       typeof saved.travelMinutes === "number" &&
       Number.isInteger(saved.travelMinutes) &&

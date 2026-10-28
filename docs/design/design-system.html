@@ -1009,15 +1009,15 @@
           <h2>色と状態</h2>
         </div>
         <p class="intro">
-          基礎になる7色は実装のCSS変数から取得。暖かな背景と落ち着いた緑を基調に、色・枠・文字の太さ・チェックで操作と状態を区別する。
+          基本の7色は標準テーマ「千歳緑」のCSS変数から取得。銀鼠・水浅葱・藍鉄・黒茶・紫紺でも、色・枠・文字の太さ・チェックの役割を揃える。下のUI見本で6テーマを切り替えられる。
         </p>
         <div class="swatches"><article class="swatch" style="--swatch:#f8f8f1"><div class="swatch-color"></div><div class="swatch-info"><strong>--paper</strong><span>#f8f8f1</span><p>基本背景</p></div></article>
 <article class="swatch" style="--swatch:#293d31"><div class="swatch-color"></div><div class="swatch-info"><strong>--ink</strong><span>#293d31</span><p>主文と見出し</p></div></article>
-<article class="swatch" style="--swatch:#2c6045"><div class="swatch-color"></div><div class="swatch-info"><strong>--green</strong><span>#2c6045</span><p>ブランドと主操作</p></div></article>
+<article class="swatch" style="--swatch:#2c6045"><div class="swatch-color"></div><div class="swatch-info"><strong>--accent</strong><span>#2c6045</span><p>操作中の文字と枠</p></div></article>
 <article class="swatch" style="--swatch:#788171"><div class="swatch-color"></div><div class="swatch-info"><strong>--muted</strong><span>#788171</span><p>補足とメタ情報</p></div></article>
 <article class="swatch" style="--swatch:#dfe4d6"><div class="swatch-color"></div><div class="swatch-info"><strong>--line</strong><span>#dfe4d6</span><p>罫線と通常の境界</p></div></article>
 <article class="swatch" style="--swatch:#eaf0e3"><div class="swatch-color"></div><div class="swatch-info"><strong>--wash</strong><span>#eaf0e3</span><p>ホバーの淡い面</p></div></article>
-<article class="swatch" style="--swatch:#a67d3a"><div class="swatch-color"></div><div class="swatch-info"><strong>--ochre</strong><span>#a67d3a</span><p>点とフォーカス</p></div></article></div>
+<article class="swatch" style="--swatch:#a67d3a"><div class="swatch-color"></div><div class="swatch-info"><strong>--focus</strong><span>#a67d3a</span><p>キーボードのフォーカス</p></div></article></div>
         <div class="state-strips">
           <div
             class="state-strip"
@@ -1102,6 +1102,7 @@
           ><button class="control" data-view="settings" aria-pressed="false">
             設定</button
           ><button class="control" data-error>書式エラー</button>
+          <select id="demo-theme" class="control" aria-label="見本のカラーテーマ"><option value="chitosemidori">千歳緑（ちとせみどり）</option><option value="ginnezu">銀鼠（ぎんねず）</option><option value="mizuasagi">水浅葱（みずあさぎ）</option><option value="aitetsu">藍鉄（あいてつ）</option><option value="kurocha">黒茶（くろちゃ）</option><option value="shikon">紫紺（しこん）</option></select>
         </div>
         <div class="demo-layout">
           <iframe
@@ -1114,14 +1115,291 @@
   &lt;head&gt;
     &lt;meta charset=&quot;utf-8&quot; /&gt;
     &lt;style&gt;
-      :root {
+      /* Shared by the panel, closed Shadow DOM controls, and static palette previews.
+   Unset/unknown themes keep the existing Chitosemidori palette. */
+:root,
+:host,
+[data-theme-preview] {
+  --scheme: light;
   --paper: #f8f8f1;
   --ink: #293d31;
-  --green: #2c6045;
+  --accent: #2c6045;
   --muted: #788171;
   --line: #dfe4d6;
   --wash: #eaf0e3;
-  --ochre: #a67d3a;
+  --focus: #a67d3a;
+  --surface: #ffffff8c;
+  --surface-raised: #ffffff;
+  --surface-outline: #9daf99;
+  --complete: #f1f5ed;
+  --settings: #eef1e8;
+  --control-border: #bccab5;
+  --empty-text: #949a8e;
+  --text-selection: #d5e4cc;
+  --action: #2c6045;
+  --on-action: #ffffff;
+  --action-hover: #1c4934;
+  --error: #972d28;
+  --error-surface: #fff0ed;
+  --error-border: #c3635b;
+  --badge-surface: #fbf1dc;
+  --badge-text: #785825;
+  --shine: #fff5d4;
+  --shine-edge: #b49b66;
+  --glow: #8fb795;
+  --shadow: #14291c;
+  --bar-surface: #fffefa;
+  --bar-text: #243e32;
+  --bar-border: #9eac9e;
+  --bar-heading: #254c3b;
+  --bar-on-heading: #fffefa;
+  --bar-heading-muted: #d9e4d8;
+  --bar-control: #e8ece2;
+  --disabled-surface: #efeee8;
+  --disabled-text: #92988d;
+  --pick-outline: #275e49;
+  --pick-fill: #2d6d49;
+  --pick-halo: #ffffff88;
+  --source-fill: #f5cc49;
+  --source-border: #b58116;
+  --source-pulse: #dcae40;
+  --source-shade: #19231f;
+  color-scheme: var(--scheme);
+}
+
+:root[data-theme=&quot;ginnezu&quot;],
+:host([data-theme=&quot;ginnezu&quot;]),
+[data-theme-preview=&quot;ginnezu&quot;] {
+  --paper: #f6f6f4;
+  --ink: #303433;
+  --accent: #4c5351;
+  --muted: #69716d;
+  --line: #d9ddda;
+  --wash: #e7eae7;
+  --focus: #656e69;
+  --surface: #ffffff8c;
+  --surface-raised: #ffffff;
+  --surface-outline: #a4ada7;
+  --complete: #ecefeb;
+  --settings: #ebeeea;
+  --control-border: #b5bdb7;
+  --empty-text: #7b837d;
+  --text-selection: #dce1dc;
+  --action: #4c5351;
+  --on-action: #ffffff;
+  --action-hover: #333b37;
+  --badge-surface: #e7eae7;
+  --badge-text: #4c5351;
+  --shine: #ffffff;
+  --shine-edge: #aab2ac;
+  --glow: #afbcb2;
+  --shadow: #202622;
+  --bar-surface: #fafbf9;
+  --bar-text: #303433;
+  --bar-border: #a6afa8;
+  --bar-heading: #414a44;
+  --bar-on-heading: #fafbf9;
+  --bar-heading-muted: #e1e6df;
+  --bar-control: #e7eae5;
+  --disabled-surface: #eceeeb;
+  --disabled-text: #858e87;
+  --pick-outline: #4c5351;
+  --pick-fill: #68766d;
+  --source-fill: #b9c5bc;
+  --source-border: #58695d;
+  --source-pulse: #829c8a;
+  --source-shade: #202622;
+}
+
+:root[data-theme=&quot;mizuasagi&quot;],
+:host([data-theme=&quot;mizuasagi&quot;]),
+[data-theme-preview=&quot;mizuasagi&quot;] {
+  --paper: #f0f7fc;
+  --ink: #243c50;
+  --accent: #276b98;
+  --muted: #586f83;
+  --line: #d1e1ee;
+  --wash: #deecf7;
+  --focus: #327fb2;
+  --surface: #ffffffa6;
+  --surface-raised: #ffffff;
+  --surface-outline: #8eb4d0;
+  --complete: #e2eff9;
+  --settings: #e4eff7;
+  --control-border: #a5bfd4;
+  --empty-text: #72899c;
+  --text-selection: #c5e0f3;
+  --action: #276b98;
+  --on-action: #ffffff;
+  --action-hover: #194e76;
+  --badge-surface: #deecf7;
+  --badge-text: #325f80;
+  --shine: #effaff;
+  --shine-edge: #8dbbdc;
+  --glow: #94c6e8;
+  --shadow: #152b40;
+  --bar-surface: #f7fbff;
+  --bar-text: #243c50;
+  --bar-border: #91aec6;
+  --bar-heading: #2c5879;
+  --bar-on-heading: #f5faff;
+  --bar-heading-muted: #d4e5f2;
+  --bar-control: #deeaf5;
+  --disabled-surface: #e7eef4;
+  --disabled-text: #8093a4;
+  --pick-outline: #276b98;
+  --pick-fill: #438fbe;
+  --source-fill: #91c9ef;
+  --source-border: #397ba9;
+  --source-pulse: #6baedb;
+  --source-shade: #182c3d;
+}
+
+:root[data-theme=&quot;aitetsu&quot;],
+:host([data-theme=&quot;aitetsu&quot;]),
+[data-theme-preview=&quot;aitetsu&quot;] {
+  --scheme: dark;
+  --paper: #1d2430;
+  --ink: #e5eaf0;
+  --accent: #a3c6d4;
+  --muted: #a2adb9;
+  --line: #3f4c5d;
+  --wash: #303d4e;
+  --focus: #b6cedb;
+  --surface: #293443;
+  --surface-raised: #303e50;
+  --surface-outline: #697e94;
+  --complete: #243a43;
+  --settings: #171e29;
+  --control-border: #596c80;
+  --empty-text: #98a4b2;
+  --text-selection: #3c566b;
+  --action: #a3c6d4;
+  --on-action: #192d3a;
+  --action-hover: #bdd9e3;
+  --error: #f2b7ad;
+  --error-surface: #452e35;
+  --error-border: #bd817d;
+  --badge-surface: #344450;
+  --badge-text: #c1d9e1;
+  --shine: #edfaff;
+  --shine-edge: #8ca9bb;
+  --glow: #90bed0;
+  --shadow: #000000;
+  --bar-surface: #202b3a;
+  --bar-text: #e5eaf0;
+  --bar-border: #697e94;
+  --bar-heading: #39485e;
+  --bar-on-heading: #edf1f6;
+  --bar-heading-muted: #ced9e3;
+  --bar-control: #344254;
+  --disabled-surface: #283140;
+  --disabled-text: #7f8c9e;
+  --pick-outline: #a3c6d4;
+  --pick-fill: #7ca6c2;
+  --pick-halo: #111b2988;
+  --source-fill: #a3c6d4;
+  --source-border: #759cae;
+  --source-pulse: #afcfdd;
+  --source-shade: #0e1521;
+}
+
+:root[data-theme=&quot;kurocha&quot;],
+:host([data-theme=&quot;kurocha&quot;]),
+[data-theme-preview=&quot;kurocha&quot;] {
+  --scheme: dark;
+  --paper: #261e1a;
+  --ink: #f0e6da;
+  --accent: #dab999;
+  --muted: #b9a99b;
+  --line: #59483c;
+  --wash: #44352b;
+  --focus: #e4c8aa;
+  --surface: #352a23;
+  --surface-raised: #413229;
+  --surface-outline: #92765f;
+  --complete: #3f3025;
+  --settings: #1f1814;
+  --control-border: #826a56;
+  --empty-text: #b09c8b;
+  --text-selection: #654b37;
+  --action: #dab999;
+  --on-action: #322318;
+  --action-hover: #e8cfb5;
+  --error: #f4b5aa;
+  --error-surface: #4b2e29;
+  --error-border: #c38377;
+  --badge-surface: #51402f;
+  --badge-text: #e5c9a5;
+  --shine: #fff1d9;
+  --shine-edge: #c2a17b;
+  --glow: #c7a27c;
+  --shadow: #100b08;
+  --bar-surface: #2c221c;
+  --bar-text: #f0e6da;
+  --bar-border: #92765f;
+  --bar-heading: #4d382b;
+  --bar-on-heading: #f6eadc;
+  --bar-heading-muted: #e0cdbb;
+  --bar-control: #49372b;
+  --disabled-surface: #362a22;
+  --disabled-text: #9e8a79;
+  --pick-outline: #dab999;
+  --pick-fill: #c6986d;
+  --pick-halo: #1a120d88;
+  --source-fill: #dab999;
+  --source-border: #b58e67;
+  --source-pulse: #e6c8a9;
+  --source-shade: #160f0a;
+}
+
+:root[data-theme=&quot;shikon&quot;],
+:host([data-theme=&quot;shikon&quot;]),
+[data-theme-preview=&quot;shikon&quot;] {
+  --scheme: dark;
+  --paper: #251d2b;
+  --ink: #eee5f2;
+  --accent: #d0afd9;
+  --muted: #b7a6bf;
+  --line: #54415f;
+  --wash: #42314d;
+  --focus: #dfc4e8;
+  --surface: #34283d;
+  --surface-raised: #40304b;
+  --surface-outline: #8e6f9e;
+  --complete: #40304b;
+  --settings: #1c1522;
+  --control-border: #80628f;
+  --empty-text: #a994b4;
+  --text-selection: #624571;
+  --action: #d0afd9;
+  --on-action: #302037;
+  --action-hover: #e1c9e8;
+  --error: #f4b5bd;
+  --error-surface: #492b3c;
+  --error-border: #c18393;
+  --badge-surface: #503956;
+  --badge-text: #e2c6e7;
+  --shine: #fbeeff;
+  --shine-edge: #b699c6;
+  --glow: #bc95cd;
+  --shadow: #100a16;
+  --bar-surface: #2c2134;
+  --bar-text: #eee5f2;
+  --bar-border: #8e6f9e;
+  --bar-heading: #50365c;
+  --bar-on-heading: #f4eaf8;
+  --bar-heading-muted: #dfcce7;
+  --bar-control: #483251;
+  --disabled-surface: #35283d;
+  --disabled-text: #9882a5;
+  --pick-outline: #d0afd9;
+  --pick-fill: #b88ec9;
+  --pick-halo: #160e1d88;
+  --source-fill: #d0afd9;
+  --source-border: #a981bc;
+  --source-pulse: #dec0e8;
+  --source-shade: #130b1a;
 }
 
 
@@ -1129,7 +1407,7 @@
 :root {
   --footer-height: 56px;
   scroll-padding-bottom: calc(var(--footer-height) + 16px);
-  color-scheme: light;
+  color-scheme: var(--scheme);
   background: var(--paper);
   color: var(--ink);
   font-family: &quot;Hiragino Kaku Gothic ProN&quot;, &quot;Yu Gothic&quot;, Meiryo, sans-serif;
@@ -1166,7 +1444,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 button {
@@ -1196,7 +1474,7 @@ a {
   color: inherit;
 }
 ::selection {
-  background: #d5e4cc;
+  background: var(--text-selection);
 }
 .brand {
   display: flex;
@@ -1214,7 +1492,7 @@ a {
   place-items: center;
   width: 30px;
   height: 32px;
-  background: var(--green);
+  background: var(--accent);
   border-radius: 7px;
   color: var(--paper);
   font:
@@ -1238,7 +1516,7 @@ a {
   font-style: italic;
 }
 .brand-period {
-  color: var(--ochre);
+  color: var(--focus);
 }
 .settings-button,
 .panel-close-button {
@@ -1263,7 +1541,7 @@ a {
 .settings-button:hover,
 .panel-close-button:hover {
   background: var(--wash);
-  color: var(--green);
+  color: var(--accent);
 }
 main {
   padding: 0 24px calc(var(--footer-height) + 16px);
@@ -1324,7 +1602,7 @@ main {
   font-weight: 500;
 }
 .stage-title[data-state=&quot;active&quot;] {
-  color: var(--green);
+  color: var(--accent);
   font-weight: 600;
 }
 .stage-label.is-completing,
@@ -1332,9 +1610,9 @@ main {
   background-image: linear-gradient(
     110deg,
     var(--muted) 38%,
-    #b49b66 46%,
-    #fff5d4 50%,
-    #b49b66 54%,
+    var(--shine-edge) 46%,
+    var(--shine) 50%,
+    var(--shine-edge) 54%,
     var(--muted) 62%
   );
   background-size: 300% 100%;
@@ -1419,7 +1697,7 @@ main {
   cursor: pointer;
 }
 .order-select:hover:not(:disabled) {
-  color: var(--green);
+  color: var(--accent);
   background: var(--wash);
 }
 .order-select:disabled {
@@ -1433,7 +1711,7 @@ main {
   margin-bottom: 12px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: #fff0ed;
+  background: var(--error-surface);
   font-size: 11px;
 }
 .order-feedback .text-button {
@@ -1466,7 +1744,7 @@ main {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--accent);
 }
 .status-dot.busy:before {
   animation: pulse 1s infinite;
@@ -1481,8 +1759,8 @@ main {
   display: none;
 }
 .notice.error {
-  color: #984d37;
-  background: #f7ece3;
+  color: var(--error);
+  background: var(--error-surface);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -1494,7 +1772,7 @@ main {
 .candidate {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #ffffff8c;
+  background: var(--surface);
   transition:
     border-color 160ms,
     box-shadow 160ms;
@@ -1502,11 +1780,11 @@ main {
   animation: appear 220ms both;
 }
 .candidate.expanded {
-  border-color: #9daf99;
-  box-shadow: 0 4px 14px #26472c07;
+  border-color: var(--surface-outline);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 3%, transparent);
 }
 .candidate.selected {
-  background: #f1f5ed;
+  background: var(--complete);
 }
 .candidate-heading {
   width: 100%;
@@ -1572,13 +1850,13 @@ main {
   padding: 1px 5px;
   border-radius: 4px;
   background: var(--wash);
-  color: var(--green);
+  color: var(--accent);
   font-size: 10px;
   line-height: 1.5;
 }
 .source-tag.is-ai {
-  background: #fbf1dc;
-  color: #785825;
+  background: var(--badge-surface);
+  color: var(--badge-text);
 }
 .candidate-year {
   white-space: nowrap;
@@ -1593,7 +1871,7 @@ main {
 }
 .expanded .candidate-arrow {
   transform: rotate(90deg);
-  color: var(--green);
+  color: var(--accent);
 }
 .variant-region {
   display: grid;
@@ -1639,7 +1917,7 @@ main {
   color: var(--muted);
 }
 .variant-arrow {
-  color: var(--green);
+  color: var(--accent);
   font-size: 14px;
 }
 .variant-note {
@@ -1666,12 +1944,12 @@ main {
 .empty-calendar {
   width: 44px;
   height: 46px;
-  border: 1px solid #c7cfbe;
+  border: 1px solid var(--line);
   border-radius: 9px;
   margin: auto;
   display: grid;
   place-items: center;
-  color: #a5b29e;
+  color: var(--empty-text);
   position: relative;
 }
 .empty-calendar:before {
@@ -1680,7 +1958,7 @@ main {
   top: 11px;
   left: 0;
   right: 0;
-  border-top: 1px solid #c7cfbe;
+  border-top: 1px solid var(--line);
 }
 .empty-calendar span {
   padding-top: 10px;
@@ -1698,7 +1976,7 @@ main {
 }
 .registration-summary {
   font-size: 12px;
-  color: var(--green);
+  color: var(--accent);
   margin: 0 13px 12px;
   padding-top: 9px;
   border-top: 1px solid var(--line);
@@ -1723,7 +2001,7 @@ main {
   border: 0;
   background: none;
   padding: 5px 0;
-  color: var(--green);
+  color: var(--accent);
   font-size: 11px;
   line-height: 1.5;
   border-radius: 3px;
@@ -1752,15 +2030,15 @@ main {
   scroll-margin-bottom: 16px;
 }
 .field-row:hover {
-  background: #ffffff8c;
+  background: var(--surface);
 }
 .field-row[data-complete=&quot;true&quot;] {
-  background: #f1f5ed;
+  background: var(--complete);
   border-color: var(--line);
 }
 .field-row[aria-current=&quot;step&quot;] {
-  background: #ffffff8c;
-  border-color: var(--green);
+  background: var(--surface);
+  border-color: var(--accent);
 }
 .field-heading {
   display: flex;
@@ -1783,12 +2061,12 @@ main {
   font-weight: 400;
 }
 .field-row[aria-current=&quot;step&quot;] .field-label {
-  color: var(--green);
+  color: var(--accent);
   font-weight: 600;
 }
 .field-row[data-complete=&quot;true&quot;]:hover .field-label,
 .field-row[data-complete=&quot;true&quot;]:focus-visible .field-label {
-  color: var(--green);
+  color: var(--accent);
 }
 .field-edit {
   margin-left: auto;
@@ -1808,7 +2086,7 @@ main {
   overflow: auto;
 }
 .field-value.is-empty {
-  color: #949a8e;
+  color: var(--empty-text);
 }
 .source-note {
   display: flex;
@@ -1841,7 +2119,7 @@ main {
   flex-shrink: 0;
 }
 .panel-close-error {
-  color: #972d28;
+  color: var(--error);
   font-size: 11px;
   margin: 8px 0 0;
 }
@@ -1867,17 +2145,17 @@ main {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
 }
 .download-button:hover {
   background: var(--wash);
-  border-color: var(--green);
+  border-color: var(--accent);
 }
 .primary-button {
   position: relative;
-  background: var(--green);
-  color: #fff;
-  border: 1px solid var(--green);
+  background: var(--action);
+  color: var(--on-action);
+  border: 1px solid var(--action);
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
@@ -1889,7 +2167,7 @@ main {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.5;
-  box-shadow: 0 3px 5px #243e3210;
+  box-shadow: 0 3px 5px color-mix(in srgb, var(--shadow) 6%, transparent);
 }
 .primary-button.calendar-ready::after {
   content: &quot;&quot;;
@@ -1900,15 +2178,15 @@ main {
   background-image: linear-gradient(
     110deg,
     transparent 38%,
-    #fff5d42e 46%,
-    #fff5d45c 50%,
-    #fff5d42e 54%,
+    color-mix(in srgb, var(--shine) 18%, transparent) 46%,
+    color-mix(in srgb, var(--shine) 36%, transparent) 50%,
+    color-mix(in srgb, var(--shine) 18%, transparent) 54%,
     transparent 62%
   );
   background-size: 250% 100%;
   box-shadow:
-    0 0 0 2px #8fb79599,
-    0 0 16px #8fb79566;
+    0 0 0 2px color-mix(in srgb, var(--glow) 60%, transparent),
+    0 0 16px color-mix(in srgb, var(--glow) 40%, transparent);
   opacity: 0;
   animation: calendar-ready-glow 1300ms ease-in-out 650ms;
 }
@@ -1930,7 +2208,7 @@ main {
   }
 }
 .primary-button:hover {
-  background: #1c4934;
+  background: var(--action-hover);
 }
 .primary-button span {
   font-size: 17px;
@@ -1960,7 +2238,7 @@ main {
   flex-direction: column;
   padding: 22px 16px 32px;
   min-height: 100dvh;
-  background: #eef1e8;
+  background: var(--settings);
 }
 .settings-open main,
 .settings-open .footer {
@@ -1974,13 +2252,13 @@ main {
 }
 .settings-note {
   margin: 5px 8px 20px;
-  color: var(--green);
+  color: var(--accent);
   font-size: 11px;
 }
 .setting-group {
   flex-shrink: 0;
   background: var(--paper);
-  border: 1px solid #d2dbca;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
   margin-top: 12px;
@@ -1991,14 +2269,97 @@ main {
   align-items: baseline;
   gap: 4px 12px;
 }
+#theme-heading {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.settings .theme-choice {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+.theme-option {
+  display: block;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.theme-choice:hover .theme-option {
+  border-color: var(--surface-outline);
+}
+.theme-radio:checked + .theme-option {
+  border-color: var(--accent);
+}
+.theme-radio:focus-visible + .theme-option {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.theme-swatch {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  height: 30px;
+  margin-bottom: 7px;
+}
+.theme-swatch i {
+  flex: 1;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+.theme-swatch i:nth-child(2) {
+  background: var(--muted);
+}
+.theme-swatch i:last-child {
+  flex: 1.5;
+  background: var(--action);
+}
+.theme-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.theme-check {
+  margin-inline-start: auto;
+  visibility: hidden;
+  color: var(--accent);
+  font-size: 10px;
+}
+.theme-radio:checked + .theme-option .theme-check {
+  visibility: visible;
+}
+.theme-reading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 5px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.theme-note {
+  font-size: 9px;
+}
 .setting-status:empty {
   display: none;
 }
 .setting-status {
-  color: var(--green);
+  color: var(--accent);
 }
 .setting-feedback button {
-  color: #972d28;
+  color: var(--error);
 }
 .settings label {
   display: block;
@@ -2019,9 +2380,9 @@ main {
 .number-control input {
   width: 75px;
   padding: 7px;
-  border: 1px solid #bccab5;
+  border: 1px solid var(--control-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface-raised);
   color: var(--ink);
 }
 .hint {
@@ -2034,7 +2395,7 @@ main {
   gap: 6px;
 }
 .checkbox-label input {
-  accent-color: var(--green);
+  accent-color: var(--accent);
   margin: 0;
 }
 .ai-area {
@@ -2051,7 +2412,7 @@ main {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
   text-decoration: none;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -2067,8 +2428,8 @@ main {
   margin-right: 6px;
   vertical-align: -1px;
   border: 1.5px solid var(--line);
-  border-top-color: var(--green);
-  border-right-color: var(--green);
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
   border-radius: 50%;
   animation: ai-spin 3s linear infinite;
 }
@@ -2143,15 +2504,15 @@ main {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #ffffff8c;
-  color: var(--green);
+  background: var(--surface);
+  color: var(--accent);
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
 .reload-button:hover:not(:disabled) {
-  background: #fff;
-  border-color: var(--green);
+  background: var(--surface-raised);
+  border-color: var(--accent);
 }
 .reload-button.rescan-link {
   padding-inline: 0;
@@ -2174,13 +2535,13 @@ main {
   margin-top: 8px;
   padding: 9px;
   color: var(--ink);
-  background: #fff;
-  border: 1px solid #bccab5;
+  background: var(--surface-raised);
+  border: 1px solid var(--control-border);
   border-radius: 6px;
   font: 12px/1.6 monospace;
 }
 .settings input[aria-invalid=&quot;true&quot;] {
-  border-color: #984d37;
+  border-color: var(--error);
 }
 .format-tokens {
   display: flex;
@@ -2191,16 +2552,16 @@ main {
 .format-tokens button {
   font-size: 10px;
   padding: 4px 7px;
-  border: 1px solid #c7d2be;
+  border: 1px solid var(--control-border);
   border-radius: 5px;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
 }
 .format-tokens button:hover {
-  background: white;
+  background: var(--surface-raised);
 }
 .format-preview {
-  background: #ffffff80;
+  background: var(--surface);
   border-radius: 6px;
   padding: 10px;
 }
@@ -2223,14 +2584,14 @@ main {
 }
 
 .format-preview.error {
-  background: #fff0ed;
-  border: 1px solid #c3635b;
-  color: #972d28;
+  background: var(--error-surface);
+  border: 1px solid var(--error-border);
+  color: var(--error);
 }
 .format-preview.error span,
 .format-preview.error output,
 .setting-status.error {
-  color: #972d28;
+  color: var(--error);
 }
 .format-preview.error span {
   font-size: 11px;
@@ -2582,6 +2943,8 @@ main {
         );
       window.addEventListener(&quot;message&quot;, (e) =&gt; {
         if (e.source !== parent) return;
+        if ([&quot;chitosemidori&quot;,&quot;ginnezu&quot;,&quot;mizuasagi&quot;,&quot;aitetsu&quot;,&quot;kurocha&quot;,&quot;shikon&quot;].includes(e.data?.theme))
+          document.documentElement.dataset.theme = e.data.theme;
         if ([&quot;list&quot;, &quot;pick&quot;, &quot;settings&quot;].includes(e.data?.view))
           view(e.data.view);
         if (e.data?.action === &quot;error&quot;) {
@@ -2648,16 +3011,303 @@ main {
           class="overlay-frame"
           id="overlay-demo"
           title="ページ下部の取得操作バーの見本"
-          sandbox=""
+          sandbox="allow-scripts"
           srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;ja&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;
-    *{box-sizing:border-box} :host{color-scheme:light}
-    .outline{position:fixed;pointer-events:none;border:2px solid #275e49;background:#2d6d4914;border-radius:5px;box-shadow:0 0 0 3px #fff8;transition:top 70ms,left 70ms,width 70ms,height 70ms}
-    .guide{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:640px;max-width:calc(100vw - 32px);pointer-events:auto;background:#fffefa;color:#243e32;border:1px solid #9eac9e;border-radius:14px;box-shadow:0 2px 5px #14291c24,0 8px 24px #14291c24;font:13px/1.5 &#39;Hiragino Kaku Gothic ProN&#39;,&#39;Yu Gothic&#39;,sans-serif;animation:picker-enter 650ms cubic-bezier(.22,.61,.36,1)}
-    .instruction-row{display:flex;align-items:center;gap:12px;padding:7px 16px;min-height:56px;background:#254c3b;color:#fffefa;border-radius:13px 13px 0 0}.instruction{flex:1;min-width:0}strong{display:block;font-size:15px;line-height:1.5}.hint{display:block;font-size:11px;color:#d9e4d8;line-height:1.5}.toolbar{display:flex;justify-content:space-between;gap:12px;padding:14px 16px}.step-list,.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:320px}
-    button{font:inherit;cursor:pointer;border:1px solid transparent;border-radius:7px;padding:8px 10px;background:#e8ece2;color:#254c3b;white-space:nowrap}button:focus-visible{outline:3px solid #2c6045;outline-offset:2px}button:hover:not(:disabled){filter:brightness(.94)}button:disabled{color:#92988d;background:#efeee8;cursor:default}[hidden]{display:none!important}
-    .controls{grid-template-columns:repeat(2,minmax(0,1fr));width:160px}.close-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;padding:0;background:transparent;color:#d9e4d8}.close-button:hover{background:#e8ece2;color:#254c3b}.close-button:focus-visible{outline-color:#fffefa}.close-button svg{width:16px;height:16px}
-    .step-list button{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;padding-inline:6px;background:transparent;border-color:#dfe4d6;font-weight:400}.step-number{font-size:10px}.step-check{display:none;flex:0 0 10px;width:10px;font-size:10px;color:inherit}.step-list button.done{background:#f1f5ed;color:#788171}.step-list button.done:hover,.step-list button.done:focus-visible{color:#2c6045}.step-list button.done .step-check{display:inline}.step-list button[aria-current=&quot;step&quot;]{background:#fffefa;border-color:#2c6045;color:#2c6045;font-weight:600}
-    .instruction-row{cursor:grab;touch-action:none;user-select:none}.instruction-row:focus-visible{outline:2px solid #fffefa;outline-offset:-6px}.guide.is-dragging{box-shadow:0 4px 8px #14291c30,0 12px 32px #14291c30}.is-dragging .instruction-row{cursor:grabbing}
+    /* Shared by the panel, closed Shadow DOM controls, and static palette previews.
+   Unset/unknown themes keep the existing Chitosemidori palette. */
+:root,
+:host,
+[data-theme-preview] {
+  --scheme: light;
+  --paper: #f8f8f1;
+  --ink: #293d31;
+  --accent: #2c6045;
+  --muted: #788171;
+  --line: #dfe4d6;
+  --wash: #eaf0e3;
+  --focus: #a67d3a;
+  --surface: #ffffff8c;
+  --surface-raised: #ffffff;
+  --surface-outline: #9daf99;
+  --complete: #f1f5ed;
+  --settings: #eef1e8;
+  --control-border: #bccab5;
+  --empty-text: #949a8e;
+  --text-selection: #d5e4cc;
+  --action: #2c6045;
+  --on-action: #ffffff;
+  --action-hover: #1c4934;
+  --error: #972d28;
+  --error-surface: #fff0ed;
+  --error-border: #c3635b;
+  --badge-surface: #fbf1dc;
+  --badge-text: #785825;
+  --shine: #fff5d4;
+  --shine-edge: #b49b66;
+  --glow: #8fb795;
+  --shadow: #14291c;
+  --bar-surface: #fffefa;
+  --bar-text: #243e32;
+  --bar-border: #9eac9e;
+  --bar-heading: #254c3b;
+  --bar-on-heading: #fffefa;
+  --bar-heading-muted: #d9e4d8;
+  --bar-control: #e8ece2;
+  --disabled-surface: #efeee8;
+  --disabled-text: #92988d;
+  --pick-outline: #275e49;
+  --pick-fill: #2d6d49;
+  --pick-halo: #ffffff88;
+  --source-fill: #f5cc49;
+  --source-border: #b58116;
+  --source-pulse: #dcae40;
+  --source-shade: #19231f;
+  color-scheme: var(--scheme);
+}
+
+:root[data-theme=&quot;ginnezu&quot;],
+:host([data-theme=&quot;ginnezu&quot;]),
+[data-theme-preview=&quot;ginnezu&quot;] {
+  --paper: #f6f6f4;
+  --ink: #303433;
+  --accent: #4c5351;
+  --muted: #69716d;
+  --line: #d9ddda;
+  --wash: #e7eae7;
+  --focus: #656e69;
+  --surface: #ffffff8c;
+  --surface-raised: #ffffff;
+  --surface-outline: #a4ada7;
+  --complete: #ecefeb;
+  --settings: #ebeeea;
+  --control-border: #b5bdb7;
+  --empty-text: #7b837d;
+  --text-selection: #dce1dc;
+  --action: #4c5351;
+  --on-action: #ffffff;
+  --action-hover: #333b37;
+  --badge-surface: #e7eae7;
+  --badge-text: #4c5351;
+  --shine: #ffffff;
+  --shine-edge: #aab2ac;
+  --glow: #afbcb2;
+  --shadow: #202622;
+  --bar-surface: #fafbf9;
+  --bar-text: #303433;
+  --bar-border: #a6afa8;
+  --bar-heading: #414a44;
+  --bar-on-heading: #fafbf9;
+  --bar-heading-muted: #e1e6df;
+  --bar-control: #e7eae5;
+  --disabled-surface: #eceeeb;
+  --disabled-text: #858e87;
+  --pick-outline: #4c5351;
+  --pick-fill: #68766d;
+  --source-fill: #b9c5bc;
+  --source-border: #58695d;
+  --source-pulse: #829c8a;
+  --source-shade: #202622;
+}
+
+:root[data-theme=&quot;mizuasagi&quot;],
+:host([data-theme=&quot;mizuasagi&quot;]),
+[data-theme-preview=&quot;mizuasagi&quot;] {
+  --paper: #f0f7fc;
+  --ink: #243c50;
+  --accent: #276b98;
+  --muted: #586f83;
+  --line: #d1e1ee;
+  --wash: #deecf7;
+  --focus: #327fb2;
+  --surface: #ffffffa6;
+  --surface-raised: #ffffff;
+  --surface-outline: #8eb4d0;
+  --complete: #e2eff9;
+  --settings: #e4eff7;
+  --control-border: #a5bfd4;
+  --empty-text: #72899c;
+  --text-selection: #c5e0f3;
+  --action: #276b98;
+  --on-action: #ffffff;
+  --action-hover: #194e76;
+  --badge-surface: #deecf7;
+  --badge-text: #325f80;
+  --shine: #effaff;
+  --shine-edge: #8dbbdc;
+  --glow: #94c6e8;
+  --shadow: #152b40;
+  --bar-surface: #f7fbff;
+  --bar-text: #243c50;
+  --bar-border: #91aec6;
+  --bar-heading: #2c5879;
+  --bar-on-heading: #f5faff;
+  --bar-heading-muted: #d4e5f2;
+  --bar-control: #deeaf5;
+  --disabled-surface: #e7eef4;
+  --disabled-text: #8093a4;
+  --pick-outline: #276b98;
+  --pick-fill: #438fbe;
+  --source-fill: #91c9ef;
+  --source-border: #397ba9;
+  --source-pulse: #6baedb;
+  --source-shade: #182c3d;
+}
+
+:root[data-theme=&quot;aitetsu&quot;],
+:host([data-theme=&quot;aitetsu&quot;]),
+[data-theme-preview=&quot;aitetsu&quot;] {
+  --scheme: dark;
+  --paper: #1d2430;
+  --ink: #e5eaf0;
+  --accent: #a3c6d4;
+  --muted: #a2adb9;
+  --line: #3f4c5d;
+  --wash: #303d4e;
+  --focus: #b6cedb;
+  --surface: #293443;
+  --surface-raised: #303e50;
+  --surface-outline: #697e94;
+  --complete: #243a43;
+  --settings: #171e29;
+  --control-border: #596c80;
+  --empty-text: #98a4b2;
+  --text-selection: #3c566b;
+  --action: #a3c6d4;
+  --on-action: #192d3a;
+  --action-hover: #bdd9e3;
+  --error: #f2b7ad;
+  --error-surface: #452e35;
+  --error-border: #bd817d;
+  --badge-surface: #344450;
+  --badge-text: #c1d9e1;
+  --shine: #edfaff;
+  --shine-edge: #8ca9bb;
+  --glow: #90bed0;
+  --shadow: #000000;
+  --bar-surface: #202b3a;
+  --bar-text: #e5eaf0;
+  --bar-border: #697e94;
+  --bar-heading: #39485e;
+  --bar-on-heading: #edf1f6;
+  --bar-heading-muted: #ced9e3;
+  --bar-control: #344254;
+  --disabled-surface: #283140;
+  --disabled-text: #7f8c9e;
+  --pick-outline: #a3c6d4;
+  --pick-fill: #7ca6c2;
+  --pick-halo: #111b2988;
+  --source-fill: #a3c6d4;
+  --source-border: #759cae;
+  --source-pulse: #afcfdd;
+  --source-shade: #0e1521;
+}
+
+:root[data-theme=&quot;kurocha&quot;],
+:host([data-theme=&quot;kurocha&quot;]),
+[data-theme-preview=&quot;kurocha&quot;] {
+  --scheme: dark;
+  --paper: #261e1a;
+  --ink: #f0e6da;
+  --accent: #dab999;
+  --muted: #b9a99b;
+  --line: #59483c;
+  --wash: #44352b;
+  --focus: #e4c8aa;
+  --surface: #352a23;
+  --surface-raised: #413229;
+  --surface-outline: #92765f;
+  --complete: #3f3025;
+  --settings: #1f1814;
+  --control-border: #826a56;
+  --empty-text: #b09c8b;
+  --text-selection: #654b37;
+  --action: #dab999;
+  --on-action: #322318;
+  --action-hover: #e8cfb5;
+  --error: #f4b5aa;
+  --error-surface: #4b2e29;
+  --error-border: #c38377;
+  --badge-surface: #51402f;
+  --badge-text: #e5c9a5;
+  --shine: #fff1d9;
+  --shine-edge: #c2a17b;
+  --glow: #c7a27c;
+  --shadow: #100b08;
+  --bar-surface: #2c221c;
+  --bar-text: #f0e6da;
+  --bar-border: #92765f;
+  --bar-heading: #4d382b;
+  --bar-on-heading: #f6eadc;
+  --bar-heading-muted: #e0cdbb;
+  --bar-control: #49372b;
+  --disabled-surface: #362a22;
+  --disabled-text: #9e8a79;
+  --pick-outline: #dab999;
+  --pick-fill: #c6986d;
+  --pick-halo: #1a120d88;
+  --source-fill: #dab999;
+  --source-border: #b58e67;
+  --source-pulse: #e6c8a9;
+  --source-shade: #160f0a;
+}
+
+:root[data-theme=&quot;shikon&quot;],
+:host([data-theme=&quot;shikon&quot;]),
+[data-theme-preview=&quot;shikon&quot;] {
+  --scheme: dark;
+  --paper: #251d2b;
+  --ink: #eee5f2;
+  --accent: #d0afd9;
+  --muted: #b7a6bf;
+  --line: #54415f;
+  --wash: #42314d;
+  --focus: #dfc4e8;
+  --surface: #34283d;
+  --surface-raised: #40304b;
+  --surface-outline: #8e6f9e;
+  --complete: #40304b;
+  --settings: #1c1522;
+  --control-border: #80628f;
+  --empty-text: #a994b4;
+  --text-selection: #624571;
+  --action: #d0afd9;
+  --on-action: #302037;
+  --action-hover: #e1c9e8;
+  --error: #f4b5bd;
+  --error-surface: #492b3c;
+  --error-border: #c18393;
+  --badge-surface: #503956;
+  --badge-text: #e2c6e7;
+  --shine: #fbeeff;
+  --shine-edge: #b699c6;
+  --glow: #bc95cd;
+  --shadow: #100a16;
+  --bar-surface: #2c2134;
+  --bar-text: #eee5f2;
+  --bar-border: #8e6f9e;
+  --bar-heading: #50365c;
+  --bar-on-heading: #f4eaf8;
+  --bar-heading-muted: #dfcce7;
+  --bar-control: #483251;
+  --disabled-surface: #35283d;
+  --disabled-text: #9882a5;
+  --pick-outline: #d0afd9;
+  --pick-fill: #b88ec9;
+  --pick-halo: #160e1d88;
+  --source-fill: #d0afd9;
+  --source-border: #a981bc;
+  --source-pulse: #dec0e8;
+  --source-shade: #130b1a;
+}
+
+    *{box-sizing:border-box}
+    .outline{position:fixed;pointer-events:none;border:2px solid var(--pick-outline);background:color-mix(in srgb,var(--pick-fill) 8%,transparent);border-radius:5px;box-shadow:0 0 0 3px var(--pick-halo);transition:top 70ms,left 70ms,width 70ms,height 70ms}
+    .guide{color-scheme:var(--scheme);position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:640px;max-width:calc(100vw - 32px);pointer-events:auto;background:var(--bar-surface);color:var(--bar-text);border:1px solid var(--bar-border);border-radius:14px;box-shadow:0 2px 5px color-mix(in srgb,var(--shadow) 14%,transparent),0 8px 24px color-mix(in srgb,var(--shadow) 14%,transparent);font:13px/1.5 &#39;Hiragino Kaku Gothic ProN&#39;,&#39;Yu Gothic&#39;,sans-serif;animation:picker-enter 650ms cubic-bezier(.22,.61,.36,1)}
+    .instruction-row{display:flex;align-items:center;gap:12px;padding:7px 16px;min-height:56px;background:var(--bar-heading);color:var(--bar-on-heading);border-radius:13px 13px 0 0}.instruction{flex:1;min-width:0}strong{display:block;font-size:15px;line-height:1.5}.hint{display:block;font-size:11px;color:var(--bar-heading-muted);line-height:1.5}.toolbar{display:flex;justify-content:space-between;gap:12px;padding:14px 16px}.step-list,.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:320px}
+    button{font:inherit;cursor:pointer;border:1px solid transparent;border-radius:7px;padding:8px 10px;background:var(--bar-control);color:var(--bar-text);white-space:nowrap}button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}button:hover:not(:disabled){filter:brightness(.94)}button:disabled{color:var(--disabled-text);background:var(--disabled-surface);cursor:default}[hidden]{display:none!important}
+    .controls{grid-template-columns:repeat(2,minmax(0,1fr));width:160px}.close-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;padding:0;background:transparent;color:var(--bar-heading-muted)}.close-button:hover{background:var(--bar-control);color:var(--bar-text)}.close-button:focus-visible{outline-color:var(--bar-on-heading)}.close-button svg{width:16px;height:16px}
+    .step-list button{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;padding-inline:6px;background:transparent;border-color:var(--line);font-weight:400}.step-number{font-size:10px}.step-check{display:none;flex:0 0 10px;width:10px;font-size:10px;color:inherit}.step-list button.done{background:var(--complete);color:var(--muted)}.step-list button.done:hover,.step-list button.done:focus-visible{color:var(--accent)}.step-list button.done .step-check{display:inline}.step-list button[aria-current=&quot;step&quot;]{background:var(--bar-surface);border-color:var(--accent);color:var(--accent);font-weight:600}
+    .instruction-row{cursor:grab;touch-action:none;user-select:none}.instruction-row:focus-visible{outline:2px solid var(--bar-on-heading);outline-offset:-6px}.guide.is-dragging{box-shadow:0 4px 8px color-mix(in srgb,var(--shadow) 19%,transparent),0 12px 32px color-mix(in srgb,var(--shadow) 19%,transparent)}.is-dragging .instruction-row{cursor:grabbing}
     @keyframes picker-enter{from{transform:translate(-50%,12px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
     @media(max-width:560px){.toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.step-list,.controls{width:100%}}
     @media(max-width:340px){.instruction-row,.toolbar{padding-inline:12px}strong{font-size:13px}.hint{font-size:10px}button{font-size:12px;padding-inline:6px}.step-list button{padding-inline:3px}}
@@ -2667,7 +3317,7 @@ main {
 
 html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&lt;/head&gt;&lt;body&gt;
 &lt;div class=&quot;guide&quot; role=&quot;region&quot; aria-label=&quot;取得バーの静的見本&quot;&gt;&lt;div class=&quot;instruction-row&quot;&gt;&lt;div class=&quot;instruction&quot;&gt;&lt;strong&gt;ページ上の文字をクリック&lt;/strong&gt;&lt;span class=&quot;hint&quot;&gt;タイトルにする文字を選択してください&lt;/span&gt;&lt;/div&gt;&lt;button class=&quot;close-button&quot; title=&quot;選択モードを閉じる（Esc）&quot; aria-label=&quot;選択モードを閉じる&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;m6 6 12 12M18 6 6 18&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;/div&gt;
-&lt;div class=&quot;toolbar&quot;&gt;&lt;div class=&quot;step-list&quot;&gt;&lt;button aria-current=&quot;step&quot;&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;タイトル&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;button&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;場所&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;button&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;詳細&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;controls&quot;&gt;&lt;button disabled&gt;戻る&lt;/button&gt;&lt;button&gt;スキップ&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"
+&lt;div class=&quot;toolbar&quot;&gt;&lt;div class=&quot;step-list&quot;&gt;&lt;button aria-current=&quot;step&quot;&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;タイトル&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;button&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;場所&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;button&gt;&lt;span class=&quot;step-number&quot; aria-hidden=&quot;true&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;step-label&quot;&gt;詳細&lt;/span&gt;&lt;span class=&quot;step-check&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;controls&quot;&gt;&lt;button disabled&gt;戻る&lt;/button&gt;&lt;button&gt;スキップ&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;script&gt;window.addEventListener(&#39;message&#39;, (event) =&gt; { if(event.source === parent &amp;&amp; [&quot;chitosemidori&quot;,&quot;ginnezu&quot;,&quot;mizuasagi&quot;,&quot;aitetsu&quot;,&quot;kurocha&quot;,&quot;shikon&quot;].includes(event.data?.theme)) document.documentElement.dataset.theme = event.data.theme; });&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"
         ></iframe>
         <p class="small-note" style="margin-top: 12px">
           実装の操作バーCSSを使用した静的見本。幅640px、下24px。560px以下では操作列を2行にする。
@@ -2811,7 +3461,7 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
         </p>
         <div class="code-top">
           <span class="code-label"
-            >sche10le-design-system.md · 268行 · UTF-8</span
+            >sche10le-design-system.md · 287行 · UTF-8</span
           >
           <div class="code-actions">
             <button class="control" id="copy-markdown">コピー</button
@@ -2825,7 +3475,7 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
           aria-label="Markdown形式のデザインシステム全文"
         ><code id="markdown-source" class="language-markdown"># Sche10le デザインシステム
 
-対象：拡張機能 0.4.1 / 記録日：2026-10-28
+対象：拡張機能 0.4.1の次期開発版（伝統色テーマ対応） / 記録日：2026-10-28
 
 この資料は、現在のUI・アイコン・ストア素材に実装されているデザインを記録する。数値は現行実装の値であり、すべてを共通トークン化したものではない。「方針」は今後の追加・修正時に守る判断基準を示す。
 
@@ -2858,31 +3508,31 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
 
 ## 3. 色
 
-### 共通トークン（lib/theme.css）
+### 基本トークン（lib/theme.css・標準テーマの値）
 
 | トークン | 値      | 役割                               |
 | -------- | ------- | ---------------------------------- |
 | --paper  | #f8f8f1 | 基本背景。純白より柔らかい紙色     |
 | --ink    | #293d31 | 主文・見出し                       |
-| --green  | #2c6045 | 主操作・ブランド・操作中の枠や文字 |
+| --accent  | #2c6045 | 主操作・ブランド・操作中の枠や文字 |
 | --muted  | #788171 | 補足・出典・メタ情報               |
 | --line   | #dfe4d6 | 罫線・カードの通常境界             |
 | --wash   | #eaf0e3 | 補助操作のホバー・操作案内の背景   |
-| --ochre  | #a67d3a | ロゴの点・フォーカスのアクセント   |
+| --focus  | #a67d3a | ロゴの点・フォーカスのアクセント   |
 
-### 状態色・専用色（各実装内の値）
+### 状態色・専用色（標準テーマの値）
 
 | 用途                       | 背景      | 文字・境界など               |
 | -------------------------- | --------- | ---------------------------- |
 | 候補カード                 | #ffffff8c | 境界 --line                  |
-| 初回スキャン・再試行       | #ffffff8c | 境界 --line、文字 --green、影なし |
+| 初回スキャン・再試行       | #ffffff8c | 境界 --line、文字 --accent、影なし |
 | 展開中の候補               | #ffffff8c | 境界 #9daf99、薄い影         |
-| 内容の選択中の項目         | #ffffff8c | 境界 --green                 |
+| 内容の選択中の項目         | #ffffff8c | 境界 --accent                 |
 | 確定した日程・取得済み項目 | #f1f5ed   | 薄い境界、完了チェック       |
 | AI補完ラベル               | #fbf1dc   | 文字 #785825                 |
 | 設定画面                   | #eef1e8   | 設定項目の背景 --paper       |
 | 書式エラー                 | #fff0ed   | 文字 #972d28、境界 #c3635b   |
-| 一般エラー通知             | #f7ece3   | 文字 #984d37                 |
+| 一般エラー通知             | #fff0ed   | 文字 #972d28                 |
 | 主操作のホバー             | #1c4934   | 白文字                       |
 | 完了ラベルの光             | #fff5d4   | グラデーションの縁 #b49b66   |
 | プロモーション背景         | #214b37   | 紙色の文字                   |
@@ -2901,6 +3551,25 @@ html,body {margin:0;background:#e9ede4} .guide {animation:none} &lt;/style&gt;&l
 補助アイコンや登録パターンには、一時的なホバー面として--washを使う。完了を示す#f1f5edの結果面とは役割を分け、淡緑だけで完了を判断させずチェックや確定内容を併せる。黄土系はロゴの点・キーボードフォーカス・元文字列の強調などに使い、選択中の項目の塗りには使わない。AI補完ラベルは出典の表示であり、選択状態を表さない。
 
 深緑はブランドや取得バー上段の案内帯にも使う。案内帯は下段の白い操作領域と分け、全体を一つの大きなボタンのように見せない。色だけで役割を説明せず、形・位置・ラベル・枠・太字・チェックを組み合わせる。エラーには説明・枠・再試行などの操作を併せる。
+
+### 伝統色テーマ
+
+テーマは色名から配色全体を組み立てる。名前だけを置き換えず、文字・面・境界・主操作・完了・エラー・光の色まで揃える。色名と色調の着想は[和色大辞典](https://www.colordic.org/w)を参考にし、画面の読みやすさに合わせて濃淡を調整した。下記は特定の染料や印刷色の厳密な再現を意味しない。
+
+| 表示名 | 内部ID | 配色の方向 |
+| --- | --- | --- |
+| 千歳緑（ちとせみどり） | `chitosemidori` | 標準。従来の紙色と深緑 |
+| 銀鼠（ぎんねず） | `ginnezu` | 明るい灰色と控えめな墨色 |
+| 水浅葱（みずあさぎ） | `mizuasagi` | 青寄りの淡い水色と、文字・操作を担う落ち着いた青 |
+| 藍鉄（あいてつ） | `aitetsu` | 藍を含む暗い面、柔らかな明色の文字と主操作 |
+| 黒茶（くろちゃ） | `kurocha` | 濃い茶色の面に、生成り色の文字と主操作 |
+| 紫紺（しこん） | `shikon` | 深い紫の面に、淡い藤色の文字と主操作 |
+
+設定の最後に、読み仮名と配色見本を添えた2列のラジオ選択を配置する。クリックまたは矢印キーで即時反映し、端末に自動保存する。現在の選択は枠とチェックで示し、色見本は装飾として扱う。保存失敗時は表示を保ち、理由と「再試行」を出す。テーマ変更では日程や取得値、取得バーの手順・位置をリセットしない。サイドパネル、取得バー、元文字列の強調に同じテーマを適用し、元ページ自体や配布アイコンは変更しない。
+
+CSSは色名ではなく役割を使う。`--accent`は文字・現在地の枠、`--action`と`--on-action`は主操作の面と文字、`--surface`は操作対象の面、`--complete`は完了の面、`--bar-*`は取得バー、`--error*`はエラー、`--shine*`は完了の光を表す。全テーマを`lib/theme.css`にまとめ、閉じたShadow DOMにも同じ定義を渡す。保存するのは`lib/themes.js`に定義したIDだけで、不明・未設定の場合は千歳緑に戻す。OSへの自動追従・任意色の編集は設けない。
+
+本資料中の「白背景」「深緑」「淡緑」および色の数値は、特記のない限り千歳緑の例を指す。ほかのテーマでは同じ役割のトークンに置き換える。ダークテーマでは、操作中を少し明るい面と枠・太字、完了を控えめな面とチェックで示す。主操作・取得バーの文字と背景のコントラストを確認し、暗い背景の上に白い入力欄や薄すぎるエラー文を残さない。
 
 ## 4. タイポグラフィ
 
@@ -3067,7 +3736,7 @@ UIと同じ紙色・深緑・Georgiaのワードマークを使用する。背�
 
 | 内容                               | ソース・素材                                               |
 | ---------------------------------- | ---------------------------------------------------------- |
-| 共通色                             | lib/theme.css                                              |
+| 共通色・テーマ                     | lib/theme.css / lib/themes.js                              |
 | パネルの部品・レスポンシブ         | entrypoints/sidepanel/style.css / index.html               |
 | 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |
 | 取得バー                           | lib/picker.js                                              |
@@ -3097,12 +3766,12 @@ HTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取�
       <footer class="document-footer">
         <span>Sche10le · デザインシステム / 実装 v0.4.1</span
         ><span
-          >参照コミット 0af420f · 生成元 docs/design/design-system.md</span
+          >参照コミット 35727e6 · 生成元 docs/design/design-system.md</span
         >
       </footer>
     </main>
     <script id="markdown-data" type="application/json">
-      "# Sche10le デザインシステム\n\n対象：拡張機能 0.4.1 / 記録日：2026-10-28\n\nこの資料は、現在のUI・アイコン・ストア素材に実装されているデザインを記録する。数値は現行実装の値であり、すべてを共通トークン化したものではない。「方針」は今後の追加・修正時に守る判断基準を示す。\n\n## 1. デザインの軸\n\nページの日程を見つけ、登録方法を選び、必要な文字をページから取得してGoogleカレンダーへ渡す。入力作業と往復を減らし、操作の連続性を優先する。\n\n- 静かな道具：アイボリーと深緑、細い罫線、余白で区切る。装飾や説明を常設しすぎない。\n- その場で理解できる：候補に触れると登録パターンが開く。対象の日時と取得先の項目を視覚的につなぐ。\n- 次の一手を明確にする：濃い緑の大きな面は主操作に使う。サイドパネルの選択中は白背景で示し、内容の現在地には深緑の枠と太字を添える。確定・取得済みは淡緑とチェックで区別する。ページ上の取得バーも選択中は白背景・深緑の枠・太字、完了は淡緑と末尾のチェックにそろえる。\n- 軽快さを守る：WXT・バニラJSを基本とし、描画やアニメーションのために実行時依存や外部フォントを追加しない。\n\n## 2. ブランドとアイコン\n\n表記は製品名「Sche10le」、ワードマークは「sche10le.」。数字の10だけをイタリックにし、末尾のピリオドを黄土色にする。\n\n| 要素                   | 現行値                                                        |\n| ---------------------- | ------------------------------------------------------------- |\n| フッターのワードマーク | Georgia → Times New Roman → serif、600、20px / 1、字間 -1px |\n| マークとロゴの間隔     | 7px                                                          |\n| フッターのマーク       | 配布用32px PNGを24×24pxで表示                                        |\n| PNG生成用マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |\n| PNG生成用マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |\n\nマークは上部の短い横線とセリフ体の「10」で構成する。以前のリング付きカレンダー風アイコンは使用しない。縦横比を変形したり、数字を別書体に差し替えたりしない。\n\n配布用PNGは16・32・48・128px。マークの30:32の比率を維持し、高さをキャンバスの87.5%にして中央配置する。背景は透明。128px版はストアアイコンにも使用する。\n\n`npm run icons` はサイドパネルCSSに保持した30×32px・角丸7pxのマーク原稿から描画する。フッターは生成済みPNGを使用する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。\n\n## 3. 色\n\n### 共通トークン（lib/theme.css）\n\n| トークン | 値      | 役割                               |\n| -------- | ------- | ---------------------------------- |\n| --paper  | #f8f8f1 | 基本背景。純白より柔らかい紙色     |\n| --ink    | #293d31 | 主文・見出し                       |\n| --green  | #2c6045 | 主操作・ブランド・操作中の枠や文字 |\n| --muted  | #788171 | 補足・出典・メタ情報               |\n| --line   | #dfe4d6 | 罫線・カードの通常境界             |\n| --wash   | #eaf0e3 | 補助操作のホバー・操作案内の背景   |\n| --ochre  | #a67d3a | ロゴの点・フォーカスのアクセント   |\n\n### 状態色・専用色（各実装内の値）\n\n| 用途                       | 背景      | 文字・境界など               |\n| -------------------------- | --------- | ---------------------------- |\n| 候補カード                 | #ffffff8c | 境界 --line                  |\n| 初回スキャン・再試行       | #ffffff8c | 境界 --line、文字 --green、影なし |\n| 展開中の候補               | #ffffff8c | 境界 #9daf99、薄い影         |\n| 内容の選択中の項目         | #ffffff8c | 境界 --green                 |\n| 確定した日程・取得済み項目 | #f1f5ed   | 薄い境界、完了チェック       |\n| AI補完ラベル               | #fbf1dc   | 文字 #785825                 |\n| 設定画面                   | #eef1e8   | 設定項目の背景 --paper       |\n| 書式エラー                 | #fff0ed   | 文字 #972d28、境界 #c3635b   |\n| 一般エラー通知             | #f7ece3   | 文字 #984d37                 |\n| 主操作のホバー             | #1c4934   | 白文字                       |\n| 完了ラベルの光             | #fff5d4   | グラデーションの縁 #b49b66   |\n| プロモーション背景         | #214b37   | 紙色の文字                   |\n| プロモーションのアクセント | —         | #d2b477、補足 #d1dfcb        |\n\n### 操作と状態の配色方針\n\n| 役割 | 表現 | 例・判断基準 |\n| ---- | ---- | ------------ |\n| 最後の主操作 | 深緑の塗り＋白文字 | 操作ボタンの中では「Googleカレンダーで開く」を最も強くする |\n| 初回操作・再試行 | 白系の背景＋細い枠、影なし | スキャン。ホバー時は白背景＋深緑の枠で応答する |\n| 選択中・操作中 | 白系の背景＋対象を示す枠や太字 | 日程は展開で、内容項目は深緑の枠と項目名の太字で現在地を示す |\n| 選択・取得・スキップ済み | 淡緑（#f1f5ed）の結果面＋チェック | 再操作できる項目でも、深緑の塗りで主操作のようには見せない |\n| やり直しなどの補助操作 | 背景なしの緑文字、ホバー時に下線 | 再スキャン・選び直す。文字の見た目を軽くしてもクリック領域は保つ |\n\n補助アイコンや登録パターンには、一時的なホバー面として--washを使う。完了を示す#f1f5edの結果面とは役割を分け、淡緑だけで完了を判断させずチェックや確定内容を併せる。黄土系はロゴの点・キーボードフォーカス・元文字列の強調などに使い、選択中の項目の塗りには使わない。AI補完ラベルは出典の表示であり、選択状態を表さない。\n\n深緑はブランドや取得バー上段の案内帯にも使う。案内帯は下段の白い操作領域と分け、全体を一つの大きなボタンのように見せない。色だけで役割を説明せず、形・位置・ラベル・枠・太字・チェックを組み合わせる。エラーには説明・枠・再試行などの操作を併せる。\n\n## 4. タイポグラフィ\n\n外部フォントを読み込まない。日本語はHiragino Kaku Gothic ProN → Yu Gothic → Meiryo → sans-serif、ブランドと日付の数字はGeorgia、時刻などの英数字はAvenir Next → Avenir → sans-serifを基本とする。細部のフォールバックは各CSSを参照する。\n\n| 用途                     | 現行値                          |\n| ------------------------ | ------------------------------- |\n| UIの基本                 | 13px / 1.65                     |\n| 手順のセクション見出し   | 12px・500（操作中は600）         |\n| 設定画面の見出し         | 18px                            |\n| 日付バッジの日           | Georgia 28px / 0.95、字間 -1px  |\n| 時間帯                   | Avenir系 14px / 1.7、字間 0.4px |\n| 取得した内容             | 12px / 1.7                      |\n| 主操作ボタン             | 15px・600 / 1.5                 |\n| 再スキャン・登録パターン | 11px                            |\n| 内容の項目名・取得と保存の補足文 | 11px（項目番号は10px）          |\n| その他の出典・小ラベル   | 9〜10px                         |\n| タイトル書式入力         | monospace 12px / 1.6            |\n\n小さなメタ情報のサイズは現状値であり、新しい本文に9pxを推奨するものではない。--mutedと紙色の組み合わせは通常サイズの文字に対する4.5:1を満たさないため、重要な説明には--inkを優先する。コントラスト適合を色だけで一律に宣言しない。\n\n## 5. 余白・形・レスポンシブ\n\n厳密な8pxグリッドではない。4・6・8・10・12・16・18・20・24・32pxを主に使い、密度と役割に合わせる。\n\n| 場所               | 現行値                                |\n| ------------------ | ------------------------------------- |\n| サイドパネル最小幅 | 280px                                 |\n| ヘッダー           | 設けない              |\n| 本文               | 左右24px、下はフッターの実高＋16px |\n| 候補の間隔         | 10px                                  |\n| 候補見出し         | 上下15px・左右13px                    |\n| 取得結果の行       | パディング12px、行間4px、角丸8px      |\n| 候補・設定項目     | 角丸12px                              |\n| 主操作             | 最小高さ56px、角丸10px、余白13×15px   |\n| スキャン操作       | 最小高さ36px。初回・再試行は角丸7pxのボタン、再スキャンはリンク風 |\n| 固定フッター       | 上下10px・左右24px、下段は最低34px              |\n| 320px以下          | 本文・フッター左右16px  |\n\n影は境界を補う程度に使う。通常カードは細い罫線を主体とし、全要素を浮いたカードにしない。長い本文やURLは折り返す。日時・登録パターンの主要ラベルは狭い幅でも判別できるようにする。\n\n初回スキャン・再試行のボタンは、候補カードと同じ白系背景（#ffffff8c）とlineの細い枠を使い、影は付けない。ホバー時は白背景とgreenの枠で操作対象を示す。完了を表す淡緑と区別し、完了後の再スキャンは引き続き背景なしのリンク風にする。\n\n## 6. サイドパネルの部品と状態\n\n### 候補一覧\n\n日程カードは展開中も通常の白背景を維持し、登録パターンの展開と控えめな枠・影で操作対象を示す。日程の確定後に淡緑の背景（#f1f5ed）へ切り替える。淡緑は内容項目の取得・スキップ完了にも使い、完了した結果を示す色に統一する。日程カードはホバーまたはフォーカスに応じて自動で開閉し、クリック・Enterによる手動の開閉切り替えは行わない。マウス由来のフォーカスが残っていても、ポインターがカード全体から離れれば閉じる。キーボードでは日程の案内からTabで登録方法へ進め、カード内にフォーカスがある間は開いたままにする。タッチではタップでフォーカスして開き、別の候補や操作へ移ると閉じる。閉じたときは元ページの強調表示も解除する。日程の案内はボタンではなく、フォーカス可能なグループとして表示する。\n\n日付バッジ → 日程名・時間帯 → 出典の順に読む。ホバーとキーボードフォーカスで登録パターンを展開し、時間どおり・移動込み・終日を選べる。選択後は該当候補と取得内容に集中させる。「選び直す」で開いた候補と選択状態を解除する。\n\nローカルAIの候補だけに10pxの「AI」ラベルを置く（#fbf1dc背景・#785825文字、余白1×5px、角丸4px）。本文・構造化データの通常抽出にはラベルも空の出典行も置かない。詳しい出典と原文引用は日程へのホバーで表示し、スクリーンリーダーには抽出元を読み上げる。年を補った注記は日程の下に残す。\n\n再スキャンは文字だけのリンク風ボタン。「選び直す」と同じ緑・11pxの通常ウェイトで、枠・背景・影を付けず、ホバー時に下線を表示する。実装はbuttonのまま、最小高さ36pxとキーボードのフォーカス表示を保つ。初回の「スキャン」と失敗後の「再試行」は白系の背景＋細い枠のボタンにする。実行中の「スキャン中…」は開始時のリンク風／ボタンの見た目を保って無効化し、先頭に11px・3秒で1回転のスピナーを表示する。待機中はスピナーを表示せず、動きを減らす設定では回転を止める。候補カードと同じ面積・外観にはしない。登場順／日時順は見出しのEnd側の控えめなselectで、独立した大きな設定行にしない。並び順は保存する。\n\n### スキャンの状態\n\n未許可のページではボタンと対象ページの情報帯を隠し、紙色と淡い緑の操作案内だけを表示する。案内タイトルは置かず、説明文の「Sche10le のアイコン」と「パズルのアイコン」の直後にそれぞれ画像を添える。画像は隣接する文章と同じ意味なので装飾として扱い、名称と離れて改行しない。エラー色は使わない。未スキャン・実行中は候補欄を空にし、日程の見出し・件数・並び順も隠す。完了後は0件でも見出し・件数・並び順を表示する。アクセス可能なら「スキャン」、実行中は無効な「スキャン中…」、完了後は「再スキャン」。対象外は専用の説明、一時的な失敗はエラー説明と「再試行」にする。0件の案内はスキャン完了時だけ表示する。\n\n### AI補完の状態\n\n「AIで日程を補完しています。表示されている候補は選べます。」の文頭に11pxのスピナーを置く。3秒でゆっくり1回転し、完了・失敗・無効化・ページ変更時に停止する。prefers-reduced-motionでは静止表示。状態はaria-liveで通知する。文中の「AIで日程を補完」などはホバー時だけ1pxの下線を表示し、キーボード操作時は共通のフォーカス枠を残す。押すと設定のAI項目へ移動してチェックボックスにフォーカスする。閉じると元のリンクへ戻る。無効化でリンクが非表示になった場合はフッターの設定ボタンへ戻る。\n\n### 操作のセクション\n\n「スキャン」「日時」「内容」の固定見出しで区切り、番号や進捗バーは置かない。見出しは12px・500・muted、操作中だけ600・greenとし、完了した見出しに10pxのチェックを付ける。チェック用の幅12pxは未完了時も確保し、位置を動かさない。未完了から完了へ切り替わったときだけ、見出しの文字内を淡い白金色の光が左から右へ550msで一度通る。文字の位置・大きさやチェックは動かさず、終了後は通常色に戻す。再描画・設定画面からの復帰では繰り返さず、prefers-reduced-motionでは省略する。スキャン結果はドメイン名と件数、日時の結果は選択済みカード、内容の結果は各取得欄に残す。完了のチェックはその工程を終えた意味であり、カレンダーへの保存完了は表さない。\n\nスキャン欄は見出しとページ情報を左、スキャンボタンを右に置く2列のグリッドとする。件数はスキャン完了後だけページ名の横に表示し、日時欄には重複させない。「スキャン完了」の文字は読み上げ用に残し、画面では見出しのチェックで示す。日時の見出しはスキャン後から、内容の見出しと取得欄は日時選択後から表示する。未許可のページは従来のアイコン案内だけとする。\n\n「選び直す」で日時が操作中へ戻り、取得欄を選び直すと内容のチェックが外れる。内容の項目をすべて選択またはスキップしたときは内容にもチェックを付ける。中断時も内容が現在の工程であり、再開操作を残す。読み上げには見出しの状態とaria-currentを使う。\n\n### 取得中・取得済み\n\n選択後の予定情報は選択済みカードに集約する。選択済みカードは展開できないため右端の矢印を非表示にし、「選び直す」で一覧に戻ると矢印を再表示する。確定後は背景を淡緑（#f1f5ed）にし、枠は通常の薄い境界（line）を維持する。日時の確定は見出しのチェックと選択したカードだけを残す構成で示す。カードの元の日付・時刻の下に12pxの緑文字で「移動込み 13:30–16:30」のように登録内容を表示し、区切り線と9pxの上余白を置く。終日では「終日」とし、登録日が元の表示と異なる場合は日付も補う。時間付きの登録が日をまたぐ場合は両端の日付・時刻を明記し、仮の終了時刻の注記も維持する。カード下の「YOUR PLAN」や重複した日時は設けず、選択後も「日時」の見出しと選択済みカードを残す。Start側の見出しとチェック用の領域を固定し、End側（日本語UIでは右端）の操作は選択前の並び順から選択後の「選び直す」に切り替える。ヘッダの最小高さは30pxを維持する。カード下には取得結果だけを置く。登録内容に「登録：」という接頭辞は付けない。\n\nサイドパネルはタイトル・場所・詳細の取得結果を表示する。項目名は11px、項目番号は10px、元ページURLについての補足文と主操作ボタン下の補足文は11pxとし、取得本文の12pxとの階層を保つ。行全体がクリック対象で、再選択できる。現在の対象は白背景（#ffffff8c）・深緑の枠（green）と項目名の太字（600）で示す。「選択中」のラベルは設けず、通常の項目名と取得本文は400のままにする。読み上げ向けのaria-currentと操作案内は維持する。ホバー／フォーカス時に編集アイコンを出す。取得・スキップで通過した項目は日程の選択済みカードと同じ淡緑の背景（#f1f5ed）と全周の薄い枠（line）にし、影は付けない。ラベル横に10pxのチェックを残し、文字だけに工程見出しと同じ550msの光を一度通す。欄全体の発光や一時的なチェックは使わない。完了はdraft.stepより前の項目として導出し、選び直した手順以降はチェックを外す。再描画では光を繰り返さず、動きを減らす設定ではチェックのみ。読み上げ用の説明にも「設定済み」を添える。\n\nタイトルの初期値はページタイトル、場所は空欄、詳細はページURL。詳細の取得後も元ページURLを末尾に空行で残す。書式を適用したタイトルと元の取得文字列を分けて保持する。取得手順を進める操作はページ下部に集約する。\n\n### 主操作\n\n「Googleカレンダーで開く」の隣に、40px四方・20pxのダウンロードSVGを持つ補助ボタンを8px間隔で中央揃えに配置する。背景は透明、枠はline、アイコンはgreen。ホバーでwash背景とgreen枠を付ける。title/aria-labelは「予定をダウンロード（.ics）」。狭い幅では主ボタンの文字を折り返し、両方の操作を表示する。\n\n「Googleカレンダーで開く」をサイドパネル下部に固定する。文字は15px・600、最小高さ56px。取得途中でも進める。Googleカレンダー側で確認・保存するため、拡張内で保存完了を表示しない。\n\n### 設定\n\n移動時間欄の「次に選ぶ移動込みに適用」という補足は表示しない。タイトル書式の変数ボタンは、ホバーすると実際に挿入する文字列（`{title}`、`{from:HHmm}`、`{to:HHmm}`、`{date:YYYY-MM-DD}`）をブラウザ標準のツールチップで表示する。\n\n設定を開くとメインの一覧とフッターを隠し、#eef1e8の専用面に切り替える。移動時間・タイトル書式・AI補完はすべて自動保存。個別の保存ボタンは設けない。有効な書式を即座にプレビューし、不正な書式は赤いエラー表示にする。保存失敗時には該当項目の「再試行」を表示する。\n\n### フッターとブランド\n\nBraveと判定でき、閉じるAPIに対応している場合だけ、設定の右に4pxの間隔で18pxの線画の×を表示する。クリック領域は設定と同じ36px以上、色とホバー面も共通とする。歯車と×はともに図形の中心をviewBoxの中央に置いたSVGとし、フォントの字形やベースラインによる上下のずれを防ぐ。titleとaria-labelは「サイドバーを閉じる」。閉じる失敗時はフッター内に赤字の通知を表示し、選択内容を維持して再試行できる。Chromeや判定失敗・API非対応の環境には追加しない。\n\n左に24pxのアイコンと20pxのロゴ、右に20pxのSVG歯車アイコンだけの設定ボタンを1行で置く。操作領域は36px以上とし、ホバー時のtitleと読み上げ用のaria-labelに「設定」を指定する。ロゴにリンクや選択解除の動作は持たせない。予定選択中だけ、この行の12px上に主操作エリアを置く。本文下余白とルートのscroll-padding-bottomはResizeObserverで計測したフッター高＋16pxとし、取得結果行のscroll-margin-bottomは16px。設定表示中はフッターを隠すが、直前の高さを保持して復帰時のスクロールを安定させる。\n\n主操作ボタン下の補足文は、取得途中は「情報の取得は途中でもOK。保存は Google カレンダーで。」、全項目の取得・スキップが完了したら「Google カレンダーで修正してから保存できます。」に切り替える。完了への切り替わりから650ms後、ボタンの表面を柔らかい光が1300msかけて一度流れ、輪郭にも緑の光を出して消す。光が消えてから10秒の間隔で追加2回まで繰り返す。項目ラベルの光と時間をずらし、ボタンの位置・大きさ・フォーカスは動かさない。再描画では回数や待機時間をリセットせず、選び直し・設定表示・カレンダーを開く・ICS取得では中止する。動きを減らす設定では補足文だけを切り替える。\n\n### 設定画面のことば\n\n設定画面の最下部にだけ小さな緑の点＋日本語訳を置く。通常の候補一覧・取得中には表示しない。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。\n\n## 7. ページ上の取得オーバーレイ\n\nページと独立したclosed Shadow DOMに描画する。ページ本文のCSSで形や操作が崩れないようにする。\n\n- 操作バー：幅640px、最大幅は画面幅−32px、下24px、上段の余白7×16px・最小高さ56px、下段の余白は上下14px・左右16px、角丸14px。開始・再開時のみ12px下から650msでフェードインし、日程確定・選び直し・再開のいずれも待機を入れない。見出しの光とは並行して動き、cubic-bezier(.22,.61,.36,1)で静かに止まる。発光・拡大・跳ね返りはなく、項目の切り替えでは再生しない。動きを減らす設定では即時表示する。\n- 上段：「ページ上の文字をクリック」と対象項目、右端に閉じるための「×」。×は16pxのSVGとし、32pxの操作領域を確保する。背景は透明、ホバー時だけ淡い面を表示する。ツールチップは「選択モードを閉じる（Esc）」、読み上げ名は「選択モードを閉じる」。\n- 移動：案内帯をドラッグすると、取得バーを中央揃えのまま上下に移動できます。下端まで動かすと初期位置（画面下から24px）にぴったり戻ります。上端も画面上から24pxで止まり、画面サイズが変わった場合は表示範囲内に収めます。手順の切り替え・中断後の再開・同じ予定の内容の選び直しでは位置を保ち、新しい日程を選ぶと初期位置に戻ります。案内帯にキーボードでフォーカスすると、↑↓で16pxずつ、Shift＋↑↓で48pxずつ移動でき、Homeで上端、Endで初期位置に戻せます。ドラッグ中はカーソルと影を変え、Escで取得モードを閉じた場合もドラッグを解除します。\n- 下段：タイトル／場所／詳細、戻る／スキップ。現在地は項目名の太字・枠・末尾のチェックで示し、上段には「1 / 3」や完了チェックを重ねて表示しない。カレンダーを開くボタンは置かない。\n- 選択中の項目：白背景・深緑の枠・項目名の太字。取得済みの項目：淡緑・項目名の後ろのチェック。サイドパネルと同じ序数（1・2・3）を項目名の前に付け、完了後も残す。序数は小さめのサイズを保ち、色と太さは項目名に連動する。選択中は深緑・600、完了後はmuted（#788171）・400とし、完了項目もホバー／キーボードフォーカス時は深緑に戻す。未完了は番号と項目名、完了後は末尾のチェックも含めて中央寄せする。項目ボタン全体は幅320px、狭い画面では利用可能な幅を使う。操作可能な主ボタンの濃い緑と区別する。\n- タイトル選択中の「戻る」は無効状態で残す。詳細を選択中のスキップは可能で、取得またはスキップで3項目を終えると操作バーを閉じる。\n- 取得完了後は操作バーと選択枠を閉じ、通常のページ操作に戻す。サイドパネルの項目をクリックまたはEnter／Spaceで選び直すと再表示する。取得中の右上の「×」とEscは取得内容を保持して中断する。\n- 560px以下は下段を2行にし、340px以下は余白・文字を縮める。手順の変化でボタン位置やバー全体の寸法が跳ねない。\n\nオーバーレイの上段は深緑背景#254c3bの案内帯とし、案内文#fffefa、補足文と×は#d9e4d8。下段の操作領域はほぼ白の背景#fffefa、文字#243e32、外枠は#9eac9eの1pxとする。背景の透過・ぼかしや外側の白い縁は設けない。項目ボタンの通常背景は透明、選択中は#fffefaと深緑の枠、完了は#f1f5ed。キーボードフォーカスは下段が深緑#2c6045、上段の×は白系#fffefaの3pxアウトラインで示す。影は0 2px 5px #14291c24と0 8px 24px #14291c24を重ね、輪郭の近くでページから分離する。候補の元文字列は黄土系の縁と波紋で示し、それ以外のページを#19231f・48%で暗くする。ページのクリックを妨げない。\n\n## 8. 動きとフィードバック\n\n| 動作                     | 時間・回数                   |\n| ------------------------ | ---------------------------- |\n| ボタンの色・押下         | 140ms、押下時に下1px         |\n| 候補の境界・影           | 160ms                        |\n| 登録パターンの開閉・矢印 | 180ms                        |\n| 候補の出現               | 220ms、下4pxから現れる       |\n| 取得セクションの出現     | 200ms                        |\n| 元の日時への追従開始     | ホバー／フォーカス後 約180ms |\n| 元文字列の波紋           | 1.1秒×3回                    |\n| 取得バーの開始・再開     | 待機なし、650msで12px下からフェードイン |\n| ページ上の選択枠の追従   | 70ms                         |\n| 内容の項目ラベルの光     | 550ms、完了への切り替わり時に1回 |\n| 工程見出しの光           | 550ms、完了への切り替わり時に1回 |\n| 完了後の主操作の光       | 初回650ms待機、1300msの光・消灯後10秒間隔、最大3回       |\n| スキャン中の小さな点     | 1秒周期、処理中のみ          |\n\n動きは、原因と結果・対象位置・完了状態を知らせるために使う。飾りの常時アニメーションは追加しない。prefers-reduced-motionでは移動・パルス・画面遷移の動きを抑え、文字や静的なチェックを残す。\n\n## 9. 操作とライティングの方針\n\n- 色だけに依存せず、項目名の太字・エラー理由・チェック・disabled状態を併用する。\n- ボタン全体をクリック可能にする。キーボードで候補を展開し、行の再選択はEnter／Spaceでも行える。\n- フォーカス：サイドパネルは黄土色2px・offset 4px。取得バーは3px・offset 2px。\n- スキャンと再スキャンで語彙を統一する。「走査」と混在させない。\n- 選択モードを閉じる操作は段階によって意味や読み上げ名を変えない。「連携完了」「保存完了」といった、実際に確認できない完了表現は使わない。\n- 触れば分かる機能に説明文を重ねない。常設ヒーローコピーを拡張の狭いUIに置かない。\n- 設定を閉じたら元の操作へ戻る。不要な確認ダイアログで操作を止めない。\n- 日付の選択・文字の取得・カレンダーへの移動という主導線を優先し、将来のサービス追加でも主ボタンを横並びに増やさない。\n\n## 10. プロモーション素材\n\nUIと同じ紙色・深緑・Georgiaのワードマークを使用する。背景は少し深い#214b37。黄土系#d2b477の矢印とピリオドで、読み取りからカレンダーへ渡す方向を示す。\n\n| 素材     | 仕様                                      | 主な組版                       |\n| -------- | ----------------------------------------- | ------------------------------ |\n| 小タイル | 440×280px、24ビットRGB PNG、アルファなし  | ロゴ36px、見出し20px、補足10px |\n| マーキー | 1400×560px、24ビットRGB PNG、アルファなし | ロゴ64px、見出し43px、補足16px |\n\nコピーは「ページの日程を、カレンダーへ。」、補足は「Googleカレンダー対応」。見出しの行間は小1.75／大1.65。素材は単純拡大ではなく、キャンバスごとに余白・配置・文字サイズを調整する。切れた文字や過剰な小文字を避け、縮小時もブランドと用途が伝わるようにする。\n\nページとカレンダーの図は機能を説明するイラストであり、実際の製品画面のスクリーンショットではない。ストアのスクリーンショット欄には実画面を使用する。プロモーション画像はZIPに同梱しない。\n\n## 11. 資料と実装の対応\n\n| 内容                               | ソース・素材                                               |\n| ---------------------------------- | ---------------------------------------------------------- |\n| 共通色                             | lib/theme.css                                              |\n| パネルの部品・レスポンシブ         | entrypoints/sidepanel/style.css / index.html               |\n| 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |\n| 取得バー                           | lib/picker.js                                              |\n| 元の日時の強調                     | lib/source-highlight.js                                    |\n| 設定画面の言葉と出典               | lib/footer-quotes.js                                       |\n| 配布用アイコン                     | public/icons/{16,32,48,128}.png                            |\n| アイコン生成                       | scripts/generate-icons.js（npm run icons）                 |\n| プロモーション原稿                 | store/promotional/tiles.html                               |\n| プロモーションPNG                  | store/promotional/small-440x280.png / marquee-1400x560.png |\n| プロモーション生成                 | scripts/generate-store-tiles.js                            |\n| 本資料のMarkdown原稿               | docs/design/design-system.md                               |\n| 本資料のHTML生成                   | scripts/build-design-system.js                             |\n\n## 12. 更新時の確認\n\n1. 実装CSS・アイコン・プロモーション・本資料で色と字体の意図が揃っているか確認する。\n2. 280〜320pxの狭い幅、キーボードフォーカス、長いタイトル・URLを確認する。\n3. 選択中・完了・操作可能・無効・エラーが判別できるか確認する。\n4. 動きを減らす設定で、意味や完了の通知が失われないか確認する。\n5. PNGの寸法とアルファの有無を検証する。アイコンは透明可、タイルはRGB・アルファなし。\n6. HTMLを再生成し、コードブロック・ダウンロードしたMarkdown・原稿の内容が一致するか確認する。\n\nHTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取り、設定の永続保存、Googleカレンダーへの移動は行わない。資料専用の見出しやナビゲーションの大きさは、拡張本体の新しいトークンではない。\n"
+      "# Sche10le デザインシステム\n\n対象：拡張機能 0.4.1の次期開発版（伝統色テーマ対応） / 記録日：2026-10-28\n\nこの資料は、現在のUI・アイコン・ストア素材に実装されているデザインを記録する。数値は現行実装の値であり、すべてを共通トークン化したものではない。「方針」は今後の追加・修正時に守る判断基準を示す。\n\n## 1. デザインの軸\n\nページの日程を見つけ、登録方法を選び、必要な文字をページから取得してGoogleカレンダーへ渡す。入力作業と往復を減らし、操作の連続性を優先する。\n\n- 静かな道具：アイボリーと深緑、細い罫線、余白で区切る。装飾や説明を常設しすぎない。\n- その場で理解できる：候補に触れると登録パターンが開く。対象の日時と取得先の項目を視覚的につなぐ。\n- 次の一手を明確にする：濃い緑の大きな面は主操作に使う。サイドパネルの選択中は白背景で示し、内容の現在地には深緑の枠と太字を添える。確定・取得済みは淡緑とチェックで区別する。ページ上の取得バーも選択中は白背景・深緑の枠・太字、完了は淡緑と末尾のチェックにそろえる。\n- 軽快さを守る：WXT・バニラJSを基本とし、描画やアニメーションのために実行時依存や外部フォントを追加しない。\n\n## 2. ブランドとアイコン\n\n表記は製品名「Sche10le」、ワードマークは「sche10le.」。数字の10だけをイタリックにし、末尾のピリオドを黄土色にする。\n\n| 要素                   | 現行値                                                        |\n| ---------------------- | ------------------------------------------------------------- |\n| フッターのワードマーク | Georgia → Times New Roman → serif、600、20px / 1、字間 -1px |\n| マークとロゴの間隔     | 7px                                                          |\n| フッターのマーク       | 配布用32px PNGを24×24pxで表示                                        |\n| PNG生成用マーク内の数字         | Georgia → serif、16px / 1、字間 -1px、上パディング6px         |\n| PNG生成用マークの横線           | 上7px・左右6px、1px、白27%（#ffffff45）                       |\n\nマークは上部の短い横線とセリフ体の「10」で構成する。以前のリング付きカレンダー風アイコンは使用しない。縦横比を変形したり、数字を別書体に差し替えたりしない。\n\n配布用PNGは16・32・48・128px。マークの30:32の比率を維持し、高さをキャンバスの87.5%にして中央配置する。背景は透明。128px版はストアアイコンにも使用する。\n\n`npm run icons` はサイドパネルCSSに保持した30×32px・角丸7pxのマーク原稿から描画する。フッターは生成済みPNGを使用する。生成環境はGeorgiaを使用できるmacOSとPlaywrightのChromium。PNGを同梱するため、利用者の環境によって配布用アイコンの字体は変わらない。UI内の文字はOSのフォントに依存する。\n\n## 3. 色\n\n### 基本トークン（lib/theme.css・標準テーマの値）\n\n| トークン | 値      | 役割                               |\n| -------- | ------- | ---------------------------------- |\n| --paper  | #f8f8f1 | 基本背景。純白より柔らかい紙色     |\n| --ink    | #293d31 | 主文・見出し                       |\n| --accent  | #2c6045 | 主操作・ブランド・操作中の枠や文字 |\n| --muted  | #788171 | 補足・出典・メタ情報               |\n| --line   | #dfe4d6 | 罫線・カードの通常境界             |\n| --wash   | #eaf0e3 | 補助操作のホバー・操作案内の背景   |\n| --focus  | #a67d3a | ロゴの点・フォーカスのアクセント   |\n\n### 状態色・専用色（標準テーマの値）\n\n| 用途                       | 背景      | 文字・境界など               |\n| -------------------------- | --------- | ---------------------------- |\n| 候補カード                 | #ffffff8c | 境界 --line                  |\n| 初回スキャン・再試行       | #ffffff8c | 境界 --line、文字 --accent、影なし |\n| 展開中の候補               | #ffffff8c | 境界 #9daf99、薄い影         |\n| 内容の選択中の項目         | #ffffff8c | 境界 --accent                 |\n| 確定した日程・取得済み項目 | #f1f5ed   | 薄い境界、完了チェック       |\n| AI補完ラベル               | #fbf1dc   | 文字 #785825                 |\n| 設定画面                   | #eef1e8   | 設定項目の背景 --paper       |\n| 書式エラー                 | #fff0ed   | 文字 #972d28、境界 #c3635b   |\n| 一般エラー通知             | #fff0ed   | 文字 #972d28                 |\n| 主操作のホバー             | #1c4934   | 白文字                       |\n| 完了ラベルの光             | #fff5d4   | グラデーションの縁 #b49b66   |\n| プロモーション背景         | #214b37   | 紙色の文字                   |\n| プロモーションのアクセント | —         | #d2b477、補足 #d1dfcb        |\n\n### 操作と状態の配色方針\n\n| 役割 | 表現 | 例・判断基準 |\n| ---- | ---- | ------------ |\n| 最後の主操作 | 深緑の塗り＋白文字 | 操作ボタンの中では「Googleカレンダーで開く」を最も強くする |\n| 初回操作・再試行 | 白系の背景＋細い枠、影なし | スキャン。ホバー時は白背景＋深緑の枠で応答する |\n| 選択中・操作中 | 白系の背景＋対象を示す枠や太字 | 日程は展開で、内容項目は深緑の枠と項目名の太字で現在地を示す |\n| 選択・取得・スキップ済み | 淡緑（#f1f5ed）の結果面＋チェック | 再操作できる項目でも、深緑の塗りで主操作のようには見せない |\n| やり直しなどの補助操作 | 背景なしの緑文字、ホバー時に下線 | 再スキャン・選び直す。文字の見た目を軽くしてもクリック領域は保つ |\n\n補助アイコンや登録パターンには、一時的なホバー面として--washを使う。完了を示す#f1f5edの結果面とは役割を分け、淡緑だけで完了を判断させずチェックや確定内容を併せる。黄土系はロゴの点・キーボードフォーカス・元文字列の強調などに使い、選択中の項目の塗りには使わない。AI補完ラベルは出典の表示であり、選択状態を表さない。\n\n深緑はブランドや取得バー上段の案内帯にも使う。案内帯は下段の白い操作領域と分け、全体を一つの大きなボタンのように見せない。色だけで役割を説明せず、形・位置・ラベル・枠・太字・チェックを組み合わせる。エラーには説明・枠・再試行などの操作を併せる。\n\n### 伝統色テーマ\n\nテーマは色名から配色全体を組み立てる。名前だけを置き換えず、文字・面・境界・主操作・完了・エラー・光の色まで揃える。色名と色調の着想は[和色大辞典](https://www.colordic.org/w)を参考にし、画面の読みやすさに合わせて濃淡を調整した。下記は特定の染料や印刷色の厳密な再現を意味しない。\n\n| 表示名 | 内部ID | 配色の方向 |\n| --- | --- | --- |\n| 千歳緑（ちとせみどり） | `chitosemidori` | 標準。従来の紙色と深緑 |\n| 銀鼠（ぎんねず） | `ginnezu` | 明るい灰色と控えめな墨色 |\n| 水浅葱（みずあさぎ） | `mizuasagi` | 青寄りの淡い水色と、文字・操作を担う落ち着いた青 |\n| 藍鉄（あいてつ） | `aitetsu` | 藍を含む暗い面、柔らかな明色の文字と主操作 |\n| 黒茶（くろちゃ） | `kurocha` | 濃い茶色の面に、生成り色の文字と主操作 |\n| 紫紺（しこん） | `shikon` | 深い紫の面に、淡い藤色の文字と主操作 |\n\n設定の最後に、読み仮名と配色見本を添えた2列のラジオ選択を配置する。クリックまたは矢印キーで即時反映し、端末に自動保存する。現在の選択は枠とチェックで示し、色見本は装飾として扱う。保存失敗時は表示を保ち、理由と「再試行」を出す。テーマ変更では日程や取得値、取得バーの手順・位置をリセットしない。サイドパネル、取得バー、元文字列の強調に同じテーマを適用し、元ページ自体や配布アイコンは変更しない。\n\nCSSは色名ではなく役割を使う。`--accent`は文字・現在地の枠、`--action`と`--on-action`は主操作の面と文字、`--surface`は操作対象の面、`--complete`は完了の面、`--bar-*`は取得バー、`--error*`はエラー、`--shine*`は完了の光を表す。全テーマを`lib/theme.css`にまとめ、閉じたShadow DOMにも同じ定義を渡す。保存するのは`lib/themes.js`に定義したIDだけで、不明・未設定の場合は千歳緑に戻す。OSへの自動追従・任意色の編集は設けない。\n\n本資料中の「白背景」「深緑」「淡緑」および色の数値は、特記のない限り千歳緑の例を指す。ほかのテーマでは同じ役割のトークンに置き換える。ダークテーマでは、操作中を少し明るい面と枠・太字、完了を控えめな面とチェックで示す。主操作・取得バーの文字と背景のコントラストを確認し、暗い背景の上に白い入力欄や薄すぎるエラー文を残さない。\n\n## 4. タイポグラフィ\n\n外部フォントを読み込まない。日本語はHiragino Kaku Gothic ProN → Yu Gothic → Meiryo → sans-serif、ブランドと日付の数字はGeorgia、時刻などの英数字はAvenir Next → Avenir → sans-serifを基本とする。細部のフォールバックは各CSSを参照する。\n\n| 用途                     | 現行値                          |\n| ------------------------ | ------------------------------- |\n| UIの基本                 | 13px / 1.65                     |\n| 手順のセクション見出し   | 12px・500（操作中は600）         |\n| 設定画面の見出し         | 18px                            |\n| 日付バッジの日           | Georgia 28px / 0.95、字間 -1px  |\n| 時間帯                   | Avenir系 14px / 1.7、字間 0.4px |\n| 取得した内容             | 12px / 1.7                      |\n| 主操作ボタン             | 15px・600 / 1.5                 |\n| 再スキャン・登録パターン | 11px                            |\n| 内容の項目名・取得と保存の補足文 | 11px（項目番号は10px）          |\n| その他の出典・小ラベル   | 9〜10px                         |\n| タイトル書式入力         | monospace 12px / 1.6            |\n\n小さなメタ情報のサイズは現状値であり、新しい本文に9pxを推奨するものではない。--mutedと紙色の組み合わせは通常サイズの文字に対する4.5:1を満たさないため、重要な説明には--inkを優先する。コントラスト適合を色だけで一律に宣言しない。\n\n## 5. 余白・形・レスポンシブ\n\n厳密な8pxグリッドではない。4・6・8・10・12・16・18・20・24・32pxを主に使い、密度と役割に合わせる。\n\n| 場所               | 現行値                                |\n| ------------------ | ------------------------------------- |\n| サイドパネル最小幅 | 280px                                 |\n| ヘッダー           | 設けない              |\n| 本文               | 左右24px、下はフッターの実高＋16px |\n| 候補の間隔         | 10px                                  |\n| 候補見出し         | 上下15px・左右13px                    |\n| 取得結果の行       | パディング12px、行間4px、角丸8px      |\n| 候補・設定項目     | 角丸12px                              |\n| 主操作             | 最小高さ56px、角丸10px、余白13×15px   |\n| スキャン操作       | 最小高さ36px。初回・再試行は角丸7pxのボタン、再スキャンはリンク風 |\n| 固定フッター       | 上下10px・左右24px、下段は最低34px              |\n| 320px以下          | 本文・フッター左右16px  |\n\n影は境界を補う程度に使う。通常カードは細い罫線を主体とし、全要素を浮いたカードにしない。長い本文やURLは折り返す。日時・登録パターンの主要ラベルは狭い幅でも判別できるようにする。\n\n初回スキャン・再試行のボタンは、候補カードと同じ白系背景（#ffffff8c）とlineの細い枠を使い、影は付けない。ホバー時は白背景とgreenの枠で操作対象を示す。完了を表す淡緑と区別し、完了後の再スキャンは引き続き背景なしのリンク風にする。\n\n## 6. サイドパネルの部品と状態\n\n### 候補一覧\n\n日程カードは展開中も通常の白背景を維持し、登録パターンの展開と控えめな枠・影で操作対象を示す。日程の確定後に淡緑の背景（#f1f5ed）へ切り替える。淡緑は内容項目の取得・スキップ完了にも使い、完了した結果を示す色に統一する。日程カードはホバーまたはフォーカスに応じて自動で開閉し、クリック・Enterによる手動の開閉切り替えは行わない。マウス由来のフォーカスが残っていても、ポインターがカード全体から離れれば閉じる。キーボードでは日程の案内からTabで登録方法へ進め、カード内にフォーカスがある間は開いたままにする。タッチではタップでフォーカスして開き、別の候補や操作へ移ると閉じる。閉じたときは元ページの強調表示も解除する。日程の案内はボタンではなく、フォーカス可能なグループとして表示する。\n\n日付バッジ → 日程名・時間帯 → 出典の順に読む。ホバーとキーボードフォーカスで登録パターンを展開し、時間どおり・移動込み・終日を選べる。選択後は該当候補と取得内容に集中させる。「選び直す」で開いた候補と選択状態を解除する。\n\nローカルAIの候補だけに10pxの「AI」ラベルを置く（#fbf1dc背景・#785825文字、余白1×5px、角丸4px）。本文・構造化データの通常抽出にはラベルも空の出典行も置かない。詳しい出典と原文引用は日程へのホバーで表示し、スクリーンリーダーには抽出元を読み上げる。年を補った注記は日程の下に残す。\n\n再スキャンは文字だけのリンク風ボタン。「選び直す」と同じ緑・11pxの通常ウェイトで、枠・背景・影を付けず、ホバー時に下線を表示する。実装はbuttonのまま、最小高さ36pxとキーボードのフォーカス表示を保つ。初回の「スキャン」と失敗後の「再試行」は白系の背景＋細い枠のボタンにする。実行中の「スキャン中…」は開始時のリンク風／ボタンの見た目を保って無効化し、先頭に11px・3秒で1回転のスピナーを表示する。待機中はスピナーを表示せず、動きを減らす設定では回転を止める。候補カードと同じ面積・外観にはしない。登場順／日時順は見出しのEnd側の控えめなselectで、独立した大きな設定行にしない。並び順は保存する。\n\n### スキャンの状態\n\n未許可のページではボタンと対象ページの情報帯を隠し、紙色と淡い緑の操作案内だけを表示する。案内タイトルは置かず、説明文の「Sche10le のアイコン」と「パズルのアイコン」の直後にそれぞれ画像を添える。画像は隣接する文章と同じ意味なので装飾として扱い、名称と離れて改行しない。エラー色は使わない。未スキャン・実行中は候補欄を空にし、日程の見出し・件数・並び順も隠す。完了後は0件でも見出し・件数・並び順を表示する。アクセス可能なら「スキャン」、実行中は無効な「スキャン中…」、完了後は「再スキャン」。対象外は専用の説明、一時的な失敗はエラー説明と「再試行」にする。0件の案内はスキャン完了時だけ表示する。\n\n### AI補完の状態\n\n「AIで日程を補完しています。表示されている候補は選べます。」の文頭に11pxのスピナーを置く。3秒でゆっくり1回転し、完了・失敗・無効化・ページ変更時に停止する。prefers-reduced-motionでは静止表示。状態はaria-liveで通知する。文中の「AIで日程を補完」などはホバー時だけ1pxの下線を表示し、キーボード操作時は共通のフォーカス枠を残す。押すと設定のAI項目へ移動してチェックボックスにフォーカスする。閉じると元のリンクへ戻る。無効化でリンクが非表示になった場合はフッターの設定ボタンへ戻る。\n\n### 操作のセクション\n\n「スキャン」「日時」「内容」の固定見出しで区切り、番号や進捗バーは置かない。見出しは12px・500・muted、操作中だけ600・greenとし、完了した見出しに10pxのチェックを付ける。チェック用の幅12pxは未完了時も確保し、位置を動かさない。未完了から完了へ切り替わったときだけ、見出しの文字内を淡い白金色の光が左から右へ550msで一度通る。文字の位置・大きさやチェックは動かさず、終了後は通常色に戻す。再描画・設定画面からの復帰では繰り返さず、prefers-reduced-motionでは省略する。スキャン結果はドメイン名と件数、日時の結果は選択済みカード、内容の結果は各取得欄に残す。完了のチェックはその工程を終えた意味であり、カレンダーへの保存完了は表さない。\n\nスキャン欄は見出しとページ情報を左、スキャンボタンを右に置く2列のグリッドとする。件数はスキャン完了後だけページ名の横に表示し、日時欄には重複させない。「スキャン完了」の文字は読み上げ用に残し、画面では見出しのチェックで示す。日時の見出しはスキャン後から、内容の見出しと取得欄は日時選択後から表示する。未許可のページは従来のアイコン案内だけとする。\n\n「選び直す」で日時が操作中へ戻り、取得欄を選び直すと内容のチェックが外れる。内容の項目をすべて選択またはスキップしたときは内容にもチェックを付ける。中断時も内容が現在の工程であり、再開操作を残す。読み上げには見出しの状態とaria-currentを使う。\n\n### 取得中・取得済み\n\n選択後の予定情報は選択済みカードに集約する。選択済みカードは展開できないため右端の矢印を非表示にし、「選び直す」で一覧に戻ると矢印を再表示する。確定後は背景を淡緑（#f1f5ed）にし、枠は通常の薄い境界（line）を維持する。日時の確定は見出しのチェックと選択したカードだけを残す構成で示す。カードの元の日付・時刻の下に12pxの緑文字で「移動込み 13:30–16:30」のように登録内容を表示し、区切り線と9pxの上余白を置く。終日では「終日」とし、登録日が元の表示と異なる場合は日付も補う。時間付きの登録が日をまたぐ場合は両端の日付・時刻を明記し、仮の終了時刻の注記も維持する。カード下の「YOUR PLAN」や重複した日時は設けず、選択後も「日時」の見出しと選択済みカードを残す。Start側の見出しとチェック用の領域を固定し、End側（日本語UIでは右端）の操作は選択前の並び順から選択後の「選び直す」に切り替える。ヘッダの最小高さは30pxを維持する。カード下には取得結果だけを置く。登録内容に「登録：」という接頭辞は付けない。\n\nサイドパネルはタイトル・場所・詳細の取得結果を表示する。項目名は11px、項目番号は10px、元ページURLについての補足文と主操作ボタン下の補足文は11pxとし、取得本文の12pxとの階層を保つ。行全体がクリック対象で、再選択できる。現在の対象は白背景（#ffffff8c）・深緑の枠（green）と項目名の太字（600）で示す。「選択中」のラベルは設けず、通常の項目名と取得本文は400のままにする。読み上げ向けのaria-currentと操作案内は維持する。ホバー／フォーカス時に編集アイコンを出す。取得・スキップで通過した項目は日程の選択済みカードと同じ淡緑の背景（#f1f5ed）と全周の薄い枠（line）にし、影は付けない。ラベル横に10pxのチェックを残し、文字だけに工程見出しと同じ550msの光を一度通す。欄全体の発光や一時的なチェックは使わない。完了はdraft.stepより前の項目として導出し、選び直した手順以降はチェックを外す。再描画では光を繰り返さず、動きを減らす設定ではチェックのみ。読み上げ用の説明にも「設定済み」を添える。\n\nタイトルの初期値はページタイトル、場所は空欄、詳細はページURL。詳細の取得後も元ページURLを末尾に空行で残す。書式を適用したタイトルと元の取得文字列を分けて保持する。取得手順を進める操作はページ下部に集約する。\n\n### 主操作\n\n「Googleカレンダーで開く」の隣に、40px四方・20pxのダウンロードSVGを持つ補助ボタンを8px間隔で中央揃えに配置する。背景は透明、枠はline、アイコンはgreen。ホバーでwash背景とgreen枠を付ける。title/aria-labelは「予定をダウンロード（.ics）」。狭い幅では主ボタンの文字を折り返し、両方の操作を表示する。\n\n「Googleカレンダーで開く」をサイドパネル下部に固定する。文字は15px・600、最小高さ56px。取得途中でも進める。Googleカレンダー側で確認・保存するため、拡張内で保存完了を表示しない。\n\n### 設定\n\n移動時間欄の「次に選ぶ移動込みに適用」という補足は表示しない。タイトル書式の変数ボタンは、ホバーすると実際に挿入する文字列（`{title}`、`{from:HHmm}`、`{to:HHmm}`、`{date:YYYY-MM-DD}`）をブラウザ標準のツールチップで表示する。\n\n設定を開くとメインの一覧とフッターを隠し、#eef1e8の専用面に切り替える。移動時間・タイトル書式・AI補完はすべて自動保存。個別の保存ボタンは設けない。有効な書式を即座にプレビューし、不正な書式は赤いエラー表示にする。保存失敗時には該当項目の「再試行」を表示する。\n\n### フッターとブランド\n\nBraveと判定でき、閉じるAPIに対応している場合だけ、設定の右に4pxの間隔で18pxの線画の×を表示する。クリック領域は設定と同じ36px以上、色とホバー面も共通とする。歯車と×はともに図形の中心をviewBoxの中央に置いたSVGとし、フォントの字形やベースラインによる上下のずれを防ぐ。titleとaria-labelは「サイドバーを閉じる」。閉じる失敗時はフッター内に赤字の通知を表示し、選択内容を維持して再試行できる。Chromeや判定失敗・API非対応の環境には追加しない。\n\n左に24pxのアイコンと20pxのロゴ、右に20pxのSVG歯車アイコンだけの設定ボタンを1行で置く。操作領域は36px以上とし、ホバー時のtitleと読み上げ用のaria-labelに「設定」を指定する。ロゴにリンクや選択解除の動作は持たせない。予定選択中だけ、この行の12px上に主操作エリアを置く。本文下余白とルートのscroll-padding-bottomはResizeObserverで計測したフッター高＋16pxとし、取得結果行のscroll-margin-bottomは16px。設定表示中はフッターを隠すが、直前の高さを保持して復帰時のスクロールを安定させる。\n\n主操作ボタン下の補足文は、取得途中は「情報の取得は途中でもOK。保存は Google カレンダーで。」、全項目の取得・スキップが完了したら「Google カレンダーで修正してから保存できます。」に切り替える。完了への切り替わりから650ms後、ボタンの表面を柔らかい光が1300msかけて一度流れ、輪郭にも緑の光を出して消す。光が消えてから10秒の間隔で追加2回まで繰り返す。項目ラベルの光と時間をずらし、ボタンの位置・大きさ・フォーカスは動かさない。再描画では回数や待機時間をリセットせず、選び直し・設定表示・カレンダーを開く・ICS取得では中止する。動きを減らす設定では補足文だけを切り替える。\n\n### 設定画面のことば\n\n設定画面の最下部にだけ小さな緑の点＋日本語訳を置く。通常の候補一覧・取得中には表示しない。パネルを開くたびに海外の言葉6種から1つを選び、操作中は変えない。ホバーのtitle属性で英語原文と出典を示す。主操作と競合するサイズ・色にしない。\n\n## 7. ページ上の取得オーバーレイ\n\nページと独立したclosed Shadow DOMに描画する。ページ本文のCSSで形や操作が崩れないようにする。\n\n- 操作バー：幅640px、最大幅は画面幅−32px、下24px、上段の余白7×16px・最小高さ56px、下段の余白は上下14px・左右16px、角丸14px。開始・再開時のみ12px下から650msでフェードインし、日程確定・選び直し・再開のいずれも待機を入れない。見出しの光とは並行して動き、cubic-bezier(.22,.61,.36,1)で静かに止まる。発光・拡大・跳ね返りはなく、項目の切り替えでは再生しない。動きを減らす設定では即時表示する。\n- 上段：「ページ上の文字をクリック」と対象項目、右端に閉じるための「×」。×は16pxのSVGとし、32pxの操作領域を確保する。背景は透明、ホバー時だけ淡い面を表示する。ツールチップは「選択モードを閉じる（Esc）」、読み上げ名は「選択モードを閉じる」。\n- 移動：案内帯をドラッグすると、取得バーを中央揃えのまま上下に移動できます。下端まで動かすと初期位置（画面下から24px）にぴったり戻ります。上端も画面上から24pxで止まり、画面サイズが変わった場合は表示範囲内に収めます。手順の切り替え・中断後の再開・同じ予定の内容の選び直しでは位置を保ち、新しい日程を選ぶと初期位置に戻ります。案内帯にキーボードでフォーカスすると、↑↓で16pxずつ、Shift＋↑↓で48pxずつ移動でき、Homeで上端、Endで初期位置に戻せます。ドラッグ中はカーソルと影を変え、Escで取得モードを閉じた場合もドラッグを解除します。\n- 下段：タイトル／場所／詳細、戻る／スキップ。現在地は項目名の太字・枠・末尾のチェックで示し、上段には「1 / 3」や完了チェックを重ねて表示しない。カレンダーを開くボタンは置かない。\n- 選択中の項目：白背景・深緑の枠・項目名の太字。取得済みの項目：淡緑・項目名の後ろのチェック。サイドパネルと同じ序数（1・2・3）を項目名の前に付け、完了後も残す。序数は小さめのサイズを保ち、色と太さは項目名に連動する。選択中は深緑・600、完了後はmuted（#788171）・400とし、完了項目もホバー／キーボードフォーカス時は深緑に戻す。未完了は番号と項目名、完了後は末尾のチェックも含めて中央寄せする。項目ボタン全体は幅320px、狭い画面では利用可能な幅を使う。操作可能な主ボタンの濃い緑と区別する。\n- タイトル選択中の「戻る」は無効状態で残す。詳細を選択中のスキップは可能で、取得またはスキップで3項目を終えると操作バーを閉じる。\n- 取得完了後は操作バーと選択枠を閉じ、通常のページ操作に戻す。サイドパネルの項目をクリックまたはEnter／Spaceで選び直すと再表示する。取得中の右上の「×」とEscは取得内容を保持して中断する。\n- 560px以下は下段を2行にし、340px以下は余白・文字を縮める。手順の変化でボタン位置やバー全体の寸法が跳ねない。\n\nオーバーレイの上段は深緑背景#254c3bの案内帯とし、案内文#fffefa、補足文と×は#d9e4d8。下段の操作領域はほぼ白の背景#fffefa、文字#243e32、外枠は#9eac9eの1pxとする。背景の透過・ぼかしや外側の白い縁は設けない。項目ボタンの通常背景は透明、選択中は#fffefaと深緑の枠、完了は#f1f5ed。キーボードフォーカスは下段が深緑#2c6045、上段の×は白系#fffefaの3pxアウトラインで示す。影は0 2px 5px #14291c24と0 8px 24px #14291c24を重ね、輪郭の近くでページから分離する。候補の元文字列は黄土系の縁と波紋で示し、それ以外のページを#19231f・48%で暗くする。ページのクリックを妨げない。\n\n## 8. 動きとフィードバック\n\n| 動作                     | 時間・回数                   |\n| ------------------------ | ---------------------------- |\n| ボタンの色・押下         | 140ms、押下時に下1px         |\n| 候補の境界・影           | 160ms                        |\n| 登録パターンの開閉・矢印 | 180ms                        |\n| 候補の出現               | 220ms、下4pxから現れる       |\n| 取得セクションの出現     | 200ms                        |\n| 元の日時への追従開始     | ホバー／フォーカス後 約180ms |\n| 元文字列の波紋           | 1.1秒×3回                    |\n| 取得バーの開始・再開     | 待機なし、650msで12px下からフェードイン |\n| ページ上の選択枠の追従   | 70ms                         |\n| 内容の項目ラベルの光     | 550ms、完了への切り替わり時に1回 |\n| 工程見出しの光           | 550ms、完了への切り替わり時に1回 |\n| 完了後の主操作の光       | 初回650ms待機、1300msの光・消灯後10秒間隔、最大3回       |\n| スキャン中の小さな点     | 1秒周期、処理中のみ          |\n\n動きは、原因と結果・対象位置・完了状態を知らせるために使う。飾りの常時アニメーションは追加しない。prefers-reduced-motionでは移動・パルス・画面遷移の動きを抑え、文字や静的なチェックを残す。\n\n## 9. 操作とライティングの方針\n\n- 色だけに依存せず、項目名の太字・エラー理由・チェック・disabled状態を併用する。\n- ボタン全体をクリック可能にする。キーボードで候補を展開し、行の再選択はEnter／Spaceでも行える。\n- フォーカス：サイドパネルは黄土色2px・offset 4px。取得バーは3px・offset 2px。\n- スキャンと再スキャンで語彙を統一する。「走査」と混在させない。\n- 選択モードを閉じる操作は段階によって意味や読み上げ名を変えない。「連携完了」「保存完了」といった、実際に確認できない完了表現は使わない。\n- 触れば分かる機能に説明文を重ねない。常設ヒーローコピーを拡張の狭いUIに置かない。\n- 設定を閉じたら元の操作へ戻る。不要な確認ダイアログで操作を止めない。\n- 日付の選択・文字の取得・カレンダーへの移動という主導線を優先し、将来のサービス追加でも主ボタンを横並びに増やさない。\n\n## 10. プロモーション素材\n\nUIと同じ紙色・深緑・Georgiaのワードマークを使用する。背景は少し深い#214b37。黄土系#d2b477の矢印とピリオドで、読み取りからカレンダーへ渡す方向を示す。\n\n| 素材     | 仕様                                      | 主な組版                       |\n| -------- | ----------------------------------------- | ------------------------------ |\n| 小タイル | 440×280px、24ビットRGB PNG、アルファなし  | ロゴ36px、見出し20px、補足10px |\n| マーキー | 1400×560px、24ビットRGB PNG、アルファなし | ロゴ64px、見出し43px、補足16px |\n\nコピーは「ページの日程を、カレンダーへ。」、補足は「Googleカレンダー対応」。見出しの行間は小1.75／大1.65。素材は単純拡大ではなく、キャンバスごとに余白・配置・文字サイズを調整する。切れた文字や過剰な小文字を避け、縮小時もブランドと用途が伝わるようにする。\n\nページとカレンダーの図は機能を説明するイラストであり、実際の製品画面のスクリーンショットではない。ストアのスクリーンショット欄には実画面を使用する。プロモーション画像はZIPに同梱しない。\n\n## 11. 資料と実装の対応\n\n| 内容                               | ソース・素材                                               |\n| ---------------------------------- | ---------------------------------------------------------- |\n| 共通色・テーマ                     | lib/theme.css / lib/themes.js                              |\n| パネルの部品・レスポンシブ         | entrypoints/sidepanel/style.css / index.html               |\n| 操作・状態遷移・完了アニメーション | entrypoints/sidepanel/main.js                              |\n| 取得バー                           | lib/picker.js                                              |\n| 元の日時の強調                     | lib/source-highlight.js                                    |\n| 設定画面の言葉と出典               | lib/footer-quotes.js                                       |\n| 配布用アイコン                     | public/icons/{16,32,48,128}.png                            |\n| アイコン生成                       | scripts/generate-icons.js（npm run icons）                 |\n| プロモーション原稿                 | store/promotional/tiles.html                               |\n| プロモーションPNG                  | store/promotional/small-440x280.png / marquee-1400x560.png |\n| プロモーション生成                 | scripts/generate-store-tiles.js                            |\n| 本資料のMarkdown原稿               | docs/design/design-system.md                               |\n| 本資料のHTML生成                   | scripts/build-design-system.js                             |\n\n## 12. 更新時の確認\n\n1. 実装CSS・アイコン・プロモーション・本資料で色と字体の意図が揃っているか確認する。\n2. 280〜320pxの狭い幅、キーボードフォーカス、長いタイトル・URLを確認する。\n3. 選択中・完了・操作可能・無効・エラーが判別できるか確認する。\n4. 動きを減らす設定で、意味や完了の通知が失われないか確認する。\n5. PNGの寸法とアルファの有無を検証する。アイコンは透明可、タイルはRGB・アルファなし。\n6. HTMLを再生成し、コードブロック・ダウンロードしたMarkdown・原稿の内容が一致するか確認する。\n\nHTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取り、設定の永続保存、Googleカレンダーへの移動は行わない。資料専用の見出しやナビゲーションの大きさは、拡張本体の新しいトークンではない。\n"
     </script>
     <script>
       const markdown = JSON.parse(
@@ -3144,6 +3813,11 @@ HTMLのUI見本は実装CSSを使った資料用デモ。ページの読み取�
           }
         });
       const frame = document.getElementById("panel-demo");
+      document.getElementById("demo-theme").addEventListener("change", (event) => {
+        const theme = event.target.value;
+        frame.contentWindow.postMessage({ theme }, "*");
+        document.getElementById("overlay-demo").contentWindow.postMessage({ theme }, "*");
+      });
       document.querySelectorAll("[data-view]").forEach((button) =>
         button.addEventListener("click", () => {
           document

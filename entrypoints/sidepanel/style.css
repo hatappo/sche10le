@@ -3,7 +3,7 @@
 :root {
   --footer-height: 56px;
   scroll-padding-bottom: calc(var(--footer-height) + 16px);
-  color-scheme: light;
+  color-scheme: var(--scheme);
   background: var(--paper);
   color: var(--ink);
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
@@ -40,7 +40,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--ochre);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 button {
@@ -70,7 +70,7 @@ a {
   color: inherit;
 }
 ::selection {
-  background: #d5e4cc;
+  background: var(--text-selection);
 }
 .brand {
   display: flex;
@@ -88,7 +88,7 @@ a {
   place-items: center;
   width: 30px;
   height: 32px;
-  background: var(--green);
+  background: var(--accent);
   border-radius: 7px;
   color: var(--paper);
   font:
@@ -112,7 +112,7 @@ a {
   font-style: italic;
 }
 .brand-period {
-  color: var(--ochre);
+  color: var(--focus);
 }
 .settings-button,
 .panel-close-button {
@@ -137,7 +137,7 @@ a {
 .settings-button:hover,
 .panel-close-button:hover {
   background: var(--wash);
-  color: var(--green);
+  color: var(--accent);
 }
 main {
   padding: 0 24px calc(var(--footer-height) + 16px);
@@ -198,7 +198,7 @@ main {
   font-weight: 500;
 }
 .stage-title[data-state="active"] {
-  color: var(--green);
+  color: var(--accent);
   font-weight: 600;
 }
 .stage-label.is-completing,
@@ -206,9 +206,9 @@ main {
   background-image: linear-gradient(
     110deg,
     var(--muted) 38%,
-    #b49b66 46%,
-    #fff5d4 50%,
-    #b49b66 54%,
+    var(--shine-edge) 46%,
+    var(--shine) 50%,
+    var(--shine-edge) 54%,
     var(--muted) 62%
   );
   background-size: 300% 100%;
@@ -293,7 +293,7 @@ main {
   cursor: pointer;
 }
 .order-select:hover:not(:disabled) {
-  color: var(--green);
+  color: var(--accent);
   background: var(--wash);
 }
 .order-select:disabled {
@@ -307,7 +307,7 @@ main {
   margin-bottom: 12px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: #fff0ed;
+  background: var(--error-surface);
   font-size: 11px;
 }
 .order-feedback .text-button {
@@ -340,7 +340,7 @@ main {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--accent);
 }
 .status-dot.busy:before {
   animation: pulse 1s infinite;
@@ -355,8 +355,8 @@ main {
   display: none;
 }
 .notice.error {
-  color: #984d37;
-  background: #f7ece3;
+  color: var(--error);
+  background: var(--error-surface);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -368,7 +368,7 @@ main {
 .candidate {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #ffffff8c;
+  background: var(--surface);
   transition:
     border-color 160ms,
     box-shadow 160ms;
@@ -376,11 +376,11 @@ main {
   animation: appear 220ms both;
 }
 .candidate.expanded {
-  border-color: #9daf99;
-  box-shadow: 0 4px 14px #26472c07;
+  border-color: var(--surface-outline);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 3%, transparent);
 }
 .candidate.selected {
-  background: #f1f5ed;
+  background: var(--complete);
 }
 .candidate-heading {
   width: 100%;
@@ -446,13 +446,13 @@ main {
   padding: 1px 5px;
   border-radius: 4px;
   background: var(--wash);
-  color: var(--green);
+  color: var(--accent);
   font-size: 10px;
   line-height: 1.5;
 }
 .source-tag.is-ai {
-  background: #fbf1dc;
-  color: #785825;
+  background: var(--badge-surface);
+  color: var(--badge-text);
 }
 .candidate-year {
   white-space: nowrap;
@@ -467,7 +467,7 @@ main {
 }
 .expanded .candidate-arrow {
   transform: rotate(90deg);
-  color: var(--green);
+  color: var(--accent);
 }
 .variant-region {
   display: grid;
@@ -513,7 +513,7 @@ main {
   color: var(--muted);
 }
 .variant-arrow {
-  color: var(--green);
+  color: var(--accent);
   font-size: 14px;
 }
 .variant-note {
@@ -540,12 +540,12 @@ main {
 .empty-calendar {
   width: 44px;
   height: 46px;
-  border: 1px solid #c7cfbe;
+  border: 1px solid var(--line);
   border-radius: 9px;
   margin: auto;
   display: grid;
   place-items: center;
-  color: #a5b29e;
+  color: var(--empty-text);
   position: relative;
 }
 .empty-calendar:before {
@@ -554,7 +554,7 @@ main {
   top: 11px;
   left: 0;
   right: 0;
-  border-top: 1px solid #c7cfbe;
+  border-top: 1px solid var(--line);
 }
 .empty-calendar span {
   padding-top: 10px;
@@ -572,7 +572,7 @@ main {
 }
 .registration-summary {
   font-size: 12px;
-  color: var(--green);
+  color: var(--accent);
   margin: 0 13px 12px;
   padding-top: 9px;
   border-top: 1px solid var(--line);
@@ -597,7 +597,7 @@ main {
   border: 0;
   background: none;
   padding: 5px 0;
-  color: var(--green);
+  color: var(--accent);
   font-size: 11px;
   line-height: 1.5;
   border-radius: 3px;
@@ -626,15 +626,15 @@ main {
   scroll-margin-bottom: 16px;
 }
 .field-row:hover {
-  background: #ffffff8c;
+  background: var(--surface);
 }
 .field-row[data-complete="true"] {
-  background: #f1f5ed;
+  background: var(--complete);
   border-color: var(--line);
 }
 .field-row[aria-current="step"] {
-  background: #ffffff8c;
-  border-color: var(--green);
+  background: var(--surface);
+  border-color: var(--accent);
 }
 .field-heading {
   display: flex;
@@ -657,12 +657,12 @@ main {
   font-weight: 400;
 }
 .field-row[aria-current="step"] .field-label {
-  color: var(--green);
+  color: var(--accent);
   font-weight: 600;
 }
 .field-row[data-complete="true"]:hover .field-label,
 .field-row[data-complete="true"]:focus-visible .field-label {
-  color: var(--green);
+  color: var(--accent);
 }
 .field-edit {
   margin-left: auto;
@@ -682,7 +682,7 @@ main {
   overflow: auto;
 }
 .field-value.is-empty {
-  color: #949a8e;
+  color: var(--empty-text);
 }
 .source-note {
   display: flex;
@@ -715,7 +715,7 @@ main {
   flex-shrink: 0;
 }
 .panel-close-error {
-  color: #972d28;
+  color: var(--error);
   font-size: 11px;
   margin: 8px 0 0;
 }
@@ -741,17 +741,17 @@ main {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
 }
 .download-button:hover {
   background: var(--wash);
-  border-color: var(--green);
+  border-color: var(--accent);
 }
 .primary-button {
   position: relative;
-  background: var(--green);
-  color: #fff;
-  border: 1px solid var(--green);
+  background: var(--action);
+  color: var(--on-action);
+  border: 1px solid var(--action);
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
@@ -763,7 +763,7 @@ main {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.5;
-  box-shadow: 0 3px 5px #243e3210;
+  box-shadow: 0 3px 5px color-mix(in srgb, var(--shadow) 6%, transparent);
 }
 .primary-button.calendar-ready::after {
   content: "";
@@ -774,15 +774,15 @@ main {
   background-image: linear-gradient(
     110deg,
     transparent 38%,
-    #fff5d42e 46%,
-    #fff5d45c 50%,
-    #fff5d42e 54%,
+    color-mix(in srgb, var(--shine) 18%, transparent) 46%,
+    color-mix(in srgb, var(--shine) 36%, transparent) 50%,
+    color-mix(in srgb, var(--shine) 18%, transparent) 54%,
     transparent 62%
   );
   background-size: 250% 100%;
   box-shadow:
-    0 0 0 2px #8fb79599,
-    0 0 16px #8fb79566;
+    0 0 0 2px color-mix(in srgb, var(--glow) 60%, transparent),
+    0 0 16px color-mix(in srgb, var(--glow) 40%, transparent);
   opacity: 0;
   animation: calendar-ready-glow 1300ms ease-in-out 650ms;
 }
@@ -804,7 +804,7 @@ main {
   }
 }
 .primary-button:hover {
-  background: #1c4934;
+  background: var(--action-hover);
 }
 .primary-button span {
   font-size: 17px;
@@ -834,7 +834,7 @@ main {
   flex-direction: column;
   padding: 22px 16px 32px;
   min-height: 100dvh;
-  background: #eef1e8;
+  background: var(--settings);
 }
 .settings-open main,
 .settings-open .footer {
@@ -848,13 +848,13 @@ main {
 }
 .settings-note {
   margin: 5px 8px 20px;
-  color: var(--green);
+  color: var(--accent);
   font-size: 11px;
 }
 .setting-group {
   flex-shrink: 0;
   background: var(--paper);
-  border: 1px solid #d2dbca;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
   margin-top: 12px;
@@ -865,14 +865,97 @@ main {
   align-items: baseline;
   gap: 4px 12px;
 }
+#theme-heading {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.settings .theme-choice {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+.theme-option {
+  display: block;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.theme-choice:hover .theme-option {
+  border-color: var(--surface-outline);
+}
+.theme-radio:checked + .theme-option {
+  border-color: var(--accent);
+}
+.theme-radio:focus-visible + .theme-option {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.theme-swatch {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  height: 30px;
+  margin-bottom: 7px;
+}
+.theme-swatch i {
+  flex: 1;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+.theme-swatch i:nth-child(2) {
+  background: var(--muted);
+}
+.theme-swatch i:last-child {
+  flex: 1.5;
+  background: var(--action);
+}
+.theme-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.theme-check {
+  margin-inline-start: auto;
+  visibility: hidden;
+  color: var(--accent);
+  font-size: 10px;
+}
+.theme-radio:checked + .theme-option .theme-check {
+  visibility: visible;
+}
+.theme-reading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 5px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.theme-note {
+  font-size: 9px;
+}
 .setting-status:empty {
   display: none;
 }
 .setting-status {
-  color: var(--green);
+  color: var(--accent);
 }
 .setting-feedback button {
-  color: #972d28;
+  color: var(--error);
 }
 .settings label {
   display: block;
@@ -893,9 +976,9 @@ main {
 .number-control input {
   width: 75px;
   padding: 7px;
-  border: 1px solid #bccab5;
+  border: 1px solid var(--control-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface-raised);
   color: var(--ink);
 }
 .hint {
@@ -908,7 +991,7 @@ main {
   gap: 6px;
 }
 .checkbox-label input {
-  accent-color: var(--green);
+  accent-color: var(--accent);
   margin: 0;
 }
 .ai-area {
@@ -925,7 +1008,7 @@ main {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
   text-decoration: none;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -941,8 +1024,8 @@ main {
   margin-right: 6px;
   vertical-align: -1px;
   border: 1.5px solid var(--line);
-  border-top-color: var(--green);
-  border-right-color: var(--green);
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
   border-radius: 50%;
   animation: ai-spin 3s linear infinite;
 }
@@ -1017,15 +1100,15 @@ main {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #ffffff8c;
-  color: var(--green);
+  background: var(--surface);
+  color: var(--accent);
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
 .reload-button:hover:not(:disabled) {
-  background: #fff;
-  border-color: var(--green);
+  background: var(--surface-raised);
+  border-color: var(--accent);
 }
 .reload-button.rescan-link {
   padding-inline: 0;
@@ -1048,13 +1131,13 @@ main {
   margin-top: 8px;
   padding: 9px;
   color: var(--ink);
-  background: #fff;
-  border: 1px solid #bccab5;
+  background: var(--surface-raised);
+  border: 1px solid var(--control-border);
   border-radius: 6px;
   font: 12px/1.6 monospace;
 }
 .settings input[aria-invalid="true"] {
-  border-color: #984d37;
+  border-color: var(--error);
 }
 .format-tokens {
   display: flex;
@@ -1065,16 +1148,16 @@ main {
 .format-tokens button {
   font-size: 10px;
   padding: 4px 7px;
-  border: 1px solid #c7d2be;
+  border: 1px solid var(--control-border);
   border-radius: 5px;
   background: transparent;
-  color: var(--green);
+  color: var(--accent);
 }
 .format-tokens button:hover {
-  background: white;
+  background: var(--surface-raised);
 }
 .format-preview {
-  background: #ffffff80;
+  background: var(--surface);
   border-radius: 6px;
   padding: 10px;
 }
@@ -1097,14 +1180,14 @@ main {
 }
 
 .format-preview.error {
-  background: #fff0ed;
-  border: 1px solid #c3635b;
-  color: #972d28;
+  background: var(--error-surface);
+  border: 1px solid var(--error-border);
+  color: var(--error);
 }
 .format-preview.error span,
 .format-preview.error output,
 .setting-status.error {
-  color: #972d28;
+  color: var(--error);
 }
 .format-preview.error span {
   font-size: 11px;

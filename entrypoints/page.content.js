@@ -48,7 +48,10 @@ export default defineContentScript({
           notify({ type: "page-changed" });
           return;
         }
-        if (message.type === "scan") {
+        if (message.type === "theme") {
+          currentPicker.setTheme(message.id);
+          currentHighlight.setTheme(message.id);
+        } else if (message.type === "scan") {
           currentPicker.stop();
           currentHighlight.capture();
           const json = [
