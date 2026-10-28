@@ -3018,7 +3018,7 @@ function contrast(foreground, background) {
   return (light + 0.05) / (dark + 0.05);
 }
 
-test("伝統色4テーマを即時反映し、取得内容とバーの手順を保ち、再表示でも復元する", async () => {
+test("伝統色6テーマを即時反映し、取得内容とバーの手順を保ち、再表示でも復元する", async () => {
   await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.remove("themeId"));
   const { source, panel } = await open();
   let reopened;
@@ -3033,6 +3033,7 @@ test("伝統色4テーマを即時反映し、取得内容とバーの手順を�
     });
     const pageStyle = await source.locator("html").getAttribute("style");
     await panel.locator("#settings-toggle").click();
+    await expect(panel.locator("#settings > .setting-group").last()).toHaveAttribute("id", "theme-settings-group");
     const backgrounds = new Set();
     const barBackgrounds = new Set();
     for (const theme of THEMES) {
@@ -3056,12 +3057,12 @@ test("伝統色4テーマを即時反映し、取得内容とバーの手順を�
           action: primary.backgroundColor, onAction: primary.color };
       });
       backgrounds.add(colors.background);
-      expect(colors.scheme).toBe(theme.id === "aitetsu" ? "dark" : "light");
+      expect(colors.scheme).toBe(["aitetsu", "kurocha", "shikon"].includes(theme.id) ? "dark" : "light");
       expect(contrast(colors.text, colors.background)).toBeGreaterThanOrEqual(7);
       expect(contrast(colors.onAction, colors.action)).toBeGreaterThanOrEqual(4.5);
       if (theme.id !== "chitosemidori")
         await expect(panel.locator("#theme-status")).toHaveText("自動保存しました");
-      await panel.screenshot({ path: `test-results/theme-${theme.id}-settings.png` });
+      await panel.screenshot({ path: `test-results/theme-${theme.id}-settings.png`, fullPage: true });
       await panel.locator("#settings-close").click();
       await expect(panel.locator(".candidate.selected")).toHaveCSS("opacity", "1");
       await expect(panel.locator("#picked-title")).toBeVisible();
@@ -3069,8 +3070,8 @@ test("伝統色4テーマを即時反映し、取得内容とバーの手順を�
       await source.screenshot({ path: `test-results/theme-${theme.id}-picker.png` });
       await panel.locator("#settings-toggle").click();
     }
-    expect(backgrounds.size).toBe(4);
-    expect(barBackgrounds.size).toBe(4);
+    expect(backgrounds.size).toBe(THEMES.length);
+    expect(barBackgrounds.size).toBe(THEMES.length);
     await panel.setViewportSize({ width: 280, height: 700 });
     expect(await panel.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const option of await panel.locator(".theme-option").all())
