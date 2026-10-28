@@ -15,6 +15,7 @@ import LiveReporter from "./live/reporter.js";
 const sample = sites[0];
 test("ライブ対象は登録済みIDだけを選び、未知ID・重複・認証URL・曖昧な日時を拒否する", () => {
   assert.equal(validateSites(sites), sites);
+  assert.deepEqual(selectSites(sites, "kokuchpro").map((s) => s.id), ["kokuchpro"]);
   assert.deepEqual(
     selectSites(sites, "peatix,connpass,peatix").map((s) => s.id),
     ["connpass", "peatix"],
