@@ -15,7 +15,11 @@ import {
 // themselves remain covered by manual release checks.
 export async function runLiveCase(
   site,
-  { allowLocalhost = false, readinessTimeout = 15_000 } = {},
+  {
+    allowLocalhost = false,
+    readinessTimeout = 15_000,
+    onProgress = async () => {},
+  } = {},
 ) {
   validateSites([site], { allowLocalhost });
   const started = Date.now();
@@ -32,7 +36,19 @@ export async function runLiveCase(
   };
   let workspace;
   let context;
+  const publish = (phase = report.phase) =>
+    onProgress({
+      ...report,
+      phase,
+      candidates: [...report.candidates],
+      durationMs: Date.now() - started,
+    });
+  const checkpoint = async (phase) => {
+    report.phase = phase;
+    await publish();
+  };
   try {
+    await publish();
     workspace = await mkdtemp(path.join(tmpdir(), "sche10le-live-"));
     const extension = path.join(workspace, "extension");
     await cp(path.resolve(".output/chrome-mv3"), extension, {
@@ -49,6 +65,7 @@ export async function runLiveCase(
     const origin = new URL(site.url).origin;
     manifest.host_permissions = [`${origin}/*`];
     await writeFile(manifestPath, JSON.stringify(manifest));
+    await checkpoint("browser");
     context = await chromium.launchPersistentContext(
       path.join(workspace, "profile"),
       {
@@ -66,6 +83,7 @@ export async function runLiveCase(
       },
     );
     context.setDefaultTimeout(10_000);
+    await checkpoint("extension");
     const worker =
       context.serviceWorkers()[0] ??
       (await context.waitForEvent("serviceworker"));
@@ -97,25 +115,41 @@ export async function runLiveCase(
         return route.abort();
       return route.continue();
     });
-    const health = () =>
-      source
-        .evaluate(() => ({
-          title: document.title,
-          lead: (document.body?.innerText ?? "").slice(0, 1000),
-        }))
-        .catch(() => ({ title: "", lead: "" }));
+    const health = async (phase) => {
+      await checkpoint(phase);
+      let timer;
+      try {
+        // evaluate() has no default action timeout. A blocked renderer must not
+        // turn a readiness/navigation failure into an unbounded diagnostic read.
+        const state = await Promise.race([
+          source
+            .evaluate(() => ({
+              title: document.title,
+              lead: (document.body?.innerText ?? "").slice(0, 1000),
+            }))
+            .catch(() => null),
+          new Promise((resolve) => {
+            timer = setTimeout(() => resolve(null), 2000);
+          }),
+        ]);
+        if (!state) report.healthUnavailable = true;
+        return state;
+      } finally {
+        clearTimeout(timer);
+      }
+    };
     let response;
-    report.phase = "navigation";
+    await checkpoint("navigation");
     try {
       response = await source.goto(site.url, {
         waitUntil: "domcontentloaded",
         timeout: 25_000,
       });
     } catch {
-      const state = await health();
+      const state = await health("navigation-health");
       report.category = unexpectedNavigation
         ? "TARGET_CHANGED"
-        : (accessCategory(null, state.title, state.lead, source.url()) ??
+        : (accessCategory(null, state?.title, state?.lead, source.url()) ??
           "NETWORK_ERROR");
       return report;
     }
@@ -129,7 +163,7 @@ export async function runLiveCase(
     }
     // Readiness uses event identity and settled rendered text, never the expected
     // dates or the extractor's output. A date mismatch must not become a timeout.
-    report.phase = "readiness";
+    await checkpoint("readiness");
     try {
       await source.waitForFunction(
         ({ identity, readySelector }) => {
@@ -169,21 +203,25 @@ export async function runLiveCase(
         { timeout: readinessTimeout, polling: 250 },
       );
     } catch {
-      const state = await health();
+      const state = await health("readiness-health");
       report.category = unexpectedNavigation
         ? "TARGET_CHANGED"
         : (accessCategory(
             report.httpStatus,
-            state.title,
-            state.lead,
+            state?.title,
+            state?.lead,
             source.url(),
           ) ??
-          (state.title.includes(site.identity)
+          (!state || state.title.includes(site.identity)
             ? "PAGE_NOT_READY"
             : "TARGET_CHANGED"));
       return report;
     }
-    const state = await health();
+    const state = await health("health");
+    if (!state) {
+      report.category = "PAGE_NOT_READY";
+      return report;
+    }
     const blocked = accessCategory(
       report.httpStatus,
       state.title,
@@ -194,10 +232,11 @@ export async function runLiveCase(
       report.category = blocked ?? "TARGET_CHANGED";
       return report;
     }
+    await checkpoint("panel");
     const panel = await context.newPage();
-    report.phase = "scan";
     await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
     await expect(panel.locator("#scan-state")).toHaveText("対象外");
+    await checkpoint("scan");
     await source.bringToFront();
     await panel.getByRole("button", { name: "スキャン", exact: true }).click();
     await expect(panel.locator("#scan-state")).toHaveText("スキャン完了");
@@ -205,7 +244,7 @@ export async function runLiveCase(
       .locator(".candidate")
       .evaluateAll((cards) => cards.map((card) => card.dataset.candidateId));
     report.candidates = ids.map(candidateFromId);
-    report.phase = "compare";
+    await checkpoint("compare");
     report.category = matchesExpected(report.candidates, site.expected)
       ? "PASS"
       : "DATE_MISMATCH";
@@ -217,10 +256,16 @@ export async function runLiveCase(
     return report;
   } finally {
     try {
-      await context?.close();
+      // Preserve the failure phase in the final report; if close hangs, the
+      // last progress attachment still tells the reporter it reached cleanup.
+      await publish("cleanup");
     } finally {
-      if (workspace) await rm(workspace, { recursive: true, force: true });
-      report.durationMs = Date.now() - started;
+      try {
+        await context?.close();
+      } finally {
+        if (workspace) await rm(workspace, { recursive: true, force: true });
+        report.durationMs = Date.now() - started;
+      }
     }
   }
 }

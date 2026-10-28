@@ -5,7 +5,13 @@ import { runLiveCase } from "./run-case.js";
 
 for (const site of selectSites(sites, process.env.LIVE_SITES ?? "all")) {
   test(site.id, async ({ browserName: _browserName }, testInfo) => {
-    const result = await runLiveCase(site);
+    const result = await runLiveCase(site, {
+      onProgress: (snapshot) =>
+        testInfo.attach("live-progress", {
+          body: JSON.stringify(snapshot),
+          contentType: "application/json",
+        }),
+    });
     await testInfo.attach("live-result", {
       body: JSON.stringify(result),
       contentType: "application/json",
