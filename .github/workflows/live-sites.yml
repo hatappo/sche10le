@@ -1,5 +1,5 @@
 name: Live event sites
-run-name: "Live event sites · ${{ inputs.sites || 'all' }}"
+run-name: "Live event sites · ${{ inputs.sites || 'ci' }}"
 
 # Run after merging into main, never while a PR is being developed.
 on:
@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       sites:
-        description: "対象ID（例: kokuchpro）。全件はall、複数はカンマ区切り。ID一覧はtests/live/sites.js"
+        description: "標準はci（こくちーずプロを除外）。個別ID・カンマ区切りも指定可。全登録サイトはall"
         required: true
-        default: all
+        default: ci
         type: string
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      LIVE_SITES: ${{ inputs.sites || 'all' }}
+      LIVE_SITES: ${{ inputs.sites || 'ci' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:

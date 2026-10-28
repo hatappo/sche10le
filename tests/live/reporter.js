@@ -4,6 +4,10 @@ import { reportOutcome, summaryMarkdown } from "./contract.js";
 
 export default class LiveReporter {
   results = new Map();
+  excludedSites = [];
+  constructor({ selection = process.env.LIVE_SITES ?? "all" } = {}) {
+    this.selection = selection;
+  }
   onBegin(_config, suite) {
     for (const test of suite.allTests()) {
       const site = sites.find((site) => site.id === test.title);
@@ -18,6 +22,10 @@ export default class LiveReporter {
           candidates: [],
         });
     }
+    this.excludedSites = this.selection === "ci"
+      ? sites.filter((site) => site.ciExclusionReason && !this.results.has(site.id))
+        .map((site) => ({ id: site.id, name: site.name, url: site.url, reason: site.ciExclusionReason }))
+      : [];
   }
   onTestEnd(test, result) {
     const progress = result.attachments
@@ -59,15 +67,17 @@ export default class LiveReporter {
   async onEnd(result) {
     const reports = [...this.results.values()];
     const outcome = reportOutcome(reports, result.status);
-    const summary = summaryMarkdown(reports, outcome);
+    const summary = summaryMarkdown(reports, outcome, this.excludedSites);
     await mkdir("test-results/live", { recursive: true });
     await writeFile(
       "test-results/live/report.json",
       JSON.stringify(
         {
           outcome,
+          selection: this.selection,
           commit: process.env.GITHUB_SHA ?? null,
           reports,
+          excludedSites: this.excludedSites,
         },
         null,
         2,
