@@ -80,7 +80,7 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 .review-heading .summary { margin: 10px 0; }
 .review-heading button { flex-shrink: 0; }
 
-.format-tokens { display: flex; flex-wrap: wrap; gap: 2px; margin-top: -12px; }
+.format-tokens { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 0; }
 .format-tokens button { border: 1px solid var(--line); }
 .format-preview { display: block; padding: 10px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
 .format-preview.error { color: var(--error); border-color: var(--error-border); }
@@ -109,8 +109,12 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 .url-start { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .url-end { flex-shrink: 0; white-space: nowrap; }
 
-.theme-setting { margin: 20px 0; }
-.theme-setting > p { margin: 0 0 8px; font-size: 12px; font-weight: 600; }
+.setting-group { padding: 20px 0; }
+.setting-group:first-child { padding-top: 0; }
+.setting-group + .setting-group { border-top: 1px solid var(--line); }
+.setting-group > label { margin-bottom: 10px; }
+.setting-group .hint { margin-top: 8px; white-space: pre-line; }
+.theme-setting > p { margin: 0 0 10px; font-size: 12px; font-weight: 600; }
 .theme-selector { border: 1px solid var(--control-border); border-radius: 10px; background: var(--surface-raised); }
 .theme-selector summary { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 10px; cursor: pointer; list-style: none; }
 .theme-selector summary::-webkit-details-marker { display: none; }

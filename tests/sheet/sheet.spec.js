@@ -173,13 +173,14 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
 test("テーマと書式を保存・復元し、カレンダーの失敗時も取得した内容を保持する", async ({ page }, info) => {
   const sheet = await start(page);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await page.screenshot({ path: `test-results/settings-groups-${info.project.name}.png`, animations: "disabled" });
   await chooseTheme(sheet, "shikon");
   await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
-  await sheet.getByLabel("タイトルの書式").fill("{unknown}");
-  await sheet.getByLabel("タイトルの書式").blur();
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).fill("{unknown}");
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).blur();
   await expect(sheet.locator(".format-preview")).toHaveClass(/error/);
-  await sheet.getByLabel("タイトルの書式").fill("{from:HHmm} {title}");
-  await sheet.getByLabel("タイトルの書式").blur();
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).fill("{from:HHmm} {title}");
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).blur();
   await expect(sheet.locator(".status")).toHaveText("自動保存しました");
   await page.reload();
   await expect(sheet.locator(".candidate")).toHaveCount(3);
@@ -209,8 +210,8 @@ test("テーマと書式を保存・復元し、カレンダーの失敗時も�
 test("設定のエラーを赤く示し、失敗した複数の変更を再試行でまとめて保存する", async ({ page }) => {
   const sheet = await start(page);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
-  const format = sheet.getByLabel("タイトルの書式");
-  await expect(sheet.getByLabel("前後の移動時間（片道・分）")).toHaveAttribute("step", "5");
+  const format = sheet.getByRole("textbox", { name: "タイトルの書式", exact: true });
+  await expect(sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true })).toHaveAttribute("step", "5");
   await format.fill("{title} ");
   await sheet.getByRole("button", { name: "開始時刻", exact: true }).tap();
   await expect(format).toHaveValue("{title} {from:HHmm}");
@@ -223,8 +224,8 @@ test("設定のエラーを赤く示し、失敗した複数の変更を再試�
   await sheet.getByRole("button", { name: "初期値に戻す" }).tap();
   await chooseTheme(sheet, "aitetsu");
   await expect(sheet.locator(".status")).toHaveClass(/error/);
-  await sheet.getByLabel("前後の移動時間（片道・分）").fill("55");
-  await sheet.getByLabel("前後の移動時間（片道・分）").blur();
+  await sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true }).fill("55");
+  await sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true }).blur();
   await expect(sheet.getByRole("button", { name: "再試行", exact: true })).toBeVisible();
   await page.evaluate(() => { window.__sheetPreview.failSave = false; });
   await sheet.getByRole("button", { name: "再試行", exact: true }).tap();
@@ -233,7 +234,7 @@ test("設定のエラーを赤く示し、失敗した複数の変更を再試�
   await expect(sheet.locator(".candidate")).toHaveCount(3);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
   await expect(sheet.locator(".theme-selector summary")).toContainText("藍鉄");
-  await expect(sheet.getByLabel("前後の移動時間（片道・分）")).toHaveValue("55");
+  await expect(sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true })).toHaveValue("55");
   await expect(format).toHaveValue("{title}");
 });
 
@@ -274,7 +275,7 @@ test("取得バーで内容を確認でき、直接の項目移動・途中確�
   await expect(title).toHaveClass(/done/);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
   await expect(sheet.locator("footer")).toBeHidden();
-  await sheet.getByLabel("タイトルの書式").fill("{from:HHmm} {title}");
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).fill("{from:HHmm} {title}");
   await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
   await expect(sheet).toHaveAttribute("data-mode", "pick");
   await expect(sheet.getByRole("button", { name: "2 場所", exact: true })).toHaveAttribute("aria-current", "step");

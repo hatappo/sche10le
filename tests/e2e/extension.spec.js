@@ -123,8 +123,8 @@ test("別タブへ設定を反映し、再スキャンも拡張自身の文字�
     await first.sheet.getByRole("button", { name: "設定", exact: true }).click();
     await chooseTheme(first.sheet, "kurocha");
     await expect(second.page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "kurocha");
-    await first.sheet.getByLabel("前後の移動時間（片道・分）").fill("10");
-    await first.sheet.getByLabel("前後の移動時間（片道・分）").blur();
+    await first.sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true }).fill("10");
+    await first.sheet.getByRole("spinbutton", { name: "前後の移動時間（片道・分）", exact: true }).blur();
     await first.sheet.getByRole("button", { name: "戻る", exact: true }).click();
     await first.sheet.getByLabel("日程の並び順").selectOption("date");
     await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get("candidateOrder")).candidateOrder)).toBe("date");
