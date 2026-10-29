@@ -1,7 +1,8 @@
 // Build a self-contained design reference from checked-in sources and assets.
 import { readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
-import { THEMES } from "../lib/themes.js";
+import { createThemeSelector } from "../lib/theme-selector.js";
+import { THEMES, resolveTheme } from "../lib/themes.js";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
@@ -26,6 +27,7 @@ const sheet = await read("lib/sheet.css");
 const components = (await read("docs/design/components.html"))
   .replace("{{THEME}}", theme)
   .replace("{{PANEL_CSS}}", sheet)
+  .replace("{{THEME_SELECTOR_SCRIPT}}", `const THEMES = ${JSON.stringify(THEMES)};\n${resolveTheme.toString()}\n${createThemeSelector.toString()}`)
   .replace("{{THEME_IDS}}", JSON.stringify(THEMES.map((theme) => theme.id)));
 const overlay = components.replace('body data-demo="list"', 'body data-demo="pick"')
   .replace('class="sheet" data-mode="list"', 'class="sheet" data-mode="pick"')

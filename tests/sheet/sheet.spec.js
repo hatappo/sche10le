@@ -1,3 +1,4 @@
+import { chooseTheme } from "../support/sheet.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
@@ -172,7 +173,7 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
 test("テーマと書式を保存・復元し、カレンダーの失敗時も取得した内容を保持する", async ({ page }, info) => {
   const sheet = await start(page);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
-  await sheet.getByLabel("カラーテーマ").selectOption("shikon");
+  await chooseTheme(sheet, "shikon");
   await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
   await sheet.getByLabel("タイトルの書式").fill("{unknown}");
   await sheet.getByLabel("タイトルの書式").blur();
@@ -220,7 +221,7 @@ test("設定のエラーを赤く示し、失敗した複数の変更を再試�
   await expect(sheet.locator(".format-preview")).toHaveClass(/error/);
   await page.evaluate(() => { window.__sheetPreview.failSave = true; });
   await sheet.getByRole("button", { name: "初期値に戻す" }).tap();
-  await sheet.getByLabel("カラーテーマ").selectOption("aitetsu");
+  await chooseTheme(sheet, "aitetsu");
   await expect(sheet.locator(".status")).toHaveClass(/error/);
   await sheet.getByLabel("前後の移動時間（片道・分）").fill("55");
   await sheet.getByLabel("前後の移動時間（片道・分）").blur();
@@ -231,7 +232,7 @@ test("設定のエラーを赤く示し、失敗した複数の変更を再試�
   await page.reload();
   await expect(sheet.locator(".candidate")).toHaveCount(3);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
-  await expect(sheet.getByLabel("カラーテーマ")).toHaveValue("aitetsu");
+  await expect(sheet.locator(".theme-selector summary")).toContainText("藍鉄");
   await expect(sheet.getByLabel("前後の移動時間（片道・分）")).toHaveValue("55");
   await expect(format).toHaveValue("{title}");
 });
@@ -246,7 +247,7 @@ test("取得途中の確認画面から設定へ進み、6テーマでも狭幅�
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
   await page.setViewportSize({ width: 320, height: 568 });
   for (const theme of ["chitosemidori", "ginnezu", "mizuasagi", "aitetsu", "kurocha", "shikon"]) {
-    await sheet.getByLabel("カラーテーマ").selectOption(theme);
+    await chooseTheme(sheet, theme);
     await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", theme);
     expect(await sheet.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
   }
@@ -298,4 +299,53 @@ test("取得バーで内容を確認でき、直接の項目移動・途中確�
   await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
   await expect(sheet).toHaveAttribute("data-mode", "list");
   await expect(sheet.locator('[aria-expanded="true"]')).toHaveCount(0);
+});
+
+test("設定と戻るが同じ位置で切り替わり、色見本はテーマの実色とキーボード操作に対応する", async ({ page }, info) => {
+  const sheet = await start(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 320, height: 568 });
+  const gear = sheet.getByRole("button", { name: "設定", exact: true });
+  const gearBox = await gear.boundingBox();
+  await gear.click();
+  const back = sheet.getByRole("button", { name: "戻る", exact: true });
+  const backBox = await back.boundingBox();
+  expect(backBox.x).toBeCloseTo(gearBox.x, 0);
+  expect(backBox.width).toBe(gearBox.width);
+  const selector = sheet.locator(".theme-selector");
+  const summary = selector.locator("summary");
+  const sourceScroll = await page.evaluate(() => scrollY);
+  await summary.focus();
+  await summary.press("Enter");
+  await expect(selector).toHaveJSProperty("open", true);
+  await expect(selector.locator(".theme-options button")).toHaveCount(6);
+  await expect(selector.getByRole("button", { name: "紫紺", exact: true })).toBeInViewport();
+  expect(await page.evaluate(() => scrollY)).toBe(sourceScroll);
+  const colors = await selector.locator(".theme-options .theme-swatch").evaluateAll(nodes => nodes.map(node => ({
+    id: node.dataset.themePreview, paper: getComputedStyle(node).backgroundColor,
+    ink: getComputedStyle(node).color, accent: getComputedStyle(node).boxShadow,
+  })));
+  expect(new Set(colors.map(color => color.paper)).size).toBe(6);
+  expect(new Set(colors.map(color => color.accent)).size).toBe(6);
+  expect(await selector.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await page.screenshot({ path: `test-results/theme-swatches-${info.project.name}.png` });
+  await selector.getByRole("button", { name: "千歳緑", exact: true }).focus();
+  await page.keyboard.press("End");
+  await expect(selector.getByRole("button", { name: "紫紺", exact: true })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(selector).toHaveJSProperty("open", false);
+  await expect(summary).toBeFocused();
+  await expect(summary).toContainText("紫紺");
+  await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
+  await summary.press("Enter");
+  await summary.press("Escape");
+  await expect(selector).toHaveJSProperty("open", false);
+  await expect(sheet).toBeVisible();
+  await back.click();
+  await pickDate(sheet);
+  const pickingGear = await gear.boundingBox();
+  await gear.click();
+  expect((await back.boundingBox()).x).toBeCloseTo(pickingGear.x, 0);
+  await back.click();
+  await expect(sheet).toHaveAttribute("data-mode", "pick");
 });

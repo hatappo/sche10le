@@ -1,3 +1,5 @@
+import { THEMES } from "../../lib/themes.js";
+
 // Called only by tests with a temporary host permission for the fixture/site.
 // The isolated world's closed shadow roots are made observable only for this run.
 export async function showSheet(worker, page) {
@@ -16,4 +18,10 @@ export async function showSheet(worker, page) {
     await chrome.scripting.executeScript({ target: { tabId: tab.id, frameIds: [0] }, files: ["/content-scripts/sheet.js"] });
     return chrome.tabs.sendMessage(tab.id, { type: "sheet-show" }, { frameId: 0 });
   }, page.url());
+}
+
+export async function chooseTheme(sheet, id) {
+  const selector = sheet.locator(".theme-selector");
+  if (!(await selector.evaluate(node => node.open))) await selector.locator("summary").click();
+  await selector.getByRole("button", { name: THEMES.find(theme => theme.id === id).name, exact: true }).click();
 }

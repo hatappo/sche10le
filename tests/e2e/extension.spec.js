@@ -3,7 +3,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createSheetPreviewServer } from "../../scripts/preview-sheet.js";
-import { showSheet } from "../support/sheet.js";
+import { showSheet, chooseTheme } from "../support/sheet.js";
 
 let context, server, workspace, baseUrl, worker;
 test.beforeAll(async () => {
@@ -121,7 +121,7 @@ test("別タブへ設定を反映し、再スキャンも拡張自身の文字�
   const first = await open(), second = await open();
   try {
     await first.sheet.getByRole("button", { name: "設定", exact: true }).click();
-    await first.sheet.getByLabel("カラーテーマ").selectOption("kurocha");
+    await chooseTheme(first.sheet, "kurocha");
     await expect(second.page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "kurocha");
     await first.sheet.getByLabel("前後の移動時間（片道・分）").fill("10");
     await first.sheet.getByLabel("前後の移動時間（片道・分）").blur();
