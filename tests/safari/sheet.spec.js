@@ -1,0 +1,185 @@
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { runInNewContext } from "node:vm";
+import { createSafariPreviewServer } from "../../scripts/preview-safari.js";
+
+let server;
+let url;
+test.beforeAll(async () => {
+  server = await createSafariPreviewServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  url = `http://127.0.0.1:${server.address().port}/`;
+});
+test.afterAll(async () => { await new Promise((resolve) => server.close(resolve)); });
+test.beforeEach(async ({ page }) => {
+  // Test-only observation of the real sheet; the production bundle uses closed roots.
+  await page.addInitScript(() => {
+    const attach = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = function(options) { return attach.call(this, { ...options, mode: "open" }); };
+  });
+});
+
+async function start(page) {
+  await page.goto(url);
+  const sheet = page.locator("sche10le-sheet .sheet");
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  return sheet;
+}
+async function pickDate(sheet, name = /^時間どおり/) {
+  await sheet.locator(".candidate-toggle").first().tap();
+  await sheet.getByRole("button", { name }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "pick");
+}
+
+test("SafariパッケージからChrome専用UI・AI・不要な権限を除外する", async () => {
+  const manifest = JSON.parse(await readFile(".output/safari-mv3/manifest.json", "utf8"));
+  expect(manifest.manifest_version).toBe(3);
+  expect(manifest.permissions.sort()).toEqual(["activeTab", "scripting", "storage"].sort());
+  expect(manifest.background.service_worker).toBe("background.js");
+  for (const key of ["side_panel", "minimum_chrome_version", "content_scripts", "host_permissions"]) expect(manifest[key]).toBeUndefined();
+  const content = await readFile(".output/safari-mv3/content-scripts/safari.js", "utf8");
+  expect(content).not.toMatch(/LanguageModel|AIで日程を補完|AIを準備する|__safariPreview/);
+});
+
+test("起動時だけトップフレームへ注入し、背景処理のURLと送信元を検証する", async () => {
+  let activate;
+  let receive;
+  const injected = [], sent = [], opened = [];
+  const api = {
+    action: { onClicked: { addListener(fn) { activate = fn; } } },
+    scripting: { async executeScript(request) { injected.push(request); } },
+    tabs: {
+      async sendMessage(...args) { sent.push(args); },
+      async create(request) { opened.push(request); return { id: 10 }; },
+    },
+    runtime: { id: "test-extension", getURL: (path) => `safari-web-extension://test${path}`, onMessage: { addListener(fn) { receive = fn; } } },
+  };
+  runInNewContext(await readFile(".output/safari-mv3/background.js", "utf8"), { chrome: api, URL, console });
+  expect(injected).toHaveLength(0);
+  await activate({ id: 4, url: "https://example.com/event" });
+  expect(injected).toEqual([{ target: { tabId: 4, frameIds: [0] }, files: ["/content-scripts/safari.js"] }]);
+  expect(sent).toEqual([[4, { type: "safari-show" }, { frameId: 0 }]]);
+  const message = { type: "safari-open-calendar", url: "https://calendar.google.com/calendar/render?action=TEMPLATE" };
+  const sender = { id: "test-extension", tab: { id: 4 }, frameId: 0 };
+  expect(await receive(message, sender)).toEqual({ ok: true });
+  expect(opened).toHaveLength(1);
+  for (const invalid of [{ ...sender, id: "other" }, { ...sender, frameId: 1 }, { id: sender.id }]) {
+    expect(await receive(message, invalid)).toEqual({ ok: false });
+  }
+  expect(await receive({ ...message, url: "https://example.com/" }, sender)).toEqual({ ok: false });
+  expect(opened).toHaveLength(1);
+  api.scripting.executeScript = async () => { throw new Error("Cannot access contents of url"); };
+  await activate({ id: 4, url: "https://example.com/event" });
+  expect(opened[1].url).toMatch(/^safari-web-extension:\/\/test\/safari-help.html/);
+});
+
+test("タップで日時を選び、同じシートを畳んで3項目を取得し、カレンダーとICSへ渡す", async ({ page }, info) => {
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  const sheet = await start(page);
+  const initialHeight = (await sheet.boundingBox()).height;
+  await page.screenshot({ path: `test-results/safari-${info.project.name}-list.png` });
+  await pickDate(sheet);
+  await expect.poll(async () => (await sheet.boundingBox()).height).toBeLessThan(initialHeight - 100);
+  await page.locator("#event-title").tap();
+  await expect(sheet.locator("h2")).toHaveText("場所をページから選択");
+  await page.screenshot({ path: `test-results/safari-${info.project.name}-pick.png` });
+  await page.locator("address").first().tap();
+  await expect(sheet.locator("h2")).toHaveText("詳細をページから選択");
+  await page.locator("article p").filter({ hasText: "受付は開始30分前" }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
+  await expect(sheet.locator(".field").nth(2)).toContainText(url);
+  await expect.poll(async () => (await sheet.boundingBox()).height).toBeCloseTo(844 * .72, 0);
+  await page.screenshot({ path: `test-results/safari-${info.project.name}-review.png` });
+  await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
+  await expect(sheet.locator(".status")).toContainText("カレンダーを開きました");
+  const handoff = new URL(await page.evaluate(() => window.__safariPreview.lastCalendar));
+  expect(handoff.searchParams.get("text")).toBe("蔵前の活版印刷ワークショップ");
+  expect(handoff.searchParams.get("location")).toContain("アトリエ蔵前");
+  expect(handoff.searchParams.get("details")).toContain("受付は開始30分前");
+  expect(handoff.searchParams.get("details")).toContain(url);
+  const downloaded = page.waitForEvent("download");
+  await sheet.getByRole("button", { name: "予定をダウンロード（.ics）" }).tap();
+  const download = await downloaded;
+  expect(await readFile(await download.path(), "utf8")).toContain("BEGIN:VEVENT");
+  expect(errors).toEqual([]);
+});
+
+test("スクロールやフォームを取得せず、閉じる・再表示・スキップ・選び直しで状態を保つ", async ({ page }) => {
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await page.locator("#event-title").evaluate((node) => {
+    node.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, isPrimary: true, pointerId: 1, clientX: 10, clientY: 100 }));
+    node.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 1, clientX: 10, clientY: 60 }));
+    node.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+  });
+  await expect(sheet.locator("h2")).toHaveText("タイトルをページから選択");
+  await page.locator("article").first().evaluate((node) => {
+    const input = document.createElement("input");
+    input.id = "page-form";
+    node.prepend(input);
+  });
+  await page.locator("#page-form").fill("入力中の内容");
+  await page.locator("#page-form").tap();
+  await expect(sheet.locator("h2")).toHaveText("タイトルをページから選択");
+  await page.locator("#event-title").tap();
+  await sheet.getByRole("button", { name: "Sche10leを閉じる", exact: true }).tap();
+  await expect(sheet).toBeHidden();
+  await page.locator("#preview-launch").tap();
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
+  await sheet.locator(".field").nth(1).tap();
+  await sheet.getByRole("button", { name: "スキップ", exact: true }).tap();
+  await sheet.getByRole("button", { name: "完了", exact: true }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  await expect(sheet.locator('[aria-expanded="true"]')).toHaveCount(0);
+  await sheet.getByRole("button", { name: "再スキャン", exact: true }).tap();
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  // A second injection must not create a second sheet or duplicate handlers.
+  await page.addScriptTag({ url: `${url}extension.js` });
+  await page.evaluate(() => window.__safariPreview.show());
+  await expect(page.locator("sche10le-sheet")).toHaveCount(1);
+  await page.evaluate(() => history.pushState({}, "", "/?new-page=1"));
+  await expect(sheet).toBeHidden();
+  await page.locator("#preview-launch").tap();
+  await expect(sheet).toHaveAttribute("data-mode", "list");
+});
+
+test("テーマと書式を保存・復元し、カレンダーの失敗時も取得した内容を保持する", async ({ page }, info) => {
+  const sheet = await start(page);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await sheet.getByLabel("カラーテーマ").selectOption("shikon");
+  await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
+  await sheet.getByLabel("タイトルの書式").fill("{unknown}");
+  await sheet.getByLabel("タイトルの書式").blur();
+  await expect(sheet.locator(".status")).toHaveClass(/error/);
+  await sheet.getByLabel("タイトルの書式").fill("{from:HHmm} {title}");
+  await sheet.getByLabel("タイトルの書式").blur();
+  await expect(sheet.locator(".status")).toHaveText("自動保存しました");
+  await page.reload();
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
+  await pickDate(sheet, /^移動込み/);
+  await page.locator("#event-title").tap();
+  await sheet.getByRole("button", { name: "内容を確認" }).tap();
+  await expect(sheet.locator(".field").first()).toContainText("1400 蔵前の活版印刷ワークショップ");
+  await page.evaluate(() => { window.__safariPreview.failOpen = true; });
+  await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
+  await expect(sheet.locator(".status")).toHaveClass(/error/);
+  await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await expect.poll(async () => (await sheet.boundingBox()).width).toBe(360);
+  await expect.poll(async () => (await sheet.boundingBox()).height).toBe(720);
+  await page.screenshot({ path: `test-results/safari-${info.project.name}-desktop.png` });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(await sheet.evaluate((node) => getComputedStyle(node).transitionDuration)).toBe("0s");
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect.poll(async () => {
+    const box = await sheet.boundingBox();
+    return box.x >= 0 && box.x + box.width <= 320;
+  }).toBe(true);
+  expect(await sheet.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+});

@@ -99,6 +99,10 @@ E2Eはブラウザコンテキストを共有しています。`page.clock` に�
 
 カレンダーへの受け渡しは `chrome.tabs.create` に渡されたURLを検査し、テストでは実際の遷移先を空白タブに置き換えます。Googleカレンダーへのログイン・予定保存は行いません。実際のツールバーからの起動とChrome標準サイドパネルの開閉は手動確認が必要です。
 
+### Safari版の試作
+
+Safari版はiPhone向けの下部シートとMac向けのドロワーを開発中です。`npm run preview:safari` でUIプレビュー、`npm run build:safari` でSafari用MV3を生成できます。ローカルAIは含みません。まだSafari拡張としての実機検証・配布準備は完了していません。共有方針、専用テスト、Xcode導入と実機確認は [Safari版の開発手順](docs/dev/safari-development.md) を参照してください。
+
 ## 変更履歴と配布用ビルド
 
 バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.5.0` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。

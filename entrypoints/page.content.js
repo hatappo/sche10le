@@ -3,6 +3,7 @@ import { createPicker } from "../lib/picker.js";
 import { createSourceHighlight } from "../lib/source-highlight.js";
 
 export default defineContentScript({
+  exclude: ["safari"],
   // Inject only on demand through activeTab; matches would grant host permissions.
   matches: [],
   registration: "runtime",

@@ -18,7 +18,10 @@
     "postinstall": "wxt prepare",
     "icons": "node scripts/generate-icons.js",
     "test:live": "playwright test --config playwright.live.config.js",
-    "check:live-samples": "node scripts/check-live-samples.js"
+    "check:live-samples": "node scripts/check-live-samples.js",
+    "build:safari": "wxt build -b safari --mv3",
+    "test:safari": "npm run build:safari && playwright test --config playwright.safari.config.js",
+    "preview:safari": "npm run build:safari && node scripts/preview-safari.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

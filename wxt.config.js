@@ -3,11 +3,11 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   imports: false,
   webExt: { disabled: true },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: "Sche10le",
     description: "ページの日程を見つけて、Googleカレンダーへ。",
-    minimum_chrome_version: "116",
-    permissions: ["activeTab", "scripting", "sidePanel", "storage"],
+    ...(browser === "safari" ? {} : { minimum_chrome_version: "116" }),
+    permissions: ["activeTab", "scripting", "storage", ...(browser === "safari" ? [] : ["sidePanel"])],
     icons: {
       16: "icons/16.png",
       32: "icons/32.png",
@@ -15,5 +15,5 @@ export default defineConfig({
       128: "icons/128.png",
     },
     action: { default_title: "Sche10leで日程を見つける" },
-  },
+  }),
 });
