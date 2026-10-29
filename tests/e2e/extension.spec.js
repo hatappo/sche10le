@@ -25,6 +25,7 @@ test.beforeAll(async () => {
   await writeFile(manifestPath, JSON.stringify(manifest));
   context = await chromium.launchPersistentContext(path.join(workspace, "profile"), {
     channel: "chromium", headless: true,
+    chromiumSandbox: process.env.PLAYWRIGHT_CHROMIUM_SANDBOX === "1",
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
     viewport: { width: 1000, height: 850 }, timezoneId: "Asia/Tokyo",
   });

@@ -78,6 +78,8 @@ npm run icons     # ブランドのCSS原稿から各サイズのPNGを再生成
 
 配布用アイコンは `public/icons/` にあります。ストアには `128.png`（128×128px）を使用します。再生成はGeorgiaを使用できるmacOSとPlaywrightのChromiumで行い、`lib/brand.css` のマーク原稿とテーマ色をそのまま描画します。生成済みPNGを同梱するため、利用者の端末にGeorgiaがなくても配布用アイコンの見た目は変わりません。
 
+main向けPRとmainへのpushでは、`Regression` ワークフローがlint・型検査・単体テスト・両ブラウザ向けビルド・Chrome実拡張・Chromium/WebKit共通UIを検証します。外部イベントサイトの検証とは分離しています。詳しくは [CIの運用](scripts/ci/README.md) を参照してください。
+
 ブラウザテストは一時プロファイルとローカルのfixtureを使用します。ツールバーのクリックによる `activeTab` の付与を自動化できないため、**テスト用コピーだけ**に `127.0.0.1` のホスト権限を追加します。本番manifestにホスト権限や自動実行Content Scriptがないことも検査します。実際のContent Scriptをページに注入し、ドロワー内での取得・ページ遷移・設定保存を確認します。
 
 E2Eはブラウザコンテキストを共有しています。`page.clock` による時計の停止・時刻変更は後続ページにも影響するため、使ったテストの `finally` で `setSystemTime(new Date())` と `resume()` を実行します。ページを閉じるだけでは時計は復元されません。

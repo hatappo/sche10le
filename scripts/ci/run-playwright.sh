@@ -5,7 +5,7 @@ repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 image=$(cat "$repo_root/scripts/ci/playwright-image.txt")
 
 if [ "$(id -u)" -eq 0 ]; then
-  echo "Run the live-test container as a non-root user." >&2
+  echo "Run the test container as a non-root user." >&2
   exit 1
 fi
 
@@ -20,6 +20,7 @@ docker run --rm --init \
   --env HOME=/tmp \
   --env TZ=Asia/Tokyo \
   --env CI=true \
+  --env PLAYWRIGHT_CHROMIUM_SANDBOX=1 \
   --env LIVE_CHROMIUM_SANDBOX=1 \
   --env LIVE_SITES \
   --env GITHUB_SHA \

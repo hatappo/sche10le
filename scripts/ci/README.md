@@ -1,4 +1,4 @@
-# ライブ検証のコンテナ
+# 回帰・ライブ検証のコンテナ
 
 `playwright-image.txt` のMicrosoft公式イメージを使う。Node.js 24・ブラウザ・OS依存ライブラリは同梱済みなので、WFでは `apt` や `playwright install` を実行しない。プロジェクトの依存は引き続き `npm ci` でlockfileからインストールする。
 
@@ -6,9 +6,21 @@ Playwrightを更新するときはイメージも同じバージョンに更新�
 
 `run-playwright.sh` はチェックアウトだけを `/workspace` にマウントする。ホストと同じ非rootのUID/GIDを使い、DockerソケットやGitHubトークンは渡さない。チェックアウトにも認証情報を保存しない。`HOME` はコンテナ内の `/tmp`、共有メモリはコンテナ専用の1GBとする。Node.js側も `TZ=Asia/Tokyo` に固定し、既存の日時テストとブラウザ側の設定にそろえる。
 
-Chromiumのサンドボックスを `LIVE_CHROMIUM_SANDBOX=1` で明示的に有効化する。起動できない場合にサンドボックス無効へ切り替える処理はない。`--privileged`・`SYS_ADMIN`・`seccomp=unconfined` は使用しない。公式のseccomp設定でユーザー名前空間の作成を許可し、`no-new-privileges` を指定する。
+Chromiumのサンドボックスを `PLAYWRIGHT_CHROMIUM_SANDBOX=1`（共通UI／Chrome実拡張）と `LIVE_CHROMIUM_SANDBOX=1`（既存のライブ検証ハーネス）で明示的に有効化する。起動できない場合にサンドボックス無効へ切り替える処理はない。`--privileged`・`SYS_ADMIN`・`seccomp=unconfined` は使用しない。公式のseccomp設定でユーザー名前空間の作成を許可し、`no-new-privileges` を指定する。
 
 ライブ検証の前に、同じコンテナ・同じブラウザ起動処理でローカルHTTP fixtureを確認する。遅れて表示される本文・空や非表示のプレースホルダーも検証する。環境が壊れているときに実サイトへ接続しない。実サイトの直列実行・2秒の間隔・リトライなし・日時のみのレポート保存は維持する。
+
+## PRの回帰検証
+
+`.github/workflows/regression.yml` はmain向けPR、mainへのpush、手動実行で動く。既存の公式イメージと実行スクリプトを共用し、以下を順に検証する。
+
+1. `npm run check`：lint・型検査・単体テスト・Chromeビルド。
+2. `npm run test:e2e -- --output=test-results/e2e`：Chrome実拡張とライブ検証ハーネスをローカルfixtureで検証。
+3. `npm run test:ui -- --output=test-results/ui`：SafariビルドとChromium／WebKitの共通UI検証。
+
+ブラウザテストはローカルfixtureだけを対象とし、外部イベントサイトへ接続しない。イメージとnpm依存の取得にはネットワークを使う。失敗時のみローカルfixtureのtrace・スクリーンショットを7日間保存する。UIとE2Eの出力先を分け、後続のテストが先の診断を消さないようにする。
+
+ライブ検証のトリガーは変更しない。PR中は走らず、マージ後またはmainからの手動実行に限定する。PRの権限は読み取りのみで、トークンをコンテナへ渡さない。新しいコミットが来たら同じPRの古い回帰実行をキャンセルする。
 
 ## ローカルで試す場合
 

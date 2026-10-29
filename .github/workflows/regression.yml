@@ -1,0 +1,45 @@
+name: Regression
+
+# Local fixtures only. Live event sites have their own post-merge workflow.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Pull prepared Playwright environment
+        timeout-minutes: 5
+        run: docker pull "$(cat scripts/ci/playwright-image.txt)"
+      - name: Install dependencies from lockfile
+        timeout-minutes: 3
+        run: bash scripts/ci/run-playwright.sh npm ci
+      - name: Lint, typecheck, unit tests and Chrome build
+        run: bash scripts/ci/run-playwright.sh npm run check
+      - name: Chrome extension and local harness regression
+        run: bash scripts/ci/run-playwright.sh npm run test:e2e -- --output=test-results/e2e
+      - name: Safari build and Chromium / WebKit UI regression
+        run: bash scripts/ci/run-playwright.sh npm run test:ui -- --output=test-results/ui
+      - name: Upload failure diagnostics from local fixtures
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

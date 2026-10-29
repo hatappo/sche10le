@@ -7,7 +7,7 @@ export default defineConfig({
   reporter: "list",
   use: { viewport: { width: 390, height: 844 }, hasTouch: true, timezoneId: "Asia/Tokyo", trace: "retain-on-failure" },
   projects: [
-    { name: "chromium", use: { browserName: "chromium" } },
+    { name: "chromium", use: { browserName: "chromium", launchOptions: { chromiumSandbox: process.env.PLAYWRIGHT_CHROMIUM_SANDBOX === "1" } } },
     { name: "webkit", use: { browserName: "webkit" } },
   ],
 });
