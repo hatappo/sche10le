@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Sche10leExtensionBundleIdentifier</key>
+	<string>$(SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER)</string>
+	<key>SFSafariWebExtensionConverterVersion</key>
+	<string>27.1</string>
+</dict>
+</plist>

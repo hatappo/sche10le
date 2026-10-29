@@ -11,7 +11,7 @@
 - 閉じても、そのページが存続する間は内容を保持する。拡張から再表示できる。再読み込み・別ページへの移動・SPAのURL変更では破棄する。
 - GoogleカレンダーURL、ICS、タイトル書式、移動時間、候補のソート、6テーマは既存の処理・設定キーを共有する。Safariの設定画面にはAIを置かない。
 
-WebKitとChromiumで**UI・ロジックの検証**を実施。2026-10-30にXcode 27.1でmacOS/iOS共通プロジェクトを生成し、iPhone 18 Pro（iOS 27.0）シミュレーター向けビルド・インストール・案内アプリの起動を確認した。同日、統合前の試作ではユーザーの手動確認でSafariの拡張メニューから起動し、検証ページの日程3件を検出して動作した。統合後の共通版はiOS／macOSともクリーンな生成物でビルドし、起動中のiPhoneシミュレーターへ再インストール済み。共通版の手動操作確認はこれから行う。署名、実機上の起動・権限・ファイル受け渡しは未検証であり、ストアへ提出できる状態ではない。
+WebKitとChromiumで**UI・ロジックの検証**を実施。2026-10-30にXcode 27.1でmacOS/iOS共通プロジェクトを生成し、iPhone 18 Pro（iOS 27.0）シミュレーター向けビルド・インストール・案内アプリの起動を確認した。同日、統合前の試作ではユーザーの手動確認でSafariの拡張メニューから起動し、検証ページの日程3件を検出して動作した。統合後の共通版はiOS／macOSともクリーンな生成物でビルドし、起動中のiPhoneシミュレーターへ再インストール済み。共通版のUIはローカルプレビューで手動確認済み。Git管理へ移したプロジェクトもiOSシミュレーター／macOS向けの署名なしビルドが成功し、アプリ内のWebリソースとバージョンの一致を確認した。移行後のSafari拡張としての手動操作確認は別途行う。署名、実機上の起動・権限・ファイル受け渡しは未検証であり、ストアへ提出できる状態ではない。
 
 初回の手動確認では、Safari内で拡張を起動する場所が分かりにくかった。公開前に案内アプリを日本語化し、「拡張を有効にする」と「Webページから拡張を起動する」を分けて、メニューの場所を図示する。現在のpackager標準の英語案内だけでは不十分。
 
@@ -54,25 +54,23 @@ npm run test:safari              # Safariビルド + Chromium/WebKitの専用テ
 
 UIはページ内のHTML/CSSであり、Safari標準ポップアップやネイティブのシートを縮めているわけではない。編集中の内容はContent Script内のメモリーに保持し、バックグラウンド処理やポップアップの存続には依存しない。ページ内の文字列をHTMLとして挿入せず、フォーム入力は取得対象にしない。URL変更の監視は再スキャンを行わない。
 
-## 次の段階：Xcodeと実機
+## Xcodeと実機の準備
 
 2026-10-30時点でXcode 27.1・Safariのpackager・iOSシミュレーターを準備済み。以下は別環境での再セットアップ手順。
 
 1. Mac App StoreからXcodeをインストールし、初回起動のセットアップを完了する。
 2. XcodeのSettings → LocationsでCommand Line ToolsにXcodeを指定する。
-3. 次のコマンドでpackagerの存在と生成を確認する。現行名は `safari-web-extension-packager`、旧名は `safari-web-extension-converter`。インストールしたXcodeに合わせて使用する。[Apple公式のパッケージ手順](https://developer.apple.com/documentation/safariservices/packaging-a-web-extension-for-safari)
+3. リポジトリ直下で次を実行し、Git管理するプロジェクトを開く。
 
 ```sh
-npm run build:safari
-xcrun --find safari-web-extension-packager
-xcrun safari-web-extension-packager "$(pwd)/.output/safari-mv3" \
-  --project-location "$(pwd)/.output/safari-xcode" \
-  --app-name Sche10le --bundle-identifier dev.sche10le.prototype --swift
+npm ci
+npm run prepare:safari
+open native/safari/Sche10le.xcodeproj
 ```
 
-`.output/safari-xcode` は最初の確認用の仮置きでGit管理外。本採用するプロジェクトの配置・Bundle Identifier・対応OS下限は生成結果を確認して決める。macOSとiOS両方のターゲットを用意し、packagerが出すmanifestの警告を確認する。Web側の変更後はWXTを再ビルドし、Xcode側が最新のリソースを参照していることを確認してアプリを再ビルドする。
+`native/safari/` が今後の管理場所。生成物を置いた旧 `.output/safari-xcode/` は使わない。共有Scheme・相対リソース参照・バージョン同期・署名設定の分離を含めて管理する。Web側を変更したら `npm run prepare:safari` を実行し、Xcodeで再ビルドする。
 
-生成されたプロジェクトは `.output/safari-xcode/Sche10le/Sche10le.xcodeproj`。`dev.sche10le.prototype` はローカル試作用の識別子で、ストア登録はしていない。生成済みフォルダーにpackagerを再実行して上書きしないこと。
+アプリID `dev.sche10le.prototype` はまだ開発用の仮ID。署名と正式IDは配布準備時に決定する。個人のTeamはGit対象外の `native/safari/Config/Signing.local.xcconfig` に置ける。詳しくは [ネイティブプロジェクトのREADME](../../native/safari/README.md) を参照。
 
 ### シミュレーターで試す
 
@@ -94,10 +92,8 @@ npm run preview:safari:native
 コマンドからのビルド確認には次を使える。通常はXcodeのRunで進める。
 
 ```sh
-xcodebuild -project .output/safari-xcode/Sche10le/Sche10le.xcodeproj \
-  -scheme 'Sche10le (iOS)' -configuration Debug -sdk iphonesimulator \
-  -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath .output/safari-derived CODE_SIGNING_ALLOWED=NO build
+npm run build:safari:ios     # Webの再ビルド + 署名なしiOSシミュレータービルド
+npm run build:safari:macos   # Webの再ビルド + 署名なしmacOSビルド
 ```
 
 以降はXcodeのApple Account、署名のTeam、実行対象のScheme（どのアプリを起動するか）、接続したiPhoneを順に設定する。登録や支払い、Bundle Identifierの確定は実装とは分けて進める。配布段階でApple Developer Program・TestFlight・App Storeの手続きを行う。[登録の公式案内](https://developer.apple.com/help/account/membership/program-enrollment)

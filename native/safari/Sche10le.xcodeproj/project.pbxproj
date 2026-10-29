@@ -1,0 +1,958 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B326066E3093B27C00080F51 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B326066D3093B27C00080F51 /* AppDelegate.swift */; };
+		B32606703093B27C00080F51 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B326066F3093B27C00080F51 /* SceneDelegate.swift */; };
+		B32606733093B27C00080F51 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B32606713093B27C00080F51 /* LaunchScreen.storyboard */; };
+		B32606763093B27C00080F51 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B32606743093B27C00080F51 /* Main.storyboard */; };
+		B326067F3093B27C00080F51 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B326067E3093B27C00080F51 /* AppDelegate.swift */; };
+		B32606823093B27C00080F51 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B32606803093B27C00080F51 /* Main.storyboard */; };
+		B32606893093B27C00080F51 /* Sche10le Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B32606883093B27C00080F51 /* Sche10le Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B32606933093B27C00080F51 /* Sche10le Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B32606923093B27C00080F51 /* Sche10le Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B32606983093B27C00080F51 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B326065D3093B27B00080F51 /* Main.html */; };
+		B32606993093B27C00080F51 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B326065D3093B27B00080F51 /* Main.html */; };
+		B326069A3093B27C00080F51 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = B326065F3093B27B00080F51 /* Icon.png */; };
+		B326069B3093B27C00080F51 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = B326065F3093B27B00080F51 /* Icon.png */; };
+		B326069C3093B27C00080F51 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = B32606603093B27B00080F51 /* Style.css */; };
+		B326069D3093B27C00080F51 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = B32606603093B27B00080F51 /* Style.css */; };
+		B326069E3093B27C00080F51 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = B32606613093B27B00080F51 /* Script.js */; };
+		B326069F3093B27C00080F51 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = B32606613093B27B00080F51 /* Script.js */; };
+		B32606A03093B27C00080F51 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32606623093B27B00080F51 /* ViewController.swift */; };
+		B32606A13093B27C00080F51 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32606623093B27B00080F51 /* ViewController.swift */; };
+		B32606A23093B27C00080F51 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B32606633093B27C00080F51 /* Assets.xcassets */; };
+		B32606A33093B27C00080F51 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B32606633093B27C00080F51 /* Assets.xcassets */; };
+		B32606A43093B27C00080F51 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32606653093B27C00080F51 /* SafariWebExtensionHandler.swift */; };
+		B32606A53093B27C00080F51 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32606653093B27C00080F51 /* SafariWebExtensionHandler.swift */; };
+		B32606BD3093B27C00080F51 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = B32606B73093B27C00080F51 /* background.js */; };
+		B32606BE3093B27C00080F51 /* chunks in Resources */ = {isa = PBXBuildFile; fileRef = B32606B83093B27C00080F51 /* chunks */; };
+		B32606BF3093B27C00080F51 /* content-scripts in Resources */ = {isa = PBXBuildFile; fileRef = B32606B93093B27C00080F51 /* content-scripts */; };
+		B32606C03093B27C00080F51 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = B32606BA3093B27C00080F51 /* icons */; };
+		B32606C13093B27C00080F51 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B32606BB3093B27C00080F51 /* manifest.json */; };
+		B32606C23093B27C00080F51 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = B32606BC3093B27C00080F51 /* help.html */; };
+		B32606C33093B27C00080F51 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = B32606B73093B27C00080F51 /* background.js */; };
+		B32606C43093B27C00080F51 /* chunks in Resources */ = {isa = PBXBuildFile; fileRef = B32606B83093B27C00080F51 /* chunks */; };
+		B32606C53093B27C00080F51 /* content-scripts in Resources */ = {isa = PBXBuildFile; fileRef = B32606B93093B27C00080F51 /* content-scripts */; };
+		B32606C63093B27C00080F51 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = B32606BA3093B27C00080F51 /* icons */; };
+		B32606C73093B27C00080F51 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B32606BB3093B27C00080F51 /* manifest.json */; };
+		B32606C83093B27C00080F51 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = B32606BC3093B27C00080F51 /* help.html */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B326068A3093B27C00080F51 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B32606573093B27B00080F51 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B32606873093B27C00080F51;
+			remoteInfo = "Sche10le Extension (iOS)";
+		};
+		B32606943093B27C00080F51 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B32606573093B27B00080F51 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B32606913093B27C00080F51;
+			remoteInfo = "Sche10le Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B32606AB3093B27C00080F51 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				B32606893093B27C00080F51 /* Sche10le Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+		B32606B23093B27C00080F51 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				B32606933093B27C00080F51 /* Sche10le Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		C00000000000000000000001 /* Common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Common.xcconfig; sourceTree = SOURCE_ROOT; };
+		B326065E3093B27B00080F51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		B326065F3093B27B00080F51 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		B32606603093B27B00080F51 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		B32606613093B27B00080F51 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		B32606623093B27B00080F51 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		B32606633093B27C00080F51 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B32606653093B27C00080F51 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		B326066A3093B27C00080F51 /* Sche10le.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sche10le.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B326066D3093B27C00080F51 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B326066F3093B27C00080F51 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		B32606723093B27C00080F51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		B32606753093B27C00080F51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B32606773093B27C00080F51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B326067C3093B27C00080F51 /* Sche10le.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sche10le.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B326067E3093B27C00080F51 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B32606813093B27C00080F51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B32606833093B27C00080F51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B32606883093B27C00080F51 /* Sche10le Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Sche10le Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B326068D3093B27C00080F51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B32606923093B27C00080F51 /* Sche10le Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Sche10le Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B32606973093B27C00080F51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B32606B73093B27C00080F51 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = "../../.output/safari-mv3/background.js"; sourceTree = SOURCE_ROOT; };
+		B32606B83093B27C00080F51 /* chunks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = chunks; path = "../../.output/safari-mv3/chunks"; sourceTree = SOURCE_ROOT; };
+		B32606B93093B27C00080F51 /* content-scripts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "content-scripts"; path = "../../.output/safari-mv3/content-scripts"; sourceTree = SOURCE_ROOT; };
+		B32606BA3093B27C00080F51 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = "../../.output/safari-mv3/icons"; sourceTree = SOURCE_ROOT; };
+		B32606BB3093B27C00080F51 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = "../../.output/safari-mv3/manifest.json"; sourceTree = SOURCE_ROOT; };
+		B32606BC3093B27C00080F51 /* help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = "help.html"; path = "../../.output/safari-mv3/help.html"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B32606673093B27C00080F51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		B32606793093B27C00080F51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		B32606853093B27C00080F51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		B326068F3093B27C00080F51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B32606563093B27B00080F51 = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000001 /* Common.xcconfig */,
+				B326065B3093B27B00080F51 /* Shared (App) */,
+				B32606643093B27C00080F51 /* Shared (Extension) */,
+				B326066C3093B27C00080F51 /* iOS (App) */,
+				B326067D3093B27C00080F51 /* macOS (App) */,
+				B326068C3093B27C00080F51 /* iOS (Extension) */,
+				B32606963093B27C00080F51 /* macOS (Extension) */,
+				B326066B3093B27C00080F51 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B326065B3093B27B00080F51 /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B32606623093B27B00080F51 /* ViewController.swift */,
+				B32606633093B27C00080F51 /* Assets.xcassets */,
+				B326065C3093B27B00080F51 /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		B326065C3093B27B00080F51 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B326065D3093B27B00080F51 /* Main.html */,
+				B326065F3093B27B00080F51 /* Icon.png */,
+				B32606603093B27B00080F51 /* Style.css */,
+				B32606613093B27B00080F51 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B32606643093B27C00080F51 /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B32606B63093B27C00080F51 /* Resources */,
+				B32606653093B27C00080F51 /* SafariWebExtensionHandler.swift */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		B326066B3093B27C00080F51 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B326066A3093B27C00080F51 /* Sche10le.app */,
+				B326067C3093B27C00080F51 /* Sche10le.app */,
+				B32606883093B27C00080F51 /* Sche10le Extension.appex */,
+				B32606923093B27C00080F51 /* Sche10le Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B326066C3093B27C00080F51 /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B326066D3093B27C00080F51 /* AppDelegate.swift */,
+				B326066F3093B27C00080F51 /* SceneDelegate.swift */,
+				B32606713093B27C00080F51 /* LaunchScreen.storyboard */,
+				B32606743093B27C00080F51 /* Main.storyboard */,
+				B32606773093B27C00080F51 /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		B326067D3093B27C00080F51 /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B326067E3093B27C00080F51 /* AppDelegate.swift */,
+				B32606803093B27C00080F51 /* Main.storyboard */,
+				B32606833093B27C00080F51 /* Info.plist */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		B326068C3093B27C00080F51 /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B326068D3093B27C00080F51 /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		B32606963093B27C00080F51 /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B32606973093B27C00080F51 /* Info.plist */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+		B32606B63093B27C00080F51 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B32606B73093B27C00080F51 /* background.js */,
+				B32606B83093B27C00080F51 /* chunks */,
+				B32606B93093B27C00080F51 /* content-scripts */,
+				B32606BA3093B27C00080F51 /* icons */,
+				B32606BB3093B27C00080F51 /* manifest.json */,
+				B32606BC3093B27C00080F51 /* help.html */,
+			);
+			name = Resources;
+			path = "Shared (Extension)";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B32606693093B27C00080F51 /* Sche10le (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B32606AC3093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le (iOS)" */;
+			buildPhases = (
+				B32606663093B27C00080F51 /* Sources */,
+				B32606673093B27C00080F51 /* Frameworks */,
+				B32606683093B27C00080F51 /* Resources */,
+				B32606AB3093B27C00080F51 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B326068B3093B27C00080F51 /* PBXTargetDependency */,
+			);
+			name = "Sche10le (iOS)";
+			productName = "Sche10le (iOS)";
+			productReference = B326066A3093B27C00080F51 /* Sche10le.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B326067B3093B27C00080F51 /* Sche10le (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B32606B33093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le (macOS)" */;
+			buildPhases = (
+				B32606783093B27C00080F51 /* Sources */,
+				B32606793093B27C00080F51 /* Frameworks */,
+				B326067A3093B27C00080F51 /* Resources */,
+				B32606B23093B27C00080F51 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B32606953093B27C00080F51 /* PBXTargetDependency */,
+			);
+			name = "Sche10le (macOS)";
+			productName = "Sche10le (macOS)";
+			productReference = B326067C3093B27C00080F51 /* Sche10le.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B32606873093B27C00080F51 /* Sche10le Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B32606A83093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le Extension (iOS)" */;
+			buildPhases = (
+				C00000000000000000000002 /* Check web resources */,
+				B32606843093B27C00080F51 /* Sources */,
+				B32606853093B27C00080F51 /* Frameworks */,
+				B32606863093B27C00080F51 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Sche10le Extension (iOS)";
+			productName = "Sche10le Extension (iOS)";
+			productReference = B32606883093B27C00080F51 /* Sche10le Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		B32606913093B27C00080F51 /* Sche10le Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B32606AF3093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le Extension (macOS)" */;
+			buildPhases = (
+				C00000000000000000000002 /* Check web resources */,
+				B326068E3093B27C00080F51 /* Sources */,
+				B326068F3093B27C00080F51 /* Frameworks */,
+				B32606903093B27C00080F51 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Sche10le Extension (macOS)";
+			productName = "Sche10le Extension (macOS)";
+			productReference = B32606923093B27C00080F51 /* Sche10le Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B32606573093B27B00080F51 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2710;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					B32606693093B27C00080F51 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					B326067B3093B27C00080F51 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					B32606873093B27C00080F51 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					B32606913093B27C00080F51 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = B326065A3093B27B00080F51 /* Build configuration list for PBXProject "Sche10le" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B32606563093B27B00080F51;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B326066B3093B27C00080F51 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B32606693093B27C00080F51 /* Sche10le (iOS) */,
+				B326067B3093B27C00080F51 /* Sche10le (macOS) */,
+				B32606873093B27C00080F51 /* Sche10le Extension (iOS) */,
+				B32606913093B27C00080F51 /* Sche10le Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B32606683093B27C00080F51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				B326069A3093B27C00080F51 /* Icon.png in Resources */,
+				B32606733093B27C00080F51 /* LaunchScreen.storyboard in Resources */,
+				B32606983093B27C00080F51 /* Main.html in Resources */,
+				B326069E3093B27C00080F51 /* Script.js in Resources */,
+				B32606A23093B27C00080F51 /* Assets.xcassets in Resources */,
+				B32606763093B27C00080F51 /* Main.storyboard in Resources */,
+				B326069C3093B27C00080F51 /* Style.css in Resources */,
+			);
+		};
+		B326067A3093B27C00080F51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				B326069B3093B27C00080F51 /* Icon.png in Resources */,
+				B326069D3093B27C00080F51 /* Style.css in Resources */,
+				B32606823093B27C00080F51 /* Main.storyboard in Resources */,
+				B326069F3093B27C00080F51 /* Script.js in Resources */,
+				B32606A33093B27C00080F51 /* Assets.xcassets in Resources */,
+				B32606993093B27C00080F51 /* Main.html in Resources */,
+			);
+		};
+		B32606863093B27C00080F51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				B32606C43093B27C00080F51 /* chunks in Resources */,
+				B32606C63093B27C00080F51 /* icons in Resources */,
+				B32606C73093B27C00080F51 /* manifest.json in Resources */,
+				B32606C83093B27C00080F51 /* help.html in Resources */,
+				B32606C53093B27C00080F51 /* content-scripts in Resources */,
+				B32606C33093B27C00080F51 /* background.js in Resources */,
+			);
+		};
+		B32606903093B27C00080F51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				B32606BE3093B27C00080F51 /* chunks in Resources */,
+				B32606C03093B27C00080F51 /* icons in Resources */,
+				B32606C13093B27C00080F51 /* manifest.json in Resources */,
+				B32606C23093B27C00080F51 /* help.html in Resources */,
+				B32606BF3093B27C00080F51 /* content-scripts in Resources */,
+				B32606BD3093B27C00080F51 /* background.js in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C00000000000000000000002 /* Check web resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = (
+				"$(SRCROOT)/Scripts/check-web-resources.sh",
+				"$(SRCROOT)/../../package.json",
+				"$(SRCROOT)/../../.output/safari-mv3/manifest.json",
+			);
+			name = "Check web resources";
+			outputPaths = ();
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$SRCROOT/Scripts/check-web-resources.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B32606663093B27C00080F51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				B32606A03093B27C00080F51 /* ViewController.swift in Sources */,
+				B326066E3093B27C00080F51 /* AppDelegate.swift in Sources */,
+				B32606703093B27C00080F51 /* SceneDelegate.swift in Sources */,
+			);
+		};
+		B32606783093B27C00080F51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				B32606A13093B27C00080F51 /* ViewController.swift in Sources */,
+				B326067F3093B27C00080F51 /* AppDelegate.swift in Sources */,
+			);
+		};
+		B32606843093B27C00080F51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				B32606A43093B27C00080F51 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+		B326068E3093B27C00080F51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				B32606A53093B27C00080F51 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B326068B3093B27C00080F51 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B32606873093B27C00080F51 /* Sche10le Extension (iOS) */;
+			targetProxy = B326068A3093B27C00080F51 /* PBXContainerItemProxy */;
+		};
+		B32606953093B27C00080F51 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B32606913093B27C00080F51 /* Sche10le Extension (macOS) */;
+			targetProxy = B32606943093B27C00080F51 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		B326065D3093B27B00080F51 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B326065E3093B27B00080F51 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		B32606713093B27C00080F51 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B32606723093B27C00080F51 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		B32606743093B27C00080F51 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B32606753093B27C00080F51 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		B32606803093B27C00080F51 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B32606813093B27C00080F51 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		B32606A63093B27C00080F51 /* Debug configuration for PBXProject "Sche10le" */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C00000000000000000000001 /* Common.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B32606A73093B27C00080F51 /* Release configuration for PBXProject "Sche10le" */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C00000000000000000000001 /* Common.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		B32606A93093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Sche10le Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "Sche10le Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B32606AA3093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Sche10le Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "Sche10le Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B32606AD3093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Sche10le;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = Sche10le;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B32606AE3093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Sche10le;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = Sche10le;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B32606B03093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Sche10le Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "Sche10le Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B32606B13093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Sche10le Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = "Sche10le Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B32606B43093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Sche10le;
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = Sche10le;
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B32606B53093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Sche10le;
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SCHE10LE_BUNDLE_IDENTIFIER)";
+				PRODUCT_NAME = Sche10le;
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B326065A3093B27B00080F51 /* Build configuration list for PBXProject "Sche10le" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32606A63093B27C00080F51 /* Debug configuration for PBXProject "Sche10le" */,
+				B32606A73093B27C00080F51 /* Release configuration for PBXProject "Sche10le" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		B32606A83093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32606A93093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le Extension (iOS)" */,
+				B32606AA3093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le Extension (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		B32606AC3093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32606AD3093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le (iOS)" */,
+				B32606AE3093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		B32606AF3093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32606B03093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le Extension (macOS)" */,
+				B32606B13093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le Extension (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		B32606B33093B27C00080F51 /* Build configuration list for PBXNativeTarget "Sche10le (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B32606B43093B27C00080F51 /* Debug configuration for PBXNativeTarget "Sche10le (macOS)" */,
+				B32606B53093B27C00080F51 /* Release configuration for PBXNativeTarget "Sche10le (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B32606573093B27B00080F51 /* Project object */;
+	validationLevel = 1;
+}

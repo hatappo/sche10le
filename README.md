@@ -88,7 +88,7 @@ E2Eはブラウザコンテキストを共有しています。`page.clock` に�
 
 ### Safari版
 
-Safari版はiPhone向けの下部シートとMac向けのドロワーを開発中です。`npm run preview:safari` でUIプレビュー、`npm run build:safari` でSafari用MV3を生成できます。ローカルAIは含みません。まだSafari拡張としての実機検証・配布準備は完了していません。共有方針、専用テスト、Xcode導入と実機確認は [Safari版の開発手順](docs/dev/safari-development.md) を参照してください。
+Safari版はiPhone向けの下部シートとMac向けのドロワーを開発中です。`npm run preview:safari` でUIプレビュー、`npm run prepare:safari` でSafari用MV3を生成してXcode向けバージョンを同期できます。Git管理するプロジェクトは `native/safari/Sche10le.xcodeproj` です。ローカルAIは含みません。まだSafari拡張としての実機検証・配布準備は完了していません。共有方針、専用テスト、Xcode導入と実機確認は [Safari版の開発手順](docs/dev/safari-development.md) を参照してください。
 
 ## 変更履歴と配布用ビルド
 

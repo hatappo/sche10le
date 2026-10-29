@@ -24,7 +24,10 @@
     "preview:safari": "npm run preview:ui",
     "preview:safari:native": "node scripts/preview-sheet.js --native",
     "test:ui": "npm run build:safari && playwright test --config playwright.sheet.config.js",
-    "preview:ui": "npm run build:safari && node scripts/preview-sheet.js"
+    "preview:ui": "npm run build:safari && node scripts/preview-sheet.js",
+    "prepare:safari": "npm run build:safari && node scripts/prepare-safari.js",
+    "build:safari:ios": "node scripts/build-safari-app.js ios",
+    "build:safari:macos": "node scripts/build-safari-app.js macos"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

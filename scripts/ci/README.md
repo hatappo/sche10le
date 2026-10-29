@@ -18,6 +18,8 @@ Chromiumのサンドボックスを `PLAYWRIGHT_CHROMIUM_SANDBOX=1`（共通UI�
 2. `npm run test:e2e -- --output=test-results/e2e`：Chrome実拡張とライブ検証ハーネスをローカルfixtureで検証。
 3. `npm run test:ui -- --output=test-results/ui`：SafariビルドとChromium／WebKitの共通UI検証。
 
+Safariビルド後には `scripts/prepare-safari.js` でネイティブプロジェクトのWebリソース参照とバージョン同期も確認する。XcodeのネイティブビルドはこのLinuxジョブでは実行せず、Macで確認する。
+
 ブラウザテストはローカルfixtureだけを対象とし、外部イベントサイトへ接続しない。イメージとnpm依存の取得にはネットワークを使う。失敗時のみローカルfixtureのtrace・スクリーンショットを7日間保存する。UIとE2Eの出力先を分け、後続のテストが先の診断を消さないようにする。
 
 ライブ検証のトリガーは変更しない。PR中は走らず、マージ後またはmainからの手動実行に限定する。PRの権限は読み取りのみで、トークンをコンテナへ渡さない。新しいコミットが来たら同じPRの古い回帰実行をキャンセルする。

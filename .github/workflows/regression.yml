@@ -35,6 +35,10 @@ jobs:
         run: bash scripts/ci/run-playwright.sh npm run test:e2e -- --output=test-results/e2e
       - name: Safari build and Chromium / WebKit UI regression
         run: bash scripts/ci/run-playwright.sh npm run test:ui -- --output=test-results/ui
+      - name: Validate native Safari resource references and version
+        run: |
+          bash scripts/ci/run-playwright.sh node scripts/prepare-safari.js
+          git diff --exit-code -- native/safari/Config/Version.xcconfig
       - name: Upload failure diagnostics from local fixtures
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
