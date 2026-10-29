@@ -3,13 +3,13 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-export async function createSafariPreviewServer() {
+export async function createSafariPreviewServer({ native = false } = {}) {
   const root = new URL("../", import.meta.url);
-  const fixture = (await readFile(new URL("tests/fixtures/events.html", root), "utf8"))
-    .replace("</head>", '<meta name="viewport" content="width=device-width, initial-scale=1" /></head>')
-    .replace("</body>", `<button id="preview-launch" style="position:fixed;top:8px;right:8px;z-index:1">Safari UI試作を開く</button>
+  let fixture = (await readFile(new URL("tests/fixtures/events.html", root), "utf8"))
+    .replace("</head>", '<meta name="viewport" content="width=device-width, initial-scale=1" /></head>');
+  if (!native) fixture = fixture.replace("</body>", `<button id="preview-launch" style="position:fixed;top:8px;right:8px;z-index:1">Safari UI試作を開く</button>
       <script src="/preview-api.js"></script><script src="/extension.js"></script><script src="/launch.js"></script></body>`);
-  const bundle = await readFile(new URL(".output/safari-mv3/content-scripts/safari.js", root));
+  const bundle = native ? null : await readFile(new URL(".output/safari-mv3/content-scripts/safari.js", root));
   const api = `(() => {
     const listeners = new Set();
     const key = 'sche10le-safari-preview';
@@ -37,9 +37,11 @@ export async function createSafariPreviewServer() {
   })();`;
   const routes = new Map([
     ["/", { type: "text/html", body: fixture }],
-    ["/preview-api.js", { type: "text/javascript", body: api }],
-    ["/extension.js", { type: "text/javascript", body: bundle }],
-    ["/launch.js", { type: "text/javascript", body: "document.getElementById('preview-launch').onclick = () => window.__safariPreview.show(); window.__safariPreview.show();" }],
+    ...(native ? [] : [
+      ["/preview-api.js", { type: "text/javascript", body: api }],
+      ["/extension.js", { type: "text/javascript", body: bundle }],
+      ["/launch.js", { type: "text/javascript", body: "document.getElementById('preview-launch').onclick = () => window.__safariPreview.show(); window.__safariPreview.show();" }],
+    ]),
   ]);
   return createServer((req, res) => {
     const resource = routes.get(new URL(req.url, "http://localhost").pathname);
@@ -50,8 +52,12 @@ export async function createSafariPreviewServer() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const server = await createSafariPreviewServer();
-  server.listen(4174, "127.0.0.1", () => {
-    console.log("Safari UIプレビュー: http://127.0.0.1:4174（拡張APIは模擬。カレンダーは開きません）");
+  const native = process.argv.includes("--native");
+  const server = await createSafariPreviewServer({ native });
+  const port = native ? 4175 : 4174;
+  server.listen(port, "127.0.0.1", () => {
+    console.log(native
+      ? `Safari拡張の検証ページ: http://127.0.0.1:${port}（模擬APIなし。Safariの拡張メニューから起動してください）`
+      : `Safari UIプレビュー: http://127.0.0.1:${port}（拡張APIは模擬。カレンダーは開きません）`);
   });
 }

@@ -11,7 +11,7 @@
 - 閉じても、そのページが存続する間は内容を保持する。拡張から再表示できる。再読み込み・別ページへの移動・SPAのURL変更では破棄する。
 - GoogleカレンダーURL、ICS、タイトル書式、移動時間、候補のソート、6テーマは既存の処理・設定キーを共有する。Safariの設定画面にはAIを置かない。
 
-WebKitとChromiumで**UI・ロジックの検証**を行った段階。Safariの拡張API、ネイティブアプリ、署名、実機上の起動・権限・ファイル受け渡しは未検証であり、ストアへ提出できる状態ではない。
+WebKitとChromiumで**UI・ロジックの検証**を実施。2026-10-30にXcode 27.1でmacOS/iOS共通プロジェクトを生成し、iPhone 18 Pro（iOS 27.0）シミュレーター向けビルド・インストール・案内アプリの起動まで確認した。Safariの拡張メニューからの実行、署名、実機上の起動・権限・ファイル受け渡しは未検証であり、ストアへ提出できる状態ではない。
 
 ## XcodeなしでUIを触る
 
@@ -54,7 +54,7 @@ UIはページ内のHTML/CSSであり、Safari標準ポップアップやネイ�
 
 ## 次の段階：Xcodeと実機
 
-この試作時点のMacにはCommand Line Toolsのみがあり、Xcode本体・Safariのpackagerはまだ用意していない。
+2026-10-30時点でXcode 27.1・Safariのpackager・iOSシミュレーターを準備済み。以下は別環境での再セットアップ手順。
 
 1. Mac App StoreからXcodeをインストールし、初回起動のセットアップを完了する。
 2. XcodeのSettings → LocationsでCommand Line ToolsにXcodeを指定する。
@@ -65,10 +65,38 @@ npm run build:safari
 xcrun --find safari-web-extension-packager
 xcrun safari-web-extension-packager "$(pwd)/.output/safari-mv3" \
   --project-location "$(pwd)/.output/safari-xcode" \
-  --app-name Sche10le --swift
+  --app-name Sche10le --bundle-identifier dev.sche10le.prototype --swift
 ```
 
 `.output/safari-xcode` は最初の確認用の仮置きでGit管理外。本採用するプロジェクトの配置・Bundle Identifier・対応OS下限は生成結果を確認して決める。macOSとiOS両方のターゲットを用意し、packagerが出すmanifestの警告を確認する。Web側の変更後はWXTを再ビルドし、Xcode側が最新のリソースを参照していることを確認してアプリを再ビルドする。
+
+生成されたプロジェクトは `.output/safari-xcode/Sche10le/Sche10le.xcodeproj`。`dev.sche10le.prototype` はローカル試作用の識別子で、ストア登録はしていない。生成済みフォルダーにpackagerを再実行して上書きしないこと。
+
+### シミュレーターで試す
+
+1. 上記のプロジェクトをXcodeで開く。
+2. 上部の実行対象を **Sche10le (iOS)**、端末を **iPhone 18 Pro** などのシミュレーターにして、▶（Run）を押す。Macや実際のiPhoneを選ぶ場合とは異なり、有料メンバーシップは不要。
+3. Xcode 27では画面の表示先が **Device Hub**。表示されない場合は **Xcode → Open Developer Tool → Device Hub** から開き、起動済み端末を選ぶ。[AppleのDevice Hub案内](https://developer.apple.com/documentation/xcode/pairing-your-devices-with-your-mac)
+4. シミュレーター内で **Settings → Apps → Safari → Extensions → Sche10le** を開き、拡張を有効にする。
+5. Macのターミナルで次を実行し、シミュレーターのSafariで `http://127.0.0.1:4175` を開く。
+
+```sh
+npm run preview:safari:native
+```
+
+このページはイベントのサンプル本文だけを返し、模擬API・拡張の自動起動は含まない。従来の4174番ポートのUIプレビューと混同しないこと。シミュレーターはMacのlocalhostに接続できるが、実際のiPhoneで同じURLは使えない。
+
+6. SafariのページメニューからSche10leを選ぶ。サイトへのアクセスを求められたら、検証ページに対して許可する。
+7. 3件の候補が表示されること、登録パターンの選択でバーへ縮むこと、タイトル・場所・詳細を順に取得できることを確認する。Googleカレンダーを開く操作は、このモードでは実際に遷移する（予定の保存は行わない）。
+
+コマンドからのビルド確認には次を使える。通常はXcodeのRunで進める。
+
+```sh
+xcodebuild -project .output/safari-xcode/Sche10le/Sche10le.xcodeproj \
+  -scheme 'Sche10le (iOS)' -configuration Debug -sdk iphonesimulator \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath .output/safari-derived CODE_SIGNING_ALLOWED=NO build
+```
 
 以降はXcodeのApple Account、署名のTeam、実行対象のScheme（どのアプリを起動するか）、接続したiPhoneを順に設定する。登録や支払い、Bundle Identifierの確定は実装とは分けて進める。配布段階でApple Developer Program・TestFlight・App Storeの手続きを行う。[登録の公式案内](https://developer.apple.com/help/account/membership/program-enrollment)
 

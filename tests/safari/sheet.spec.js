@@ -19,6 +19,23 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test("ネイティブ検証用ページには模擬APIも拡張の自動起動も含めない", async ({ page, request }) => {
+  const nativeServer = await createSafariPreviewServer({ native: true });
+  await new Promise((resolve) => nativeServer.listen(0, "127.0.0.1", resolve));
+  const nativeUrl = `http://127.0.0.1:${nativeServer.address().port}/`;
+  try {
+    await page.goto(nativeUrl);
+    await expect(page.locator("#event-title")).toBeVisible();
+    await expect(page.locator("sche10le-sheet, #preview-launch")).toHaveCount(0);
+    expect(await page.evaluate(() => window.__safariPreview)).toBeUndefined();
+    for (const path of ["preview-api.js", "extension.js", "launch.js"]) {
+      expect((await request.get(nativeUrl + path)).status()).toBe(404);
+    }
+  } finally {
+    await new Promise((resolve) => nativeServer.close(resolve));
+  }
+});
+
 async function start(page) {
   await page.goto(url);
   const sheet = page.locator("sche10le-sheet .sheet");
