@@ -9,24 +9,29 @@ html,body { margin:0; background:var(--wash); }
 [data-view] { display:none; }
 body[data-demo="list"] [data-view="list"],body[data-demo="review"] [data-view="review"],body[data-demo="settings"] [data-view="settings"] { display:block; }
 body[data-demo="pick"] [data-view="pick"] { display:block; }
+body:not([data-demo="review"]) footer { display:none; }
+#review, #close-settings { display:none; }
+body[data-demo="pick"] #review, body[data-demo="settings"] #close-settings { display:block; }
+body[data-demo="settings"] #gear { display:none; }
 </style></head><body data-demo="list"><section class="sheet" data-mode="list" aria-label="共通UIの静的見本">
-<header><h2 id="heading">日時を選ぶ</h2><button class="icon-button" aria-label="閉じる（見本）">×</button></header>
+<header><button id="close-settings" class="header-back">戻る</button><h2 id="heading">日時を選ぶ</h2><div class="header-actions"><button class="icon-button" id="gear" aria-label="設定" title="設定">⚙</button><button class="icon-button" id="review" aria-label="内容を確認" title="内容を確認">⌃</button><button class="icon-button" aria-label="閉じる（見本）">×</button></div></header>
 <div class="content">
-<div data-view="list"><div class="row"><span>スキャン済み ✓ · 1件</span><select aria-label="並び順"><option>登場順</option><option>日時順</option></select></div>
+<div data-view="list"><div class="row scan-toolbar"><span>スキャン済み ✓ · 1件</span><button class="text-button">再スキャン</button><select aria-label="並び順"><option>登場順</option><option>日時順</option></select></div>
 <article class="candidate"><button class="candidate-toggle" aria-expanded="false">11月8日（日）14:00–16:00</button><div class="variants" hidden><button class="variant">時間どおり 14:00–16:00</button><button class="variant">移動込み 13:30–16:30</button><button class="variant">終日</button></div></article></div>
 <div data-view="review"><div class="row review-heading"><p class="summary">11月8日 · 時間どおり 14:00–16:00</p><button id="reset" class="text-button">選び直す</button></div><button class="field done"><span class="field-label">1 タイトル ✓</span><span>蔵前の活版印刷ワークショップ</span></button><button class="field done"><span class="field-label">2 場所 ✓</span><span>アトリエ蔵前</span></button><button class="field"><span class="field-label">3 詳細</span><span>https://example.com/event</span></button></div>
 <div data-view="settings"><label>前後の移動時間（片道・分）<input type="number" value="30" min="0" max="180" step="5"></label><label>タイトルの書式<input id="format" value="{from:HHmm} {title}" aria-invalid="false"></label><output class="format-preview">1400 蔵前の活版印刷ワークショップ</output><p class="hint">開始・終了は移動時間を含まない開催時刻。</p><label>カラーテーマ<select><option>千歳緑（ちとせみどり）</option></select></label></div>
 </div>
-<div class="pick-controls" data-view="pick"><p class="summary">11月8日 · 時間どおり 14:00–16:00</p><div class="steps"><button aria-current="step">1 タイトル</button><button>2 場所</button><button>3 詳細</button></div><div class="row"><button class="text-button" disabled>戻る</button><button class="text-button" id="review">内容を確認</button><button class="text-button">スキップ</button></div></div>
-<footer><div data-view="list" class="row"><button class="text-button">再スキャン</button><button class="text-button" id="gear">設定</button></div><div data-view="review"><button class="primary" id="calendar">Googleカレンダーで開く ↗</button><button class="download" id="download-demo" aria-label="予定をダウンロード（.ics）">↓</button></div><div data-view="settings"><button class="text-button" id="close-settings">戻る</button></div></footer>
+<div class="pick-controls" data-view="pick"><div class="row pick-summary"><p class="summary">11月8日 · 時間どおり 14:00–16:00</p><button class="text-button" id="pick-reset">選び直す</button></div><div class="steps"><button aria-current="step"><span class="step-label">1 タイトル</span><span class="step-value">活版印刷ワークショップ</span></button><button><span class="step-label">2 場所</span><span class="step-value">未設定</span></button><button><span class="step-label">3 詳細</span><span class="step-value">https://example.com/event</span></button></div></div>
+<footer><div data-view="review"><button class="primary" id="calendar">Googleカレンダーで開く ↗</button><button class="download" id="download-demo" aria-label="予定をダウンロード（.ics）">↓</button></div></footer>
 </section><script>
-function view(mode) { document.body.dataset.demo=mode; document.querySelector('.sheet').dataset.mode=mode; document.getElementById('heading').textContent=({list:'日時を選ぶ',pick:'タイトルをページから選択',review:'内容を確認',settings:'設定'})[mode]; parent.postMessage({type:'demo-view',view:mode},'*'); }
+function view(mode) { document.body.dataset.demo=mode; document.querySelector('.sheet').dataset.mode=mode; document.getElementById('heading').textContent=({list:'日時を選ぶ',pick:'タイトルを選択',review:'内容を確認',settings:'設定'})[mode]; parent.postMessage({type:'demo-view',view:mode},'*'); }
 const toggle=document.querySelector('.candidate-toggle');
 function expand() { toggle.setAttribute('aria-expanded','true'); document.querySelector('.variants').hidden=false; }
 toggle.onclick=expand; toggle.onfocus=expand; toggle.onpointerenter=expand;
 document.querySelectorAll('.variant,.field').forEach(button=>button.onclick=()=>view('pick'));
 document.getElementById('review').onclick=()=>view('review');
 document.getElementById('reset').onclick=()=>{ toggle.setAttribute('aria-expanded','false');document.querySelector('.variants').hidden=true;view('list'); };
+document.getElementById('pick-reset').onclick=document.getElementById('reset').onclick;
 document.getElementById('gear').onclick=()=>view('settings');
 document.getElementById('close-settings').onclick=()=>view('list');
 for(const id of ['calendar','download-demo']) document.getElementById(id).onclick=()=>parent.postMessage({type:'demo-notice',text:'資料用の見本です。実際の予定作成・保存は行いません。'},'*');

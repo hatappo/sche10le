@@ -103,10 +103,10 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   await pickDate(sheet);
   await expect.poll(async () => (await sheet.boundingBox()).height).toBeLessThan(initialHeight - 100);
   await page.locator("#event-title").tap();
-  await expect(sheet.locator("h2")).toHaveText("場所をページから選択");
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
   await page.screenshot({ path: `test-results/safari-${info.project.name}-pick.png` });
   await page.locator("address").first().tap();
-  await expect(sheet.locator("h2")).toHaveText("詳細をページから選択");
+  await expect(sheet.locator("h2")).toHaveText("詳細を選択");
   await page.locator("article p").filter({ hasText: "受付は開始30分前" }).tap();
   await expect(sheet).toHaveAttribute("data-mode", "review");
   await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
@@ -127,7 +127,7 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   expect(errors).toEqual([]);
 });
 
-test("スクロールやフォームを取得せず、閉じる・再表示・スキップ・選び直しで状態を保つ", async ({ page }) => {
+test("スクロールやフォームを取得せず、閉じる・再表示・項目移動・選び直しで状態を保つ", async ({ page }) => {
   const sheet = await start(page);
   await pickDate(sheet);
   await page.locator("#event-title").evaluate((node) => {
@@ -135,7 +135,7 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
     node.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerId: 1, clientX: 10, clientY: 60 }));
     node.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
   });
-  await expect(sheet.locator("h2")).toHaveText("タイトルをページから選択");
+  await expect(sheet.locator("h2")).toHaveText("タイトルを選択");
   await page.locator("article").first().evaluate((node) => {
     const input = document.createElement("input");
     input.id = "page-form";
@@ -143,7 +143,7 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
   });
   await page.locator("#page-form").fill("入力中の内容");
   await page.locator("#page-form").tap();
-  await expect(sheet.locator("h2")).toHaveText("タイトルをページから選択");
+  await expect(sheet.locator("h2")).toHaveText("タイトルを選択");
   await page.locator("#event-title").tap();
   await sheet.getByRole("button", { name: "Sche10leを閉じる", exact: true }).tap();
   await expect(sheet).toBeHidden();
@@ -151,8 +151,8 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
   await expect(sheet).toHaveAttribute("data-mode", "review");
   await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
   await sheet.locator(".field").nth(1).tap();
-  await sheet.getByRole("button", { name: "スキップ", exact: true }).tap();
-  await sheet.getByRole("button", { name: "完了", exact: true }).tap();
+  await sheet.getByRole("button", { name: "3 詳細", exact: true }).tap();
+  await sheet.getByRole("button", { name: "内容を確認", exact: true }).tap();
   await expect(sheet).toHaveAttribute("data-mode", "review");
   await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
   await expect(sheet.locator(".candidate")).toHaveCount(3);
@@ -254,4 +254,48 @@ test("取得途中の確認画面から設定へ進み、6テーマでも狭幅�
   await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
   await sheet.locator(".field").first().tap();
   await expect(sheet.locator(".steps button").first()).toHaveAttribute("aria-current", "step");
+});
+
+test("取得バーで内容を確認でき、直接の項目移動・途中確認・日時の選び直しができる", async ({ page }, info) => {
+  const sheet = await start(page);
+  await expect(sheet.locator("header").getByRole("button", { name: "設定", exact: true })).toBeVisible();
+  await expect(sheet.locator(".scan-toolbar").getByRole("button", { name: "再スキャン", exact: true })).toBeVisible();
+  await expect(sheet.locator("footer")).toBeHidden();
+  await pickDate(sheet);
+  await expect(sheet.locator(".pick-controls .row")).toHaveCount(1);
+  await expect(sheet.getByRole("button", { name: /^(戻る|スキップ|完了)$/ })).toHaveCount(0);
+  const title = sheet.getByRole("button", { name: "1 タイトル", exact: true });
+  await expect(title.locator(".step-value")).toContainText("週末のデザイン散歩");
+  await expect(sheet.getByRole("button", { name: "2 場所", exact: true }).locator(".step-value")).toHaveText("未設定");
+  await expect(sheet.getByRole("button", { name: "3 詳細", exact: true }).locator(".step-value")).toContainText("http://");
+  await page.locator("#event-title").tap();
+  await expect(title.locator(".step-value")).toContainText("蔵前の活版印刷ワークショップ");
+  await expect(title).toHaveClass(/done/);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await expect(sheet.locator("footer")).toBeHidden();
+  await sheet.getByLabel("タイトルの書式").fill("{from:HHmm} {title}");
+  await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "pick");
+  await expect(sheet.getByRole("button", { name: "2 場所", exact: true })).toHaveAttribute("aria-current", "step");
+  await expect(title.locator(".step-value")).toContainText("1400 蔵前");
+  await sheet.locator("header").getByRole("button", { name: "内容を確認", exact: true }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await expect(sheet.locator(".field").first()).toContainText("1400 蔵前");
+  await expect(sheet.locator("footer .hint, footer .review-utility")).toHaveCount(0);
+  await expect(sheet.getByRole("button", { name: /Googleカレンダーで開く/ })).toBeVisible();
+  await sheet.locator(".field").nth(2).tap();
+  await page.locator("article p").filter({ hasText: "受付は開始30分前" }).tap();
+  // Selecting details advances automatically, even if location was left blank.
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await expect(sheet.locator(".field").nth(1)).toContainText("未設定");
+  await sheet.locator(".field").first().tap();
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect.poll(async () => (await sheet.boundingBox()).height).toBe(212);
+  expect(await sheet.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+  expect(await sheet.locator(".pick-controls").evaluate(node => node.scrollHeight <= node.clientHeight)).toBe(true);
+  expect(await title.locator(".step-value").evaluate(node => getComputedStyle(node).webkitLineClamp)).toBe("2");
+  await page.screenshot({ path: `test-results/picker-preview-${info.project.name}.png` });
+  await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "list");
+  await expect(sheet.locator('[aria-expanded="true"]')).toHaveCount(0);
 });

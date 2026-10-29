@@ -98,7 +98,7 @@ test("取得途中の確認・再選択・閉じる・再起動・二重注入�
     await sheet.getByRole("button", { name: "内容を確認" }).click();
     await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
     await sheet.locator(".field").first().click();
-    await sheet.getByRole("button", { name: "スキップ", exact: true }).click();
+    await sheet.getByRole("button", { name: "2 場所", exact: true }).click();
     await sheet.getByRole("button", { name: "Sche10leを閉じる" }).click();
     await expect(sheet).toBeHidden();
     await showSheet(worker, page);

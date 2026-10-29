@@ -31,7 +31,7 @@
 
 - `npm run check`: lint・型・抽出／書式／ICS／設定などの単体テスト・Chromeビルド。
 - `npm run test:e2e`: Chromeの実拡張。設定引き継ぎ、URL/ICS、再表示・二重注入、別タブ、ドラッグ、ライブ検証ハーネスのローカル回帰。
-- `npm run test:ui`: 共通UIをChromiumとWebKitで検証。タッチ、設定エラー／再試行、6テーマ、狭幅、完了・スキップ・選び直し、フォーム除外、reduced motion。
+- `npm run test:ui`: 共通UIをChromiumとWebKitで検証。タッチ、設定エラー／再試行、6テーマ、狭幅、完了・項目移動・選び直し、フォーム除外、reduced motion。
 - 旧サイドパネル／AI専用のE2Eは削除し、共通の利用シナリオへ移行する。ライブ検証は本番ビルドの共通Content Scriptを使い続ける。
 - テスト用コピーのみ一時的に対象ホスト権限を付け、閉じたShadow DOMを観測可能にする。配布用には含めない。ツールバー操作によるactiveTab許可は手動検証が必要。
 

@@ -29,7 +29,7 @@ const components = (await read("docs/design/components.html"))
   .replace("{{THEME_IDS}}", JSON.stringify(THEMES.map((theme) => theme.id)));
 const overlay = components.replace('body data-demo="list"', 'body data-demo="pick"')
   .replace('class="sheet" data-mode="list"', 'class="sheet" data-mode="pick"')
-  .replace('id="heading">日時を選ぶ', 'id="heading">タイトルをページから選択');
+  .replace('id="heading">日時を選ぶ', 'id="heading">タイトルを選択');
 const descriptions = {
   paper: "基本背景",
   ink: "主文と見出し",

@@ -26,7 +26,7 @@
 .sheet[data-mode="list"] { height: min(520px, calc(var(--view-height, 100dvh) * .52)); }
 .sheet[data-mode="pick"] { height: 212px; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 18px; flex-shrink: 0; background: var(--bar-heading); color: var(--bar-on-heading); }
-h2 { cursor: grab; touch-action: none; user-select: none; flex: 1; padding: 6px 0; font-size: 15px; line-height: 1.5; margin: 0; font-weight: 600; }
+h2 { min-width: 0; cursor: grab; touch-action: none; user-select: none; flex: 1; padding: 6px 0; font-size: 15px; line-height: 1.5; margin: 0; font-weight: 600; }
 button, input, select { font: inherit; }
 button { cursor: pointer; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--surface); color: var(--accent); touch-action: manipulation; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
@@ -51,7 +51,7 @@ footer { padding: 10px 16px 14px; border-top: 1px solid var(--line); flex-shrink
 [data-mode="pick"] .content, [data-mode="pick"] footer { display: none; }
 [data-mode="pick"] .pick-controls { display: block; }
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.steps button { font-size: 12px; padding: 8px 2px; color: var(--ink); background: transparent; }
+.steps button { display: flex; flex-direction: column; gap: 6px; align-items: stretch; min-width: 0; height: 80px; font-size: 12px; padding: 8px 5px; color: var(--ink); background: transparent; }
 .done { background: var(--complete); }
 .steps button.done { background: var(--complete); color: var(--muted); }
 .steps button[aria-current="step"] { border-color: var(--accent); color: var(--accent); background: var(--surface); font-weight: 600; }
@@ -74,12 +74,12 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 }
 @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
 
-.dragging h2 { cursor: grabbing; }
-.pick-controls .summary { margin: 0 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+.dragging h2 { min-width: 0; cursor: grabbing; }
+.pick-controls .summary { min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
 .review-heading { align-items: flex-start; margin-bottom: 12px; }
 .review-heading .summary { margin: 10px 0; }
 .review-heading button { flex-shrink: 0; }
-.review-utility { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+
 .format-tokens { display: flex; flex-wrap: wrap; gap: 2px; margin-top: -12px; }
 .format-tokens button { border: 1px solid var(--line); }
 .format-preview { display: block; padding: 10px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
@@ -94,3 +94,17 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 @keyframes label-shine { 45% { color: var(--accent); text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ready-cue::after, .just-completed, .scanning::before { animation: none; } .ready-cue::after { display: none; } }
+
+.header-actions { display: flex; align-items: center; flex-shrink: 0; gap: 0; }
+.icon-button { display: grid; place-items: center; width: 44px; }
+.icon-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.header-back { background: transparent; color: inherit; border: 0; padding: 8px 4px; font-size: 12px; flex-shrink: 0; }
+.scan-toolbar { flex-wrap: wrap; column-gap: 8px; row-gap: 4px; }
+.scan-toolbar select { margin-inline-start: auto; font-size: 12px; }
+.pick-summary { margin-bottom: 4px; }
+.pick-summary button { flex-shrink: 0; }
+.step-label { white-space: nowrap; }
+.step-value { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-size: 11px; line-height: 1.4; font-weight: 400; text-align: start; color: var(--muted); }
+.step-value.url-preview { display: flex; align-items: baseline; }
+.url-start { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url-end { flex-shrink: 0; white-space: nowrap; }
