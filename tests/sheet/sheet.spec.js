@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
-import { createSafariPreviewServer } from "../../scripts/preview-safari.js";
+import { createSheetPreviewServer } from "../../scripts/preview-sheet.js";
 
 let server;
 let url;
 test.beforeAll(async () => {
-  server = await createSafariPreviewServer();
+  server = await createSheetPreviewServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   url = `http://127.0.0.1:${server.address().port}/`;
 });
@@ -20,14 +20,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("ネイティブ検証用ページには模擬APIも拡張の自動起動も含めない", async ({ page, request }) => {
-  const nativeServer = await createSafariPreviewServer({ native: true });
+  const nativeServer = await createSheetPreviewServer({ native: true });
   await new Promise((resolve) => nativeServer.listen(0, "127.0.0.1", resolve));
   const nativeUrl = `http://127.0.0.1:${nativeServer.address().port}/`;
   try {
     await page.goto(nativeUrl);
     await expect(page.locator("#event-title")).toBeVisible();
     await expect(page.locator("sche10le-sheet, #preview-launch")).toHaveCount(0);
-    expect(await page.evaluate(() => window.__safariPreview)).toBeUndefined();
+    expect(await page.evaluate(() => window.__sheetPreview)).toBeUndefined();
     for (const path of ["preview-api.js", "extension.js", "launch.js"]) {
       expect((await request.get(nativeUrl + path)).status()).toBe(404);
     }
@@ -54,8 +54,8 @@ test("SafariパッケージからChrome専用UI・AI・不要な権限を除外�
   expect(manifest.permissions.sort()).toEqual(["activeTab", "scripting", "storage"].sort());
   expect(manifest.background.service_worker).toBe("background.js");
   for (const key of ["side_panel", "minimum_chrome_version", "content_scripts", "host_permissions"]) expect(manifest[key]).toBeUndefined();
-  const content = await readFile(".output/safari-mv3/content-scripts/safari.js", "utf8");
-  expect(content).not.toMatch(/LanguageModel|AIで日程を補完|AIを準備する|__safariPreview/);
+  const content = await readFile(".output/safari-mv3/content-scripts/sheet.js", "utf8");
+  expect(content).not.toMatch(/LanguageModel|AIで日程を補完|AIを準備する|__sheetPreview/);
 });
 
 test("起動時だけトップフレームへ注入し、背景処理のURLと送信元を検証する", async () => {
@@ -66,7 +66,7 @@ test("起動時だけトップフレームへ注入し、背景処理のURLと�
     action: { onClicked: { addListener(fn) { activate = fn; } } },
     scripting: { async executeScript(request) { injected.push(request); } },
     tabs: {
-      async sendMessage(...args) { sent.push(args); },
+      async sendMessage(...args) { sent.push(args); if (!injected.length) throw new Error("No receiver"); return { ok: true }; },
       async create(request) { opened.push(request); return { id: 10 }; },
     },
     runtime: { id: "test-extension", getURL: (path) => `safari-web-extension://test${path}`, onMessage: { addListener(fn) { receive = fn; } } },
@@ -74,20 +74,24 @@ test("起動時だけトップフレームへ注入し、背景処理のURLと�
   runInNewContext(await readFile(".output/safari-mv3/background.js", "utf8"), { chrome: api, URL, console });
   expect(injected).toHaveLength(0);
   await activate({ id: 4, url: "https://example.com/event" });
-  expect(injected).toEqual([{ target: { tabId: 4, frameIds: [0] }, files: ["/content-scripts/safari.js"] }]);
-  expect(sent).toEqual([[4, { type: "safari-show" }, { frameId: 0 }]]);
-  const message = { type: "safari-open-calendar", url: "https://calendar.google.com/calendar/render?action=TEMPLATE" };
+  expect(injected).toEqual([{ target: { tabId: 4, frameIds: [0] }, files: ["/content-scripts/sheet.js"] }]);
+  expect(sent).toEqual([[4, { type: "sheet-show" }, { frameId: 0 }], [4, { type: "sheet-show" }, { frameId: 0 }]]);
+  await activate({ id: 4, url: "https://example.com/event" });
+  expect(injected).toHaveLength(1);
+  const message = { type: "open-calendar", url: "https://calendar.google.com/calendar/render?action=TEMPLATE" };
   const sender = { id: "test-extension", tab: { id: 4 }, frameId: 0 };
-  expect(await receive(message, sender)).toEqual({ ok: true });
+  const dispatch = (message, sender) => new Promise((resolve) => receive(message, sender, resolve));
+  expect(await dispatch(message, sender)).toEqual({ ok: true });
   expect(opened).toHaveLength(1);
   for (const invalid of [{ ...sender, id: "other" }, { ...sender, frameId: 1 }, { id: sender.id }]) {
-    expect(await receive(message, invalid)).toEqual({ ok: false });
+    expect(await dispatch(message, invalid)).toEqual({ ok: false });
   }
-  expect(await receive({ ...message, url: "https://example.com/" }, sender)).toEqual({ ok: false });
+  expect(await dispatch({ ...message, url: "https://example.com/" }, sender)).toEqual({ ok: false });
   expect(opened).toHaveLength(1);
+  api.tabs.sendMessage = async () => { throw new Error("No receiver"); };
   api.scripting.executeScript = async () => { throw new Error("Cannot access contents of url"); };
   await activate({ id: 4, url: "https://example.com/event" });
-  expect(opened[1].url).toMatch(/^safari-web-extension:\/\/test\/safari-help.html/);
+  expect(opened[1].url).toMatch(/^safari-web-extension:\/\/test\/help.html/);
 });
 
 test("タップで日時を選び、同じシートを畳んで3項目を取得し、カレンダーとICSへ渡す", async ({ page }, info) => {
@@ -111,7 +115,7 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   await page.screenshot({ path: `test-results/safari-${info.project.name}-review.png` });
   await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
   await expect(sheet.locator(".status")).toContainText("カレンダーを開きました");
-  const handoff = new URL(await page.evaluate(() => window.__safariPreview.lastCalendar));
+  const handoff = new URL(await page.evaluate(() => window.__sheetPreview.lastCalendar));
   expect(handoff.searchParams.get("text")).toBe("蔵前の活版印刷ワークショップ");
   expect(handoff.searchParams.get("location")).toContain("アトリエ蔵前");
   expect(handoff.searchParams.get("details")).toContain("受付は開始30分前");
@@ -157,7 +161,7 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
   await expect(sheet.locator(".candidate")).toHaveCount(3);
   // A second injection must not create a second sheet or duplicate handlers.
   await page.addScriptTag({ url: `${url}extension.js` });
-  await page.evaluate(() => window.__safariPreview.show());
+  await page.evaluate(() => window.__sheetPreview.show());
   await expect(page.locator("sche10le-sheet")).toHaveCount(1);
   await page.evaluate(() => history.pushState({}, "", "/?new-page=1"));
   await expect(sheet).toBeHidden();
@@ -172,7 +176,7 @@ test("テーマと書式を保存・復元し、カレンダーの失敗時も�
   await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", "shikon");
   await sheet.getByLabel("タイトルの書式").fill("{unknown}");
   await sheet.getByLabel("タイトルの書式").blur();
-  await expect(sheet.locator(".status")).toHaveClass(/error/);
+  await expect(sheet.locator(".format-preview")).toHaveClass(/error/);
   await sheet.getByLabel("タイトルの書式").fill("{from:HHmm} {title}");
   await sheet.getByLabel("タイトルの書式").blur();
   await expect(sheet.locator(".status")).toHaveText("自動保存しました");
@@ -183,7 +187,7 @@ test("テーマと書式を保存・復元し、カレンダーの失敗時も�
   await page.locator("#event-title").tap();
   await sheet.getByRole("button", { name: "内容を確認" }).tap();
   await expect(sheet.locator(".field").first()).toContainText("1400 蔵前の活版印刷ワークショップ");
-  await page.evaluate(() => { window.__safariPreview.failOpen = true; });
+  await page.evaluate(() => { window.__sheetPreview.failOpen = true; });
   await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
   await expect(sheet.locator(".status")).toHaveClass(/error/);
   await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
@@ -199,4 +203,55 @@ test("テーマと書式を保存・復元し、カレンダーの失敗時も�
     return box.x >= 0 && box.x + box.width <= 320;
   }).toBe(true);
   expect(await sheet.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+});
+
+test("設定のエラーを赤く示し、失敗した複数の変更を再試行でまとめて保存する", async ({ page }) => {
+  const sheet = await start(page);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  const format = sheet.getByLabel("タイトルの書式");
+  await expect(sheet.getByLabel("前後の移動時間（片道・分）")).toHaveAttribute("step", "5");
+  await format.fill("{title} ");
+  await sheet.getByRole("button", { name: "開始時刻", exact: true }).tap();
+  await expect(format).toHaveValue("{title} {from:HHmm}");
+  await expect(sheet.locator(".format-preview")).toContainText("1400");
+  await expect(sheet.getByRole("button", { name: "開始時刻", exact: true })).toHaveAttribute("title", "{from:HHmm}");
+  await format.fill("{invalid}");
+  await expect(format).toHaveAttribute("aria-invalid", "true");
+  await expect(sheet.locator(".format-preview")).toHaveClass(/error/);
+  await page.evaluate(() => { window.__sheetPreview.failSave = true; });
+  await sheet.getByRole("button", { name: "初期値に戻す" }).tap();
+  await sheet.getByLabel("カラーテーマ").selectOption("aitetsu");
+  await expect(sheet.locator(".status")).toHaveClass(/error/);
+  await sheet.getByLabel("前後の移動時間（片道・分）").fill("55");
+  await sheet.getByLabel("前後の移動時間（片道・分）").blur();
+  await expect(sheet.getByRole("button", { name: "再試行", exact: true })).toBeVisible();
+  await page.evaluate(() => { window.__sheetPreview.failSave = false; });
+  await sheet.getByRole("button", { name: "再試行", exact: true }).tap();
+  await expect(sheet.locator(".status")).toHaveText("自動保存しました");
+  await page.reload();
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await expect(sheet.getByLabel("カラーテーマ")).toHaveValue("aitetsu");
+  await expect(sheet.getByLabel("前後の移動時間（片道・分）")).toHaveValue("55");
+  await expect(format).toHaveValue("{title}");
+});
+
+test("取得途中の確認画面から設定へ進み、6テーマでも狭幅と選択内容を保つ", async ({ page }) => {
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await expect(sheet.locator(".summary")).toContainText("14:00");
+  await page.locator("#event-title").tap();
+  await sheet.getByRole("button", { name: "内容を確認" }).tap();
+  await expect(sheet.locator(".review-heading").getByRole("button", { name: "選び直す" })).toBeVisible();
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await page.setViewportSize({ width: 320, height: 568 });
+  for (const theme of ["chitosemidori", "ginnezu", "mizuasagi", "aitetsu", "kurocha", "shikon"]) {
+    await sheet.getByLabel("カラーテーマ").selectOption(theme);
+    await expect(page.locator("sche10le-sheet")).toHaveAttribute("data-theme", theme);
+    expect(await sheet.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  }
+  await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
+  await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
+  await sheet.locator(".field").first().tap();
+  await expect(sheet.locator(".steps button").first()).toHaveAttribute("aria-current", "step");
 });

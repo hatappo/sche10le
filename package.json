@@ -1,6 +1,6 @@
 {
   "name": "sche10le",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -20,9 +20,11 @@
     "test:live": "playwright test --config playwright.live.config.js",
     "check:live-samples": "node scripts/check-live-samples.js",
     "build:safari": "wxt build -b safari --mv3",
-    "test:safari": "npm run build:safari && playwright test --config playwright.safari.config.js",
-    "preview:safari": "npm run build:safari && node scripts/preview-safari.js",
-    "preview:safari:native": "node scripts/preview-safari.js --native"
+    "test:safari": "npm run test:ui",
+    "preview:safari": "npm run preview:ui",
+    "preview:safari:native": "node scripts/preview-sheet.js --native",
+    "test:ui": "npm run build:safari && playwright test --config playwright.sheet.config.js",
+    "preview:ui": "npm run build:safari && node scripts/preview-sheet.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

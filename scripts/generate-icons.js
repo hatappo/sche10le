@@ -1,4 +1,4 @@
-// Render the sidebar's actual CSS mark. No extra runtime or build dependencies.
+// Render the shared brand's CSS mark. No extra runtime or build dependencies.
 // Run on macOS with Georgia installed to match the approved brand typography.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
@@ -12,12 +12,12 @@ const theme = await readFile(
   new URL("../lib/theme.css", import.meta.url),
   "utf8",
 );
-const sidebar = await readFile(
-  new URL("../entrypoints/sidepanel/style.css", import.meta.url),
+const brand = await readFile(
+  new URL("../lib/brand.css", import.meta.url),
   "utf8",
 );
 // Include both .brand-mark declarations and its decorative pseudo-element.
-const mark = sidebar.match(/\.brand-mark(?::before)?\s*\{[^}]*\}/g);
+const mark = brand.match(/\.brand-mark(?::before)?\s*\{[^}]*\}/g);
 if (mark?.length !== 3)
   throw new Error("ブランドのアイコンCSSを確認してください");
 

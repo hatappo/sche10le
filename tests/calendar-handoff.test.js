@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isCalendarHandoff } from "../lib/safari-policy.js";
+import { isCalendarHandoff } from "../lib/calendar-handoff.js";
 import { calendarUrl } from "../lib/calendar.js";
 import { createDraft } from "../lib/draft.js";
 

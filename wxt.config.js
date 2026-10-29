@@ -7,7 +7,7 @@ export default defineConfig({
     name: "Sche10le",
     description: "ページの日程を見つけて、Googleカレンダーへ。",
     ...(browser === "safari" ? {} : { minimum_chrome_version: "116" }),
-    permissions: ["activeTab", "scripting", "storage", ...(browser === "safari" ? [] : ["sidePanel"])],
+    permissions: ["activeTab", "scripting", "storage"],
     icons: {
       16: "icons/16.png",
       32: "icons/32.png",

@@ -1,0 +1,26 @@
+/* Approved icon source; independent of the extension UI container. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: 7px;
+  color: var(--paper);
+  font:
+    16px/1 Georgia,
+    serif;
+  letter-spacing: -1px;
+  position: relative;
+}
+.brand-mark:before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 6px;
+  right: 6px;
+  border-top: 1px solid #ffffff45;
+}
+.brand-mark {
+  padding-top: 6px;
+}
