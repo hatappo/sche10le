@@ -17,7 +17,12 @@
 | --- | --- |
 | `entrypoints/background.js`、`lib/extension-background.js` | 起動したタブのUIを再表示。未注入時だけスクリプトを注入。Googleカレンダーへの受け渡し |
 | `entrypoints/sheet.content.js` | 二重起動防止、ページ遷移、拡張ストレージの接続 |
-| `lib/sheet.js`、`lib/sheet.css` | 共通シート、取得、確認、設定と画面幅への対応 |
+| `lib/sheet.js` | 共通シートの組み立て、候補・取得内容の描画、スキャン・保存・カレンダーへの受け渡し |
+| `lib/sheet-state.js` | 日時選択・項目取得・確認・設定・閉じる・リセットの状態遷移。DOMや拡張APIに依存しない |
+| `lib/sheet-settings.js` | 設定画面の入力・検証・プレビュー。保存は呼び出し元へ通知 |
+| `lib/sheet-interactions.js` | ページ上の取得、スクロールとタップの区別、ドラッグ、Visual Viewportへの追従 |
+| `lib/sheet-elements.js`、`lib/theme-selector.js` | DOM部品。ブラウザごとの複製を作らない |
+| `lib/sheet.css`、`lib/theme.css` | 共通スタイル、画面幅・テーマへの対応 |
 | `lib/preferences.js` | 0.5から維持する設定キー・検証・標準値 |
 | `lib/extract.js`、`calendar.js`、`ical.js` など | 日程抽出・予定生成。ブラウザに依存しない |
 | `lib/source-highlight.js` | 出典の強調とシートを考慮したスクロール |
@@ -26,6 +31,19 @@
 ページの本文・候補・取得内容はそのページのContent Script内のメモリーに置く。閉じても残し、再読み込み・別URLへの遷移で破棄する。バックグラウンドの存続に依存させない。初回起動／再スキャン以外は本文を自動スキャンしない。
 
 設定キー（`travelMinutes`、`titleFormat`、`candidateOrder`、`themeId`）は変更しない。旧AI設定が残っていても読まず、モデルにアクセスしない。設定の連続保存は直列化し、保存失敗時は表示を維持して再試行する。
+
+## 状態遷移の保守ルール
+
+`sheet-state.js` の `transitionSheet` が、画面・戻り先・選択した日時・取得内容・完了チェックをまとめて更新する。描画やイベント側からこれらを個別に書き換えない。新しい遷移はここへ追加し、利用シナリオを `tests/sheet-state.test.js` で検証する。
+
+- 日時選択で新しい下書きを作り、タイトル取得へ進む。
+- 項目を取得するとその項目だけ完了にし、次へ進む。詳細の取得で確認画面へ進む。
+- 項目の移動や途中確認だけでは完了扱いにしない。取得済み項目を選び直しても、他の値と完了チェックは残す。
+- 設定は直前の画面と取得位置を記憶する。設定を閉じて再表示しても、戻る先を保持する。
+- 取得中に拡張を閉じると、内容を保持して確認画面へ移る。表示／非表示はDOM側で管理する。
+- 日時の選び直し・再スキャン・ページ遷移では、下書きと完了チェックを初期化する。設定は別に保持する。
+
+DOM、タイマー、非同期処理の世代管理、保存キューは `sheet.js` に残す。入力イベントは `sheet-interactions.js` が登録し、Content Script破棄時の共通AbortSignalで解除する。ブラウザ名ではなく画面幅・入力方法・Visual Viewportに応じて対応する。
 
 ## 検証の分担
 

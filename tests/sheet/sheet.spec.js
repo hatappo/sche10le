@@ -350,3 +350,30 @@ test("設定と戻るが同じ位置で切り替わり、色見本はテーマ�
   await back.click();
   await expect(sheet).toHaveAttribute("data-mode", "pick");
 });
+
+test("取得途中の設定を閉じて再開しても、戻る先と内容を保ち、再選択だけを反映する", async ({ page }) => {
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await page.locator("#event-title").tap();
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await sheet.getByRole("button", { name: "Sche10leを閉じる", exact: true }).tap();
+  await expect(sheet).toBeHidden();
+  await page.locator("#preview-launch").tap();
+  await expect(sheet).toHaveAttribute("data-mode", "settings");
+  await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
+  await expect(sheet.getByRole("button", { name: "2 場所", exact: true })).toHaveAttribute("aria-current", "step");
+  await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true })).toHaveClass(/done/);
+  await sheet.getByRole("button", { name: "3 詳細", exact: true }).tap();
+  await page.locator("article p").filter({ hasText: "受付は開始30分前" }).tap();
+  await expect(sheet).toHaveAttribute("data-mode", "review");
+  await expect(sheet.locator(".field").nth(1)).not.toHaveClass(/done/);
+  await sheet.locator(".field").first().tap();
+  await page.locator("address").first().tap();
+  await sheet.getByRole("button", { name: "内容を確認", exact: true }).tap();
+  await expect(sheet.locator(".field").first()).toContainText("アトリエ蔵前");
+  await expect(sheet.locator(".field").nth(2)).toContainText("受付は開始30分前");
+  await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
+  await pickDate(sheet);
+  await expect(sheet.locator(".steps .done")).toHaveCount(0);
+  await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true })).toContainText("週末のデザイン散歩");
+});
