@@ -1,9 +1,3 @@
-//
-//  ViewController.swift
-//  Shared (App)
-//
-//
-
 import WebKit
 
 #if os(iOS)
@@ -15,44 +9,72 @@ import SafariServices
 typealias PlatformViewController = NSViewController
 #endif
 
-let extensionBundleIdentifier = Bundle.main.object(forInfoDictionaryKey: "Sche10leExtensionBundleIdentifier") as! String
+// WKUserContentController retains its handlers; do not retain the view controller.
+private final class ScriptMessageRelay: NSObject, WKScriptMessageHandler {
+    weak var receiver: WKScriptMessageHandler?
+
+    init(receiver: WKScriptMessageHandler) {
+        self.receiver = receiver
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        receiver?.userContentController(userContentController, didReceive: message)
+    }
+}
 
 class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMessageHandler {
-
     @IBOutlet var webView: WKWebView!
+    private var pageLoaded = false
+    private var extensionBundleIdentifier: String? {
+        Bundle.main.object(forInfoDictionaryKey: "Sche10leExtensionBundleIdentifier") as? String
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        self.webView.navigationDelegate = self
-
+        webView.navigationDelegate = self
+        webView.configuration.userContentController.add(ScriptMessageRelay(receiver: self), name: "controller")
 #if os(iOS)
-        self.webView.scrollView.isScrollEnabled = false
+        // The instructions must remain reachable in landscape and with large text.
+        webView.scrollView.isScrollEnabled = true
+#elseif os(macOS)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshExtensionState), name: NSApplication.didBecomeActiveNotification, object: nil)
 #endif
+        guard let page = Bundle.main.url(forResource: "Main", withExtension: "html"),
+              let resources = Bundle.main.resourceURL else { return }
+        webView.loadFileURL(page, allowingReadAccessTo: resources)
+    }
 
-        self.webView.configuration.userContentController.add(self, name: "controller")
-
-        self.webView.loadFileURL(Bundle.main.url(forResource: "Main", withExtension: "html")!, allowingReadAccessTo: Bundle.main.resourceURL!)
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        pageLoaded = true
+        refreshExtensionState()
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // This app displays bundled instructions only, never a remote web page.
+        decisionHandler(navigationAction.request.url?.isFileURL == true ? .allow : .cancel)
+    }
+
+    @objc private func refreshExtensionState() {
+        guard pageLoaded else { return }
 #if os(iOS)
-        webView.evaluateJavaScript("show('ios')")
+        if #available(iOS 18, *) {
+            webView.evaluateJavaScript("show('ios', undefined, true)")
+        } else {
+            webView.evaluateJavaScript("show('ios', undefined, false)")
+        }
 #elseif os(macOS)
-        webView.evaluateJavaScript("show('mac')")
-
-        SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: extensionBundleIdentifier) { (state, error) in
-            guard let state = state, error == nil else {
-                // Insert code to inform the user that something went wrong.
-                return
-            }
-
+        let modernSettings: Bool
+        if #available(macOS 13, *) { modernSettings = true } else { modernSettings = false }
+        webView.evaluateJavaScript("show('mac', undefined, \(modernSettings))")
+        guard let identifier = extensionBundleIdentifier else { return }
+        SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: identifier) { [weak self] state, error in
+            guard let state = state, error == nil else { return }
             DispatchQueue.main.async {
-                if #available(macOS 13, *) {
-                    webView.evaluateJavaScript("show('mac', \(state.isEnabled), true)")
-                } else {
-                    webView.evaluateJavaScript("show('mac', \(state.isEnabled), false)")
-                }
+                self?.webView.evaluateJavaScript("show('mac', \(state.isEnabled), \(modernSettings))")
             }
         }
 #endif
@@ -60,21 +82,19 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
 #if os(macOS)
-        if (message.body as! String != "open-preferences") {
+        guard message.name == "controller", message.body as? String == "open-preferences",
+              message.frameInfo.isMainFrame, message.frameInfo.request.url?.isFileURL == true else { return }
+        guard let identifier = extensionBundleIdentifier else {
+            webView.evaluateJavaScript("showSettingsResult(false)")
             return
         }
-
-        SFSafariApplication.showPreferencesForExtension(withIdentifier: extensionBundleIdentifier) { error in
-            guard error == nil else {
-                // Insert code to inform the user that something went wrong.
-                return
-            }
-
+        SFSafariApplication.showPreferencesForExtension(withIdentifier: identifier) { [weak self] error in
+            let succeeded = error == nil
             DispatchQueue.main.async {
-                NSApp.terminate(self)
+                self?.webView.evaluateJavaScript("showSettingsResult(\(succeeded))")
+                self?.refreshExtensionState()
             }
         }
 #endif
     }
-
 }

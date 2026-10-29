@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C00000000000000000000004 /* theme.css in Resources (iOS) */ = {isa = PBXBuildFile; fileRef = C00000000000000000000003 /* theme.css */; };
+		C00000000000000000000005 /* theme.css in Resources (macOS) */ = {isa = PBXBuildFile; fileRef = C00000000000000000000003 /* theme.css */; };
 		B326066E3093B27C00080F51 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B326066D3093B27C00080F51 /* AppDelegate.swift */; };
 		B32606703093B27C00080F51 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B326066F3093B27C00080F51 /* SceneDelegate.swift */; };
 		B32606733093B27C00080F51 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B32606713093B27C00080F51 /* LaunchScreen.storyboard */; };
@@ -82,6 +84,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C00000000000000000000003 /* theme.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = ../../lib/theme.css; sourceTree = SOURCE_ROOT; };
 		C00000000000000000000001 /* Common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Common.xcconfig; sourceTree = SOURCE_ROOT; };
 		B326065E3093B27B00080F51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
 		B326065F3093B27B00080F51 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -167,6 +170,7 @@
 				B326065F3093B27B00080F51 /* Icon.png */,
 				B32606603093B27B00080F51 /* Style.css */,
 				B32606613093B27B00080F51 /* Script.js */,
+				C00000000000000000000003 /* theme.css */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -370,6 +374,7 @@
 				B32606733093B27C00080F51 /* LaunchScreen.storyboard in Resources */,
 				B32606983093B27C00080F51 /* Main.html in Resources */,
 				B326069E3093B27C00080F51 /* Script.js in Resources */,
+				C00000000000000000000004 /* theme.css in Resources */,
 				B32606A23093B27C00080F51 /* Assets.xcassets in Resources */,
 				B32606763093B27C00080F51 /* Main.storyboard in Resources */,
 				B326069C3093B27C00080F51 /* Style.css in Resources */,
@@ -382,6 +387,7 @@
 				B326069D3093B27C00080F51 /* Style.css in Resources */,
 				B32606823093B27C00080F51 /* Main.storyboard in Resources */,
 				B326069F3093B27C00080F51 /* Script.js in Resources */,
+				C00000000000000000000005 /* theme.css in Resources */,
 				B32606A33093B27C00080F51 /* Assets.xcassets in Resources */,
 				B32606993093B27C00080F51 /* Main.html in Resources */,
 			);
