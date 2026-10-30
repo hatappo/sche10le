@@ -377,3 +377,118 @@ test("取得途中の設定を閉じて再開しても、戻る先と内容を�
   await expect(sheet.locator(".steps .done")).toHaveCount(0);
   await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true })).toContainText("週末のデザイン散歩");
 });
+
+// Programmatic ranges exercise Selection integration. Native iOS long-press handles
+// and its context menu still require a physical-device check.
+async function selectRange(page, selector, start, end) {
+  await page.locator(selector).evaluate((node, [start, end]) => {
+    const range = document.createRange();
+    range.setStart(node.firstChild, start);
+    range.setEnd(node.firstChild, end);
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }, [start, end]);
+}
+
+test("範囲を調整してから明示的に取得し、項目移動・解除時に古い範囲を残さない", async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await selectRange(page, "#event-title", 0, 3);
+  const confirm = sheet.getByRole("button", { name: "この範囲を使う", exact: true });
+  await expect(confirm).toBeVisible();
+  await expect(sheet.locator("h2")).toHaveText("タイトルを選択");
+  await selectRange(page, "#event-title", 3, 7);
+  await expect(sheet.locator("#selection-preview")).toHaveText("活版印刷");
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect(confirm).toBeInViewport({ ratio: 1 });
+  await expect.poll(async () => {
+    const box = await sheet.boundingBox();
+    return Math.round(box.y + box.height);
+  }).toBeLessThanOrEqual(568);
+  await page.screenshot({ path: `test-results/range-pick-${info.project.name}.png`, animations: "disabled" });
+  await confirm.tap();
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+  await expect(sheet.locator(".steps button").first()).toContainText("活版印刷");
+  await expect(confirm).toBeHidden();
+  expect(await page.evaluate(() => getSelection().toString())).toBe("");
+  await selectRange(page, "#event-title", 0, 3);
+  await expect(confirm).toBeVisible();
+  await sheet.getByRole("button", { name: "3 詳細", exact: true }).tap();
+  await expect(confirm).toBeHidden();
+  await selectRange(page, "#event-title", 0, 3);
+  await expect(confirm).toBeVisible();
+  await page.evaluate(() => getSelection().removeAllRanges());
+  await expect(confirm).toBeHidden();
+  await page.locator("article").first().evaluate(node => {
+    const form = document.createElement("div");
+    form.contentEditable = "true";
+    form.id = "range-form";
+    form.textContent = "取得しない入力内容";
+    node.prepend(form);
+  });
+  await selectRange(page, "#range-form", 0, 4);
+  await expect(confirm).toBeHidden();
+});
+
+test("PCのドラッグ範囲を要素境界を越えて取得し、移動だけでは取得しない", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  await page.setViewportSize({ width: 1100, height: 850 });
+  await pickDate(sheet);
+  await page.locator("#event-title").evaluate(node => {
+    node.innerHTML = '<span>選びたい</span><span>範囲だけ</span><span>残す文字</span>';
+    node.style.cssText = "font:20px monospace;white-space:nowrap;";
+    node.scrollIntoView({ block: "center" });
+  });
+  const points = await page.locator("#event-title").evaluate(node => {
+    const a = node.children[0].getBoundingClientRect();
+    const b = node.children[1].getBoundingClientRect();
+    return { x1: a.left + 1, x2: b.right - 1, y: a.top + a.height / 2 };
+  });
+  await page.mouse.move(points.x1, points.y);
+  await page.mouse.down();
+  await page.mouse.move(points.x2, points.y, { steps: 12 });
+  await page.mouse.up();
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+  await expect(sheet.locator(".steps button").first().locator(".step-value")).toHaveText("選びたい範囲だけ");
+  await expect(sheet.getByRole("button", { name: "この範囲を使う" })).toBeHidden();
+  await page.locator("#event-title").evaluate(node => {
+    node.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", isPrimary: true, clientY: 100 }));
+    node.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "touch", clientY: 40 }));
+    node.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+  });
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+});
+
+test("候補の目印をソート・強調表示・登録方法・選び直しでも維持する", async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  // Change page order independently of date order before rescanning.
+  await page.locator("article").first().evaluate(node => node.before(node.nextElementSibling));
+  await sheet.getByRole("button", { name: "再スキャン", exact: true }).tap();
+  await expect(sheet.locator(".candidate-marker")).toHaveText(["A", "B", "C"]);
+  const before = await sheet.locator(".candidate").evaluateAll(nodes => nodes.map(node => ({
+    id: node.dataset.candidateId, marker: node.querySelector(".candidate-marker").textContent,
+  })));
+  await sheet.getByRole("combobox", { name: "日程の並び順" }).selectOption("date");
+  const after = await sheet.locator(".candidate").evaluateAll(nodes => nodes.map(node => ({
+    id: node.dataset.candidateId, marker: node.querySelector(".candidate-marker").textContent,
+  })));
+  expect(after).not.toEqual(before);
+  expect(after.toSorted((a, b) => a.id.localeCompare(b.id))).toEqual(before.toSorted((a, b) => a.id.localeCompare(b.id)));
+  await sheet.locator(".candidate-toggle").first().tap();
+  const selected = after[0].marker;
+  await expect(page.locator("sche10le-source-highlight .source-marker")).toHaveText(selected);
+  const sourceMarker = page.locator("sche10le-source-highlight .source-marker");
+  await expect(sourceMarker).toBeInViewport({ ratio: 1 });
+  expect((await sourceMarker.boundingBox()).y + (await sourceMarker.boundingBox()).height).toBeLessThan((await sheet.boundingBox()).y);
+  await page.screenshot({ path: `test-results/candidate-marker-${info.project.name}.png`, animations: "disabled" });
+  await sheet.getByRole("button", { name: /^移動込み/ }).tap();
+  await expect(sheet.locator(".summary .candidate-marker")).toHaveText(selected);
+  await sheet.getByRole("button", { name: "内容を確認", exact: true }).tap();
+  await expect(sheet.locator(".summary .candidate-marker")).toHaveText(selected);
+  await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
+  await expect(sheet.locator(".candidate-marker")).toHaveText(after.map(item => item.marker));
+});

@@ -134,3 +134,10 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 
 .theme-options .theme-swatch { flex-basis: 28px; height: 30px; box-shadow: inset 5px 0 var(--accent); }
 .theme-options .theme-swatch > span { margin-inline-start: 4px; }
+
+.candidate-marker { display: inline-block; min-width: 1.5em; padding: 1px 4px; border-radius: 4px; background: var(--wash); color: var(--muted); font-size: 11px; font-weight: 600; text-align: center; vertical-align: baseline; }
+.candidate-toggle[aria-expanded="true"] .candidate-marker { color: var(--accent); }
+.sheet[data-mode="pick"].has-selection { height: 268px; }
+.selection-action { display: flex; align-items: center; gap: 8px; padding: 6px 12px 10px; border-top: 1px solid var(--line); flex-shrink: 0; }
+.selection-action > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--muted); }
+.selection-confirm { flex-shrink: 0; font-size: 12px; font-weight: 600; }
