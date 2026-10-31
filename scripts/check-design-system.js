@@ -61,6 +61,8 @@ try {
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "pick");
   await frame.getByRole("button", { name: "内容を確認", exact: true }).click();
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "review");
+  // Wait for the sheet's expansion before clicking inside the scrolling frame.
+  await frame.locator(".sheet").evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished)));
   await frame.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "list");
   await expect(frame.locator(".candidate-toggle")).toHaveAttribute("aria-expanded", "false");
