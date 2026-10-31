@@ -124,6 +124,7 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   expect(handoff.searchParams.get("location")).toContain("アトリエ蔵前");
   expect(handoff.searchParams.get("details")).toContain("受付は開始30分前");
   expect(handoff.searchParams.get("details")).toContain(url);
+  await expect(sheet.locator(".download")).toHaveText("ICS");
   const downloaded = page.waitForEvent("download");
   await sheet.getByRole("button", { name: "予定をダウンロード（.ics）" }).tap();
   const download = await downloaded;
@@ -309,6 +310,7 @@ test("設定と戻るが同じ位置で切り替わり、色見本はテーマ�
   const sheet = await start(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 320, height: 568 });
+  await expect(page.locator("sche10le-sheet")).toHaveCSS("--view-width", "320px");
   const gear = sheet.getByRole("button", { name: "設定", exact: true });
   const gearBox = await gear.boundingBox();
   await gear.click();
@@ -483,8 +485,8 @@ test("候補の目印をソート・強調表示・登録方法・選び直し�
   expect(after.toSorted((a, b) => a.id.localeCompare(b.id))).toEqual(before.toSorted((a, b) => a.id.localeCompare(b.id)));
   await sheet.locator(".candidate-toggle").first().tap();
   const selected = after[0].marker;
-  await expect(page.locator("sche10le-source-highlight .source-marker")).toHaveText(selected);
-  const sourceMarker = page.locator("sche10le-source-highlight .source-marker");
+  await expect(page.locator("sche10le-source-highlight .source-marker:not(.candidate-source-marker)")).toHaveText(selected);
+  const sourceMarker = page.locator("sche10le-source-highlight .source-marker:not(.candidate-source-marker)");
   await expect(sourceMarker).toBeInViewport({ ratio: 1 });
   expect((await sourceMarker.boundingBox()).y + (await sourceMarker.boundingBox()).height).toBeLessThan((await sheet.boundingBox()).y);
   await page.screenshot({ path: `test-results/candidate-marker-${info.project.name}.png`, animations: "disabled" });
@@ -632,6 +634,27 @@ test("範囲の上下に独立して確定ボタンを表示し、上からも�
 });
 
 
+test("日程を選ぶ間だけ全候補の目印を保持し、スクロールに追従する", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  const badges = page.locator("sche10le-source-highlight .candidate-source-marker");
+  await expect(badges).toHaveText(["A", "B", "C"]);
+  await expect(page.locator("sche10le-source-highlight .shade")).toBeHidden();
+  await page.locator(".date").nth(1).evaluate(node => node.scrollIntoView({block: "start"}));
+  await expect(badges.nth(1)).toBeVisible();
+  await expect(badges.nth(1)).toBeInViewport();
+  await pickDate(sheet);
+  await expect(badges).toHaveCount(0);
+  await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
+  await expect(badges).toHaveText(["A", "B", "C"]);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await expect(badges).toHaveCount(0);
+  await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
+  await expect(badges).toHaveCount(3);
+  await sheet.getByRole("button", { name: "Sche10leを閉じる", exact: true }).tap();
+  await expect(page.locator("sche10le-source-highlight")).toHaveCount(0);
+});
+
 test("旧設定の削除失敗は起動を妨げず、次の背景起動で再試行する", async () => {
   const bundle = await readFile(".output/safari-mv3/background.js", "utf8");
   let attempts = 0, registered = 0;
@@ -653,5 +676,3 @@ test("旧設定の削除失敗は起動を妨げず、次の背景起動で再�
   expect(attempts).toBe(3);
   expect(saved).toEqual({travelMinutes: 45, titleFormat: "{title}", candidateOrder: "date"});
 });
-
-
