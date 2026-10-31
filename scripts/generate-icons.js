@@ -22,7 +22,7 @@ async function render(size, opaque = false, palette = BRAND_COLORS) {
   const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });
   try {
     await page.setContent('<span class="brand-mark" aria-hidden="true">10</span>');
-    await page.addStyleTag({ content: `${theme}\n${await brandStyles(palette)}\n
+    await page.addStyleTag({ content: `${theme}\n${await brandStyles(palette, { ios: opaque })}\n
       * { box-sizing: border-box; }
       html, body { margin: 0; background: ${opaque ? palette.background : "transparent"}; }
       .brand-mark { position: absolute; transform-origin: top left; }
