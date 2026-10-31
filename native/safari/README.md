@@ -64,3 +64,16 @@ Deployment Targetは生成時の値を維持している（iOSアプリ17.0・�
 
 - [Apple：Safari用Web Extensionのパッケージ化](https://developer.apple.com/documentation/safariservices/packaging-a-web-extension-for-safari)
 - [Apple：ビルド設定ファイル](https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project)
+
+## ホーム画面のアイコン（iOS / iPadOS）
+
+アプリ右上の歯車から「アプリの設定」を開き、6テーマのアイコンを選べる。Safari拡張内のテーマとは独立した設定。Macにはこの操作を出さない。
+
+- `npm run icons` で共通SVG・`lib/themes.js`・`lib/theme.css`から標準と5つの代替App Icon Set、設定用の`Resources/AppIcons.js`を生成する。生成物はGit管理する。
+- iPhone用は原稿の高さ100%で描画し、外側を同色で埋める。拡張・Mac用の透明余白とは分ける。
+- iOSアプリのDebug・Releaseに`ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`を指定。`CFBundleAlternateIcons`はXcodeに生成させ、手動でInfo.plistへ書き足さない。
+- `UIApplication.setAlternateIconName`をユーザーのタップ時だけ呼び出す。標準へ戻すときは`nil`を渡す。iOSが変更通知を表示する場合がある。
+- 現在の選択は`alternateIconName`を起動時・アクティブ復帰時・設定を開いたときに取得する。独自の保存値で成功を推定しない。
+- Native bridgeは同梱Main.htmlのメインフレームだけを受け付け、コンパイル済みInfo.plistに登録されたアイコン名のみ許可する。変更中の連打とバックグラウンドでの要求を抑制し、失敗時は元の選択を表示する。
+
+参考：[Appleの代替アイコン設定](https://developer.apple.com/documentation/xcode/configuring-your-app-to-use-alternate-app-icons)。実機では各色への変更・千歳緑への復帰・アプリ再起動後の選択・ホーム画面の明暗／色合い設定との組み合わせを確認する。

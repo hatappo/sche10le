@@ -25,6 +25,9 @@ private final class ScriptMessageRelay: NSObject, WKScriptMessageHandler {
 class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMessageHandler {
     @IBOutlet var webView: WKWebView!
     private var pageLoaded = false
+#if os(iOS)
+    private var iconChangeInProgress = false
+#endif
     private var extensionBundleIdentifier: String? {
         Bundle.main.object(forInfoDictionaryKey: "Sche10leExtensionBundleIdentifier") as? String
     }
@@ -36,6 +39,7 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
 #if os(iOS)
         // The instructions must remain reachable in landscape and with large text.
         webView.scrollView.isScrollEnabled = true
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshExtensionState), name: UIApplication.didBecomeActiveNotification, object: nil)
 #elseif os(macOS)
         NotificationCenter.default.addObserver(self, selector: #selector(refreshExtensionState), name: NSApplication.didBecomeActiveNotification, object: nil)
 #endif
@@ -66,6 +70,7 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
         } else {
             webView.evaluateJavaScript("show('ios', undefined, false)")
         }
+        sendIconState()
 #elseif os(macOS)
         let modernSettings: Bool
         if #available(macOS 13, *) { modernSettings = true } else { modernSettings = false }
@@ -81,9 +86,19 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "controller", message.frameInfo.isMainFrame,
+              let page = Bundle.main.url(forResource: "Main", withExtension: "html"),
+              message.frameInfo.request.url?.standardizedFileURL == page.standardizedFileURL else { return }
+#if os(iOS)
+        if message.body as? String == "get-icon-state" {
+            sendIconState()
+        } else if let request = message.body as? [String: String],
+                  request["action"] == "set-icon", let name = request["name"] {
+            setAppIcon(name)
+        }
+#endif
 #if os(macOS)
-        guard message.name == "controller", message.body as? String == "open-preferences",
-              message.frameInfo.isMainFrame, message.frameInfo.request.url?.isFileURL == true else { return }
+        guard message.body as? String == "open-preferences" else { return }
         guard let identifier = extensionBundleIdentifier else {
             webView.evaluateJavaScript("showSettingsResult(false)")
             return
@@ -97,4 +112,43 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
         }
 #endif
     }
+
+#if os(iOS)
+    private func sendIconState(failed: Bool = false) {
+        guard pageLoaded else { return }
+        let app = UIApplication.shared
+        let state: [String: Any] = [
+            "supported": app.supportsAlternateIcons,
+            "current": app.alternateIconName ?? "AppIcon",
+            "busy": iconChangeInProgress,
+            "error": failed,
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: state),
+              let json = String(data: data, encoding: .utf8) else { return }
+        webView.evaluateJavaScript("showIconState(\(json))")
+    }
+
+    private func setAppIcon(_ name: String) {
+        let app = UIApplication.shared
+        // Accept only assets registered in this app's compiled Info.plist.
+        let icons = Bundle.main.object(forInfoDictionaryKey: "CFBundleIcons") as? [String: Any]
+        let alternatives = icons?["CFBundleAlternateIcons"] as? [String: Any] ?? [:]
+        guard name == "AppIcon" || alternatives[name] != nil,
+              app.supportsAlternateIcons, app.applicationState == .active else {
+            sendIconState(failed: true)
+            return
+        }
+        guard !iconChangeInProgress else { sendIconState(); return }
+        let desired = name == "AppIcon" ? nil : name
+        guard app.alternateIconName != desired else { sendIconState(); return }
+        iconChangeInProgress = true
+        sendIconState()
+        app.setAlternateIconName(desired) { [weak self] error in
+            DispatchQueue.main.async {
+                self?.iconChangeInProgress = false
+                self?.sendIconState(failed: error != nil)
+            }
+        }
+    }
+#endif
 }

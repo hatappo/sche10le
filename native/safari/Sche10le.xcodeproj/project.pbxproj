@@ -43,6 +43,8 @@
 		B32606C63093B27C00080F51 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = B32606BA3093B27C00080F51 /* icons */; };
 		B32606C73093B27C00080F51 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B32606BB3093B27C00080F51 /* manifest.json */; };
 		B32606C83093B27C00080F51 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = B32606BC3093B27C00080F51 /* help.html */; };
+		C10000000000000000000002 /* AppIcons.js in Resources (iOS) */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* AppIcons.js */; };
+		C10000000000000000000003 /* AppIcons.js in Resources (macOS) */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* AppIcons.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +115,7 @@
 		B32606BA3093B27C00080F51 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = "../../.output/safari-mv3/icons"; sourceTree = SOURCE_ROOT; };
 		B32606BB3093B27C00080F51 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = "../../.output/safari-mv3/manifest.json"; sourceTree = SOURCE_ROOT; };
 		B32606BC3093B27C00080F51 /* help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = "help.html"; path = "../../.output/safari-mv3/help.html"; sourceTree = SOURCE_ROOT; };
+		C10000000000000000000001 /* AppIcons.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = AppIcons.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +173,7 @@
 				B326065F3093B27B00080F51 /* Icon.png */,
 				B32606603093B27B00080F51 /* Style.css */,
 				B32606613093B27B00080F51 /* Script.js */,
+				C10000000000000000000001 /* AppIcons.js */,
 				C00000000000000000000003 /* theme.css */,
 			);
 			path = Resources;
@@ -374,6 +378,7 @@
 				B32606733093B27C00080F51 /* LaunchScreen.storyboard in Resources */,
 				B32606983093B27C00080F51 /* Main.html in Resources */,
 				B326069E3093B27C00080F51 /* Script.js in Resources */,
+				C10000000000000000000002 /* AppIcons.js in Resources (iOS) */,
 				C00000000000000000000004 /* theme.css in Resources */,
 				B32606A23093B27C00080F51 /* Assets.xcassets in Resources */,
 				B32606763093B27C00080F51 /* Main.storyboard in Resources */,
@@ -387,6 +392,7 @@
 				B326069D3093B27C00080F51 /* Style.css in Resources */,
 				B32606823093B27C00080F51 /* Main.storyboard in Resources */,
 				B326069F3093B27C00080F51 /* Script.js in Resources */,
+				C10000000000000000000003 /* AppIcons.js in Resources (macOS) */,
 				C00000000000000000000005 /* theme.css in Resources */,
 				B32606A33093B27C00080F51 /* Assets.xcassets in Resources */,
 				B32606993093B27C00080F51 /* Main.html in Resources */,
@@ -697,6 +703,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-ginnezu AppIcon-mizuasagi AppIcon-aitetsu AppIcon-kurocha AppIcon-shikon";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -735,6 +742,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-ginnezu AppIcon-mizuasagi AppIcon-aitetsu AppIcon-kurocha AppIcon-shikon";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
