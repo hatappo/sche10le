@@ -27,6 +27,7 @@ const sheet = await read("lib/sheet.css");
 const components = (await read("docs/design/components.html"))
   .replace("{{THEME}}", theme)
   .replace("{{PANEL_CSS}}", sheet)
+  .replace("{{ICS_ICON}}", await read("lib/ics-icon.svg"))
   .replace("{{THEME_SELECTOR_SCRIPT}}", `const THEMES = ${JSON.stringify(THEMES)};\n${resolveTheme.toString()}\n${createThemeSelector.toString()}`)
   .replace("{{THEME_IDS}}", JSON.stringify(THEMES.map((theme) => theme.id)));
 const overlay = components.replace('body data-demo="list"', 'body data-demo="pick"')
