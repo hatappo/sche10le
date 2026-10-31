@@ -492,3 +492,19 @@ test("候補の目印をソート・強調表示・登録方法・選び直し�
   await sheet.getByRole("button", { name: "選び直す", exact: true }).tap();
   await expect(sheet.locator(".candidate-marker")).toHaveText(after.map(item => item.marker));
 });
+
+test("別の日付候補へタップで切り替えると登録方法が開く", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  for (const index of [0, 1, 0, 2, 1]) {
+    await sheet.locator(".candidate-toggle").nth(index).tap();
+    await expect(sheet.locator(".candidate-toggle").nth(index)).toHaveAttribute("aria-expanded", "true");
+    await expect(sheet.locator(".candidate").nth(index).locator(".variants")).toBeVisible();
+    await expect(sheet.locator('[aria-expanded="true"]')).toHaveCount(1);
+  }
+  // Safari may leave focus on the previous card when another is tapped.
+  await sheet.locator(".candidate-toggle").first().focus();
+  await sheet.locator(".candidate-toggle").nth(1).tap();
+  await expect(sheet.locator(".candidate-toggle").nth(1)).toHaveAttribute("aria-expanded", "true");
+  await expect(sheet.locator(".candidate").nth(1).locator(".variants")).toBeVisible();
+});
