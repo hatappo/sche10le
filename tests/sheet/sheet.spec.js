@@ -508,3 +508,90 @@ test("別の日付候補へタップで切り替えると登録方法が開く",
   await expect(sheet.locator(".candidate-toggle").nth(1)).toHaveAttribute("aria-expanded", "true");
   await expect(sheet.locator(".candidate").nth(1).locator(".variants")).toBeVisible();
 });
+
+test("範囲のプレビューだけで取得内容を変更せず、近くのボタンで確定する", async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sourceUrl = `${url}?event=long-source-for-selection-preview`;
+  await page.goto(sourceUrl);
+  const sheet = page.locator("sche10le-sheet .sheet");
+  await expect(sheet.locator(".candidate")).toHaveCount(3);
+  await sheet.getByRole("button", { name: "設定", exact: true }).tap();
+  await sheet.getByRole("textbox", { name: "タイトルの書式", exact: true }).fill("{from:HHmm} {title}");
+  await sheet.getByRole("button", { name: "戻る", exact: true }).tap();
+  await pickDate(sheet);
+  await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
+  const title = sheet.getByRole("button", { name: "1 タイトル", exact: true });
+  const original = await title.locator(".step-value").innerText();
+  const nearby = page.locator("sche10le-sheet .nearby-selection");
+  await selectRange(page, "#event-title", 0, 3);
+  await expect(title.locator(".step-value")).toHaveText("1400 蔵前の");
+  await expect(title).not.toHaveClass(/done/);
+  await selectRange(page, "#event-title", 3, 7);
+  await expect(title.locator(".step-value")).toHaveText("1400 活版印刷");
+  await expect(nearby).toBeVisible();
+  await expect(nearby).toBeInViewport({ ratio: 1 });
+  const action = await nearby.boundingBox();
+  const source = await page.evaluate(() => {
+    const rect = getSelection().getRangeAt(0).getBoundingClientRect();
+    return { bottom: rect.bottom, top: rect.top };
+  });
+  expect(action.y).toBeGreaterThan(source.bottom);
+  expect(action.y + action.height).toBeLessThan((await sheet.boundingBox()).y);
+  await page.screenshot({ path: `test-results/nearby-range-${info.project.name}.png`, animations: "disabled" });
+  await page.evaluate(() => getSelection().removeAllRanges());
+  await expect(title.locator(".step-value")).toHaveText(original);
+  await expect(nearby).toBeHidden();
+  // Leaving without confirming must not persist the transient title.
+  await selectRange(page, "#event-title", 3, 7);
+  await sheet.getByRole("button", { name: "内容を確認", exact: true }).tap();
+  await expect(sheet.locator(".field").first()).toContainText(original);
+  await expect(nearby).toBeHidden();
+  await sheet.locator(".field").first().tap();
+  await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
+  await selectRange(page, "#event-title", 3, 7);
+  await nearby.tap();
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+  await expect(title.locator(".step-value")).toHaveText("1400 活版印刷");
+  await expect(title).toHaveClass(/done/);
+  await expect(nearby).toBeHidden();
+  // Location and details follow the same preview rules, including the source URL.
+  await selectRange(page, "#event-title", 0, 3);
+  const location = sheet.getByRole("button", { name: "2 場所", exact: true });
+  await expect(location.locator(".step-value")).toHaveText("蔵前の");
+  await page.evaluate(() => getSelection().removeAllRanges());
+  await expect(location.locator(".step-value")).toHaveText("未設定");
+  await sheet.getByRole("button", { name: "3 詳細", exact: true }).tap();
+  await selectRange(page, "#event-title", 3, 7);
+  const details = sheet.getByRole("button", { name: "3 詳細", exact: true });
+  await expect(details.locator(".step-value")).toContainText("活版印刷");
+  await expect(details.locator(".step-value")).toContainText(sourceUrl);
+  await page.evaluate(() => getSelection().removeAllRanges());
+  await expect(details.locator(".step-value")).toHaveText(sourceUrl);
+  await expect(details.locator(".url-start")).toHaveCount(1);
+});
+
+test("範囲の近くに余白がない時はバーから確定でき、スクロールで表示を追従する", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  // Leave room above the source so scrolling can move it toward the bar.
+  await page.locator("main").evaluate(node => { node.style.paddingTop = "500px"; });
+  await pickDate(sheet);
+  const nearby = page.locator("sche10le-sheet .nearby-selection");
+  await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
+  await selectRange(page, "#event-title", 3, 7);
+  await expect(nearby).toBeVisible();
+  const before = await nearby.boundingBox();
+  await page.evaluate(() => scrollBy(0, 30));
+  await expect.poll(async () => (await nearby.boundingBox()).y).toBeCloseTo(before.y - 30, 0);
+  // Place the selection just above the bar, leaving no room for a separate action.
+  const sheetTop = (await sheet.boundingBox()).y;
+  await page.evaluate(top => {
+    const rect = getSelection().getRangeAt(0).getBoundingClientRect();
+    scrollBy(0, rect.bottom - (top - 12));
+  }, sheetTop);
+  await expect(nearby).toBeHidden();
+  await expect(sheet.getByRole("button", { name: "この範囲を使う", exact: true })).toBeVisible();
+  await sheet.getByRole("button", { name: "この範囲を使う", exact: true }).tap();
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+  await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true }).locator(".step-value")).toHaveText("活版印刷");
+});
