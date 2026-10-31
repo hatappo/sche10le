@@ -60,8 +60,10 @@ footer { padding: 10px 16px 14px; border-top: 1px solid var(--line); flex-shrink
 .field-label { color: var(--muted); font-size: 12px; }
 .actions { display: grid; grid-template-columns: 1fr 44px; align-items: center; gap: 8px; }
 .primary { display: flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; background: var(--action); color: var(--on-action); border-color: var(--action); font-size: 14px; font-weight: 600; }
-.download { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px; font-size: 10px; font-weight: 600; background: transparent; }
-.download svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.download { display: grid; place-items: center; width: 44px; height: 44px; padding: 5px; background: transparent; }
+.download svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.download svg text { fill: currentColor; stroke: none; font: 650 9px -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: .25px; }
+.download svg .cutout { fill: var(--paper); stroke: none; }
 .hint { font-size: 11px; color: var(--muted); margin: 0; grid-column: 1 / -1; }
 .status { padding: 0 16px; margin: 8px 0; font-size: 12px; color: var(--muted); flex-shrink: 0; }
 .status:empty { display: none; }

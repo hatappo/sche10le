@@ -133,7 +133,10 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   expect(handoff.searchParams.get("location")).toContain("アトリエ蔵前");
   expect(handoff.searchParams.get("details")).toContain("受付は開始30分前");
   expect(handoff.searchParams.get("details")).toContain(url);
-  await expect(sheet.locator(".download")).toHaveText("ICS");
+  await expect(sheet.locator(".download svg text")).toHaveText("ICS");
+  await expect(sheet.locator(".download svg")).toHaveAttribute("aria-hidden", "true");
+  await expect(sheet.locator(".download")).toHaveCSS("width", "44px");
+  await expect(sheet.locator(".download")).toHaveCSS("height", "44px");
   const downloaded = page.waitForEvent("download");
   await sheet.getByRole("button", { name: "予定をダウンロード（.ics）" }).tap();
   const download = await downloaded;
