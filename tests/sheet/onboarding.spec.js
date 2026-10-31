@@ -56,6 +56,10 @@ test("iPhoneの案内は有効化と起動を区別し、OSによって設定経
   await page.locator("footer").scrollIntoViewIfNeeded();
   await expect(page.locator("footer")).toBeInViewport();
   expect(requests.every(url => url.startsWith(origin))).toBe(true);
+  const policy = page.getByRole("link", { name: "プライバシーポリシー" });
+  await expect(policy).toBeVisible();
+  await expect(policy).toHaveAttribute("href", "https://github.com/hatappo/sche10le/blob/main/PRIVACY.md");
+  expect((await policy.boundingBox()).height).toBeGreaterThanOrEqual(44);
   expect(errors).toEqual([]);
 });
 

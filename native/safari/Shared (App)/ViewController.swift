@@ -58,7 +58,22 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        // This app displays bundled instructions only, never a remote web page.
+        // Only an explicit tap from our bundled page may open the policy externally.
+        // Remote pages never load inside the privileged web view.
+        if navigationAction.navigationType == .linkActivated,
+           navigationAction.sourceFrame.isMainFrame,
+           let page = Bundle.main.url(forResource: "Main", withExtension: "html"),
+           navigationAction.sourceFrame.request.url?.standardizedFileURL == page.standardizedFileURL,
+           let url = navigationAction.request.url,
+           url.absoluteString == "https://github.com/hatappo/sche10le/blob/main/PRIVACY.md" {
+            decisionHandler(.cancel)
+#if os(iOS)
+            UIApplication.shared.open(url)
+#elseif os(macOS)
+            NSWorkspace.shared.open(url)
+#endif
+            return
+        }
         decisionHandler(navigationAction.request.url?.isFileURL == true ? .allow : .cancel)
     }
 
