@@ -63,7 +63,9 @@ test("起動時だけトップフレームへ注入し、背景処理のURLと�
   let activate;
   let receive;
   const injected = [], sent = [], opened = [];
+  const saved = { aiEnabled: true, themeId: "shikon", futureSetting: 123 };
   const api = {
+    storage: { local: { async remove(keys) { for (const key of keys) delete saved[key]; } } },
     action: { onClicked: { addListener(fn) { activate = fn; } } },
     scripting: { async executeScript(request) { injected.push(request); } },
     tabs: {
@@ -73,6 +75,7 @@ test("起動時だけトップフレームへ注入し、背景処理のURLと�
     runtime: { id: "test-extension", getURL: (path) => `safari-web-extension://test${path}`, onMessage: { addListener(fn) { receive = fn; } } },
   };
   runInNewContext(await readFile(".output/safari-mv3/background.js", "utf8"), { chrome: api, URL, console });
+  expect(saved).toEqual({ themeId: "shikon", futureSetting: 123 });
   expect(injected).toHaveLength(0);
   await activate({ id: 4, url: "https://example.com/event" });
   expect(injected).toEqual([{ target: { tabId: 4, frameIds: [0] }, files: ["/content-scripts/sheet.js"] }]);
@@ -627,3 +630,28 @@ test("範囲の上下に独立して確定ボタンを表示し、上からも�
   await expect(above).toBeHidden();
   await expect(below).toBeHidden();
 });
+
+
+test("旧設定の削除失敗は起動を妨げず、次の背景起動で再試行する", async () => {
+  const bundle = await readFile(".output/safari-mv3/background.js", "utf8");
+  let attempts = 0, registered = 0;
+  const saved = { aiEnabled: false, travelMinutes: 45, titleFormat: "{title}", candidateOrder: "date" };
+  const api = {
+    storage: {local: {async remove(keys) {
+      attempts++;
+      if (attempts === 1) throw new Error("Storage unavailable");
+      for (const key of keys) delete saved[key];
+    }}},
+    action: {onClicked: {addListener() { registered++; }}},
+    runtime: {onMessage: {addListener() {}}},
+  };
+  for (let i = 0; i < 3; i++) {
+    runInNewContext(bundle, {chrome: api, URL, console: {warn() {}}});
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  expect(registered).toBe(3);
+  expect(attempts).toBe(3);
+  expect(saved).toEqual({travelMinutes: 45, titleFormat: "{title}", candidateOrder: "date"});
+});
+
+
