@@ -4,7 +4,7 @@
 - [0.6.0 共通UIの仕様](dev/unified-0.6.0.md)：Chrome／Safariの実装境界と操作フロー。
 - [Safariの開発手順](dev/safari-development.md)・[実機確認](dev/safari-device-checklist.md)：ビルドと必要な動作確認。
 - [Googleカレンダー連携](dev/calendar-app-handoff.md)：現在の受け渡し方式と検証範囲。
-- [0.6.0 プライバシー改訂案](dev/privacy-0.6.0-draft.md)：公開前の変更案。
+- [プライバシーポリシー](../PRIVACY.md)・[0.6.0公開準備](dev/release-0.6.0.md)：情報の扱いと提出手順。
 - [従来版の製品設計](dev/product_technical_design.md)・[ストア申告](dev/store_privacy_notes.md)：公開中の0.5以前を対象とする資料。
 
 ## 資料の保管方針
