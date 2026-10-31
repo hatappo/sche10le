@@ -4,3 +4,9 @@ node_modules/
 test-results/
 playwright-report/
 .DS_Store
+
+# Xcode user state, signing and local build products
+native/**/xcuserdata/
+native/**/*.xcuserstate
+native/safari/Config/Signing.local.xcconfig
+native/safari/build/

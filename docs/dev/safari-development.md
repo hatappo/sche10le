@@ -1,0 +1,114 @@
+# Safari版の開発（0.6.0 共通UI）
+
+[Issue #19](https://github.com/hatappo/sche10le/issues/19) の開発。Chromeも同じドロワーに統一する方針へ変更した。[統合方針](unified-0.6.0.md)を参照。iPhoneを優先し、iPad・Macにも対応する。Chrome版と同じリポジトリ・WXT・バニラJSを使用する。
+
+## 現在の到達点
+
+- Safari／ChromeのMV3ビルドを用意。`activeTab`・`scripting`・`storage` のみを宣言し、両方ともサイドパネル・ローカルAIを含めない。Safariには最小Chromeバージョンも含めない。
+- 拡張のアクションを押したタブのトップフレームへ、その場でContent Scriptを注入する。全サイトへの常時読み取り権限や自動実行は追加しない。
+- 狭い画面では下部シート、760px以上では右側のドロワーを表示する。日時と登録パターンはタップで選ぶ。
+- 日時を決めると同じシートが小さな取得バーへ縮む。タイトル→場所→詳細をページから取得し、完了後は確認用シートへ戻る。途中でも右上の展開ボタン（内容を確認）からカレンダーへ進める。
+- 閉じても、そのページが存続する間は内容を保持する。拡張から再表示できる。再読み込み・別ページへの移動・SPAのURL変更では破棄する。
+- GoogleカレンダーURL、ICS、タイトル書式、移動時間、候補のソート、6テーマは既存の処理・設定キーを共有する。Safariの設定画面にはAIを置かない。
+
+WebKitとChromiumで**UI・ロジックの検証**を実施。2026-10-30にXcode 27.1でmacOS/iOS共通プロジェクトを生成し、iPhone 18 Pro（iOS 27.0）シミュレーター向けビルド・インストール・案内アプリの起動を確認した。同日、統合前の試作ではユーザーの手動確認でSafariの拡張メニューから起動し、検証ページの日程3件を検出して動作した。統合後の共通版はiOS／macOSともクリーンな生成物でビルドし、起動中のiPhoneシミュレーターへ再インストール済み。共通版のUIはローカルプレビューで手動確認済み。Git管理へ移したプロジェクトもiOSシミュレーター／macOS向けの署名なしビルドが成功し、アプリ内のWebリソースとバージョンの一致を確認した。移行後のSafari拡張としての手動操作確認は別途行う。その後、iPhone実機では開発署名による起動・基本操作・Googleカレンダーアプリへの受け渡しを確認した。現在の確認範囲は[実機確認記録](safari-device-checklist.md)、配布上の残作業は[公開準備](release-0.6.0.md)を参照。
+
+初回の手動確認では、Safari内で拡張を起動する場所が分かりにくかった。案内アプリを日本語化し、「拡張を有効にする」と「Webページから拡張を起動する」を分けて図示した。iPhoneシミュレーターで描画を確認済み。実機で案内どおりに起動できるかを次に確認する。
+
+## XcodeなしでUIを触る
+
+```sh
+npm ci
+npm run preview:safari
+```
+
+表示された `http://127.0.0.1:4174` をブラウザーで開く。幅を狭めるとスマホ向けのシート、広げるとMac向けのドロワーになる。閉じた後はページ右上の「Sche10leを開く」から戻れる。終了はターミナルでCtrl+C。
+
+このプレビューはローカルのサンプルページに実際の共通Content Scriptを読み込む。拡張APIだけを模擬しているため、**Googleカレンダーのリンクは実際に開く**。ICSは生成・ダウンロードできる。設定はこのプレビューのlocalStorageに保存し、実際の拡張設定には触れない。サーバーは127.0.0.1にのみ待ち受け、外部イベントサイトへアクセスしない。
+
+プレビュー用API・サーバー・テストのフックは配布用ビルドには含めない。これはSafariへのインストール手順ではない。
+
+## ビルドと自動テスト
+
+```sh
+npm run check                    # Chromeのlint・型検査・単体テスト・ビルド
+npm run test:e2e                 # Chrome実拡張とライブ検証ハーネスの回帰確認
+npm run build:safari             # .output/safari-mv3/ にWeb Extensionを生成
+npx playwright install chromium webkit  # Safari UIテストの初回のみ
+npm run test:safari              # Safariビルド + Chromium/WebKitの専用テスト
+```
+
+共通UIのテストはChrome実拡張E2E・ライブサイト検証から分離している。実際のビルドを使い、タップによる取得、スクロールの除外、フォーム操作、閉じる・再表示、二重注入、SPA遷移、設定とエラー表示、移動前の時刻書式、ICS、狭幅・Mac幅、reduced motionを検査する。背景処理はAPIを模擬し、注入対象・送信元・カレンダーURL制限・起動失敗時の案内も検査する。
+
+本番では閉じたShadow DOMを使う。テストだけShadow DOMを観測可能にして、同じビルドのUIを操作する。Playwright WebKitはSafariそのものでもiPhoneでもないため、これらの成功を実機動作の保証にはしない。
+
+## コードの分担
+
+| 部分 | ファイル | 責務 |
+| --- | --- | --- |
+| 対象別の出力 | `wxt.config.js`、各entrypointのinclude/exclude | ブラウザ別のメタデータのみを分離 |
+| 起動・受け渡し | `lib/extension-background.js` | activeTabによる注入、限定したGoogleカレンダーURLだけを新規タブで開く |
+| ライフサイクル | `entrypoints/sheet.content.js` | 二重注入防止、設定API、再表示、URL変更時の破棄 |
+| 共通UI | `lib/sheet.js`、`lib/sheet.css` | シートと取得バー、ページ単位の編集中状態 |
+| 共有ロジック | `lib/extract.js`、`calendar.js`、`ical.js`、`draft.js`、`title-format.js`、`themes.js`など | 抽出・日時・書式・予定生成・テーマ |
+
+UIはページ内のHTML/CSSであり、Safari標準ポップアップやネイティブのシートを縮めているわけではない。編集中の内容はContent Script内のメモリーに保持し、バックグラウンド処理やポップアップの存続には依存しない。ページ内の文字列をHTMLとして挿入せず、フォーム入力は取得対象にしない。URL変更の監視は再スキャンを行わない。
+
+## Xcodeと実機の準備
+
+2026-10-30時点でXcode 27.1・Safariのpackager・iOSシミュレーターを準備済み。以下は別環境での再セットアップ手順。
+
+1. Mac App StoreからXcodeをインストールし、初回起動のセットアップを完了する。
+2. XcodeのSettings → LocationsでCommand Line ToolsにXcodeを指定する。
+3. リポジトリ直下で次を実行し、Git管理するプロジェクトを開く。
+
+```sh
+npm ci
+npm run prepare:safari
+open native/safari/Sche10le.xcodeproj
+```
+
+`native/safari/` が今後の管理場所。生成物を置いた旧 `.output/safari-xcode/` は使わない。共有Scheme・相対リソース参照・バージョン同期・署名設定の分離を含めて管理する。Web側を変更したら `npm run prepare:safari` を実行し、Xcodeで再ビルドする。
+
+アプリID `dev.sche10le.prototype` はまだ開発用の仮ID。署名と正式IDは配布準備時に決定する。個人のTeamはGit対象外の `native/safari/Config/Signing.local.xcconfig` に置ける。詳しくは [ネイティブプロジェクトのREADME](../../native/safari/README.md) を参照。
+
+### シミュレーターで試す
+
+1. 上記のプロジェクトをXcodeで開く。
+2. 上部の実行対象を **Sche10le (iOS)**、端末を **iPhone 18 Pro** などのシミュレーターにして、▶（Run）を押す。Macや実際のiPhoneを選ぶ場合とは異なり、有料メンバーシップは不要。
+3. Xcode 27では画面の表示先が **Device Hub**。表示されない場合は **Xcode → Open Developer Tool → Device Hub** から開き、起動済み端末を選ぶ。[AppleのDevice Hub案内](https://developer.apple.com/documentation/xcode/pairing-your-devices-with-your-mac)
+4. シミュレーター内で **Settings → Apps → Safari → Extensions → Sche10le** を開き、拡張を有効にする。
+5. Macのターミナルで次を実行し、シミュレーターのSafariで `http://127.0.0.1:4175` を開く。
+
+```sh
+npm run preview:safari:native
+```
+
+このページはイベントのサンプル本文だけを返し、模擬API・拡張の自動起動は含まない。従来の4174番ポートのUIプレビューと混同しないこと。シミュレーターはMacのlocalhostに接続できるが、実際のiPhoneで同じURLは使えない。
+
+6. SafariのページメニューからSche10leを選ぶ。サイトへのアクセスを求められたら、検証ページに対して許可する。
+7. 3件の候補が表示されること、登録パターンの選択でバーへ縮むこと、タイトル・場所・詳細を順に取得できることを確認する。Googleカレンダーを開く操作は、このモードでは実際に遷移する（予定の保存は行わない）。
+
+コマンドからのビルド確認には次を使える。通常はXcodeのRunで進める。
+
+```sh
+npm run build:safari:ios     # Webの再ビルド + 署名なしiOSシミュレータービルド
+npm run build:safari:macos   # Webの再ビルド + 署名なしmacOSビルド
+```
+
+以降はXcodeのApple Account、署名のTeam、実行対象のScheme（どのアプリを起動するか）、接続したiPhoneを順に設定する。登録や支払い、Bundle Identifierの確定は実装とは分けて進める。配布段階でApple Developer Program・TestFlight・App Storeの手続きを行う。[登録の公式案内](https://developer.apple.com/help/account/membership/program-enrollment)
+
+App Store ConnectにはXcodeなしのパッケージ化経路もあるが、まずは端末上の触り心地を検証する。[Webでのパッケージ化](https://developer.apple.com/documentation/safariservices/packaging-and-distributing-safari-web-extensions-with-app-store-connect)
+
+## 実機で確認・判断すること
+
+接続・署名・操作のチェックと現在の記録は [Safari実機確認](safari-device-checklist.md) を参照。
+
+- iPhoneのSafari拡張メニューからの初回起動、サイトアクセスの許可・拒否・再試行。Macのツールバーからの起動。
+- Safariのツールバーの伸縮、ソフトウェアキーボード、safe area、横向き、ピンチズームに対する位置調整。
+- ページ末尾・固定要素・iframeの周辺で取得対象を操作バーが隠さないか。必要なら移動・退避方法を追加する。
+- タップとスクロール、長押し・テキスト範囲選択の使い分け。現状はタップした要素の全文を基本とし、その要素内に既存の選択範囲がある場合は選択文字列を使う。
+- GoogleカレンダーのWeb／アプリへの遷移、元のページへ戻る動作、iOSのICSダウンロード／共有／カレンダーへの取り込み。
+- VoiceOver、キーボード、拡大文字、iPadの分割表示と実際の押しやすさ。
+- 複数タブ・復帰・権限取り消し・更新時の状態。設定変更は別タブへも反映する。保存中・保存失敗中のローカル編集は優先する。
+- Mac/iOSアプリのアイコン・有効化案内、対応OS下限、Safari版のプライバシー説明とストア申告、審査素材。

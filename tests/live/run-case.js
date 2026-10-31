@@ -1,3 +1,4 @@
+import { showSheet } from "../support/sheet.js";
 import assert from "node:assert/strict";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,7 +12,7 @@ import {
 } from "./contract.js";
 import { navigationErrorCode, observeNavigation } from "./network.js";
 
-// Uses the real production build, content script, extraction, and sidepanel rendering.
+// Uses the real production build, content script, extraction, and shared drawer rendering.
 // Only the disposable test copy receives host access; activeTab toolbar gestures
 // themselves remain covered by manual release checks.
 export async function runLiveCase(
@@ -67,7 +68,7 @@ export async function runLiveCase(
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
     assert.deepEqual(
       [...manifest.permissions].sort(),
-      ["activeTab", "scripting", "sidePanel", "storage"].sort(),
+      ["activeTab", "scripting", "storage"].sort(),
     );
     assert.equal(manifest.host_permissions, undefined);
     assert.equal(manifest.content_scripts, undefined);
@@ -96,8 +97,7 @@ export async function runLiveCase(
     const worker =
       context.serviceWorkers()[0] ??
       (await context.waitForEvent("serviceworker"));
-    const extensionId = new URL(worker.url()).host;
-    // Fresh profiles already default to disabled, but make AI independence explicit.
+    // Keep each live case independent of preferences from other tests.
     await worker.evaluate(() => chrome.storage.local.clear());
     const source = await context.newPage();
     stopNetwork = observeNavigation(source, {
@@ -252,15 +252,12 @@ export async function runLiveCase(
       return report;
     }
     await checkpoint("panel");
-    const panel = await context.newPage();
-    await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
-    await expect(panel.locator("#scan-state")).toHaveText("対象外");
     await checkpoint("scan");
     await source.bringToFront();
-    await panel.getByRole("button", { name: "スキャン", exact: true }).click();
-    await expect(panel.locator("#scan-state")).toHaveText("スキャン完了");
-    const ids = await panel
-      .locator(".candidate")
+    await showSheet(worker, source);
+    const sheet = source.locator("sche10le-sheet .sheet");
+    await expect(sheet.locator(".content > .row").first()).toContainText("スキャン済み");
+    const ids = await sheet.locator(".candidate")
       .evaluateAll((cards) => cards.map((card) => card.dataset.candidateId));
     report.candidates = ids.map(candidateFromId);
     await checkpoint("compare");

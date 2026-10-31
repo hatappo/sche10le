@@ -15,6 +15,7 @@
     "entrypoints/**/*.js",
     "lib/**/*.js",
     "types/**/*.d.ts",
-    "wxt.config.js"
+    "wxt.config.js",
+    ".wxt/wxt.d.ts"
   ]
 }
