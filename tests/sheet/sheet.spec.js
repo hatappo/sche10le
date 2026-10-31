@@ -522,7 +522,7 @@ test("範囲のプレビューだけで取得内容を変更せず、近くの�
   await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
   const title = sheet.getByRole("button", { name: "1 タイトル", exact: true });
   const original = await title.locator(".step-value").innerText();
-  const nearby = page.locator("sche10le-sheet .nearby-selection");
+  const nearby = page.locator('sche10le-sheet .nearby-selection[data-placement="below"]');
   await selectRange(page, "#event-title", 0, 3);
   await expect(title.locator(".step-value")).toHaveText("1400 蔵前の");
   await expect(title).not.toHaveClass(/done/);
@@ -576,7 +576,7 @@ test("範囲の近くに余白がない時はバーから確定でき、スク�
   // Leave room above the source so scrolling can move it toward the bar.
   await page.locator("main").evaluate(node => { node.style.paddingTop = "500px"; });
   await pickDate(sheet);
-  const nearby = page.locator("sche10le-sheet .nearby-selection");
+  const nearby = page.locator('sche10le-sheet .nearby-selection[data-placement="below"]');
   await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
   await selectRange(page, "#event-title", 3, 7);
   await expect(nearby).toBeVisible();
@@ -594,4 +594,36 @@ test("範囲の近くに余白がない時はバーから確定でき、スク�
   await sheet.getByRole("button", { name: "この範囲を使う", exact: true }).tap();
   await expect(sheet.locator("h2")).toHaveText("場所を選択");
   await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true }).locator(".step-value")).toHaveText("活版印刷");
+});
+
+test("範囲の上下に独立して確定ボタンを表示し、上からも取得できる", async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await page.locator("main").evaluate(node => { node.style.paddingTop = "500px"; });
+  await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
+  await selectRange(page, "#event-title", 3, 7);
+  const above = page.locator('sche10le-sheet .nearby-selection[data-placement="above"]');
+  const below = page.locator('sche10le-sheet .nearby-selection[data-placement="below"]');
+  await expect(above).toBeVisible();
+  await expect(below).toBeVisible();
+  const source = await page.evaluate(() => {
+    const rect = getSelection().getRangeAt(0).getBoundingClientRect();
+    return { top: rect.top, bottom: rect.bottom };
+  });
+  const top = await above.boundingBox();
+  expect(top.y + top.height).toBeLessThan(source.top);
+  expect((await below.boundingBox()).y).toBeGreaterThan(source.bottom);
+  await page.screenshot({ path: `test-results/range-both-${info.project.name}.png`, animations: "disabled" });
+  // Near the viewport top only the lower action has space.
+  await page.evaluate(() => scrollBy(0, getSelection().getRangeAt(0).getBoundingClientRect().top - 12));
+  await expect(above).toBeHidden();
+  await expect(below).toBeVisible();
+  await page.locator("#event-title").evaluate(node => node.scrollIntoView({ block: "center" }));
+  await expect(above).toBeVisible();
+  await above.tap();
+  await expect(sheet.locator("h2")).toHaveText("場所を選択");
+  await expect(sheet.getByRole("button", { name: "1 タイトル", exact: true }).locator(".step-value")).toHaveText("活版印刷");
+  await expect(above).toBeHidden();
+  await expect(below).toBeHidden();
 });
