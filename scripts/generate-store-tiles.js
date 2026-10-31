@@ -8,7 +8,11 @@ if (process.platform !== "darwin") {
   );
 }
 const directory = new URL("../store/promotional/", import.meta.url);
-const html = await readFile(new URL("tiles.html", directory), "utf8");
+let html = await readFile(new URL("tiles.html", directory), "utf8");
+for (const name of ["theme", "brand"]) {
+  const css = await readFile(new URL(`../lib/${name}.css`, import.meta.url), "utf8");
+  html = html.replace(`<link rel="stylesheet" href="../../lib/${name}.css" />`, `<style>${css}</style>`);
+}
 const browser = await chromium.launch({ channel: "chromium", headless: true });
 try {
   for (const [name, width, height] of [

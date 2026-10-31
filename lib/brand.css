@@ -1,26 +1,37 @@
-/* Approved icon source; independent of the extension UI container. */
+/* Shared source for extension, native app and promotional icons. */
 .brand-mark {
   display: grid;
   place-items: center;
   width: 30px;
   height: 32px;
+  padding: 0 4px 5px 0;
   background: var(--accent);
   border-radius: 7px;
   color: var(--paper);
-  font:
-    16px/1 Georgia,
-    serif;
+  font: 17px/1 Georgia, serif;
   letter-spacing: -1px;
   position: relative;
 }
-.brand-mark:before {
+/* A plain lens over the date, with one short handle. */
+.brand-mark::before {
   content: "";
   position: absolute;
-  top: 7px;
-  left: 6px;
-  right: 6px;
-  border-top: 1px solid #ffffff45;
+  top: 3px;
+  left: 3px;
+  width: 21px;
+  height: 21px;
+  border: 1.4px solid currentColor;
+  border-radius: 50%;
 }
-.brand-mark {
-  padding-top: 6px;
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: 21px;
+  width: 8px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  transform-origin: left center;
 }

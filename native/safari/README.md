@@ -56,7 +56,7 @@ cp native/safari/Config/Signing.example.xcconfig native/safari/Config/Signing.lo
 
 案内アプリは日本語で「有効化」と「ページからの起動」を分けて説明する。iOSの設定経路とmacOSの設定／環境設定はOSに合わせて切り替え、Macでは有効状態と設定を開く失敗も表示する。カラーは `lib/theme.css` を直接共有し、システムの明暗に追従する。
 
-案内のブラウザテストは `tests/sheet/onboarding.spec.js` にあり、`npm run test:ui` とPRの回帰CIに含まれる。アイコンの品質確認、署名、実機検証、ストア情報は引き続き必要。[実機確認の手順と記録](../../docs/dev/safari-device-checklist.md) を参照。
+案内のブラウザテストは `tests/sheet/onboarding.spec.js` にあり、`npm run test:ui` とPRの回帰CIに含まれる。`npm run icons` で拡張・アプリ・案内画面のアイコンを同じ原稿から再生成する。署名、実機検証、ストア情報は引き続き必要。[実機確認の手順と記録](../../docs/dev/safari-device-checklist.md) を参照。
 
 Deployment Targetは生成時の値を維持している（iOSアプリ17.0・拡張15.0、macOS12.0）。これは検証済みのサポート下限を意味しない。Web APIも含めた実機検証を経て、公開前にアプリと拡張の下限を確定する。
 
