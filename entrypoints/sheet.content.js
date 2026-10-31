@@ -13,10 +13,6 @@ export default defineContentScript({
     const sheet = createSheet({
       load: () => browser.storage.local.get(PREFERENCE_KEYS),
       save: (values) => browser.storage.local.set(values),
-      openCalendar: async (url) => {
-        const result = await browser.runtime.sendMessage({ type: "open-calendar", url });
-        if (!result?.ok) throw new Error("Calendar handoff failed");
-      },
     });
     // A navigation clears page data, including SPA navigations while the UI is closed.
     let url = location.href;

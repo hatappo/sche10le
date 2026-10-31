@@ -15,16 +15,12 @@ export async function createSheetPreviewServer({ native = false } = {}) {
     const key = 'sche10le-safari-preview';
     window.__sheetPreview = {
       show() { for (const fn of listeners) fn({type: 'sheet-show'}, {id: 'preview-safari'}, () => {}); },
-      failSave: false, failOpen: false, lastCalendar: '',
+      failSave: false,
     };
     window.chrome = {
       runtime: {
         id: 'preview-safari',
         onMessage: { addListener(fn) { listeners.add(fn); }, removeListener(fn) { listeners.delete(fn); } },
-        async sendMessage(message) {
-          window.__sheetPreview.lastCalendar = message.url;
-          return {ok: !window.__sheetPreview.failOpen};
-        },
       },
       storage: {onChanged: {addListener() {}, removeListener() {}}, local: {
         async get() { return JSON.parse(localStorage.getItem(key) || '{}'); },
@@ -58,6 +54,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   server.listen(port, "127.0.0.1", () => {
     console.log(native
       ? `Safari拡張の検証ページ: http://127.0.0.1:${port}（模擬APIなし。Safariの拡張メニューから起動してください）`
-      : `共通UIプレビュー: http://127.0.0.1:${port}（拡張APIは模擬。カレンダーは開きません）`);
+      : `共通UIプレビュー: http://127.0.0.1:${port}（設定APIは模擬。カレンダーのリンクは実際に開きます）`);
   });
 }

@@ -13,6 +13,10 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => { await new Promise((resolve) => server.close(resolve)); });
 test.beforeEach(async ({ page }) => {
+  // Exercise real link navigation without contacting Google during regression tests.
+  await page.context().route("https://calendar.google.com/**", route => route.fulfill({
+    contentType: "text/html", body: "<!doctype html><title>Calendar test destination</title>",
+  }));
   // Test-only observation of the real sheet; the production bundle uses closed roots.
   await page.addInitScript(() => {
     const attach = Element.prototype.attachShadow;
@@ -117,9 +121,14 @@ test("タップで日時を選び、同じシートを畳んで3項目を取得�
   await expect(sheet.locator(".field").nth(2)).toContainText(url);
   await expect.poll(async () => (await sheet.boundingBox()).height).toBeCloseTo(844 * .72, 0);
   await page.screenshot({ path: `test-results/safari-${info.project.name}-review.png` });
-  await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
-  await expect(sheet.locator(".status")).toContainText("カレンダーを開きました");
-  const handoff = new URL(await page.evaluate(() => window.__sheetPreview.lastCalendar));
+  const opened = page.waitForEvent("popup");
+  await sheet.getByRole("link", { name: /Googleカレンダーで開く/ }).tap();
+  const destination = await opened;
+  await destination.waitForLoadState("domcontentloaded");
+  const handoff = new URL(destination.url());
+  expect(handoff.pathname).toBe("/calendar/r/eventedit");
+  expect(await destination.evaluate(() => window.opener)).toBeNull();
+  await destination.close();
   expect(handoff.searchParams.get("text")).toBe("蔵前の活版印刷ワークショップ");
   expect(handoff.searchParams.get("location")).toContain("アトリエ蔵前");
   expect(handoff.searchParams.get("details")).toContain("受付は開始30分前");
@@ -174,7 +183,7 @@ test("スクロールやフォームを取得せず、閉じる・再表示・�
   await expect(sheet).toHaveAttribute("data-mode", "list");
 });
 
-test("テーマと書式を保存・復元し、カレンダーの失敗時も取得した内容を保持する", async ({ page }, info) => {
+test("テーマと書式を保存・復元し、カレンダーへの遷移が中断されても取得した内容を保持する", async ({ page }, info) => {
   const sheet = await start(page);
   await sheet.getByRole("button", { name: "設定", exact: true }).tap();
   await page.screenshot({ path: `test-results/settings-groups-${info.project.name}.png`, animations: "disabled" });
@@ -193,9 +202,12 @@ test("テーマと書式を保存・復元し、カレンダーの失敗時も�
   await page.locator("#event-title").tap();
   await sheet.getByRole("button", { name: "内容を確認" }).tap();
   await expect(sheet.locator(".field").first()).toContainText("1400 蔵前の活版印刷ワークショップ");
-  await page.evaluate(() => { window.__sheetPreview.failOpen = true; });
-  await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).tap();
-  await expect(sheet.locator(".status")).toHaveClass(/error/);
+  // Cancelling a user navigation must not discard the draft or claim success.
+  await sheet.getByRole("link", { name: /Googleカレンダーで開く/ }).evaluate(link => {
+    link.addEventListener("click", event => event.preventDefault(), {once: true});
+  });
+  await sheet.getByRole("link", { name: /Googleカレンダーで開く/ }).tap();
+  await expect(sheet.locator(".status")).toBeEmpty();
   await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
   await page.setViewportSize({ width: 1024, height: 800 });
   await expect.poll(async () => (await sheet.boundingBox()).width).toBe(360);
@@ -288,7 +300,7 @@ test("取得バーで内容を確認でき、直接の項目移動・途中確�
   await expect(sheet).toHaveAttribute("data-mode", "review");
   await expect(sheet.locator(".field").first()).toContainText("1400 蔵前");
   await expect(sheet.locator("footer .hint, footer .review-utility")).toHaveCount(0);
-  await expect(sheet.getByRole("button", { name: /Googleカレンダーで開く/ })).toBeVisible();
+  await expect(sheet.getByRole("link", { name: /Googleカレンダーで開く/ })).toBeVisible();
   await sheet.locator(".field").nth(2).tap();
   await page.locator("article p").filter({ hasText: "受付は開始30分前" }).tap();
   // Selecting details advances automatically, even if location was left blank.
@@ -678,25 +690,26 @@ test("旧設定の削除失敗は起動を妨げず、次の背景起動で再�
 });
 
 
-test("実機用のカレンダー直接リンクは検証ビルドだけに含め、予定の全項目を維持する", async ({ page }) => {
+test("カレンダーの直接リンクはキーボードで開け、再選択した内容も反映する", async ({ page }) => {
   const sheet = await start(page);
-  await pickDate(sheet);
+  await pickDate(sheet, /^移動込み/);
   await sheet.getByRole("button", {name: "内容を確認", exact: true}).tap();
-  const links = sheet.locator(".calendar-handoff-probe");
-  if (process.env.VITE_CALENDAR_HANDOFF_PROBE !== "true") {
-    await expect(links).toHaveCount(0);
-    return;
-  }
-  await expect(links).toHaveCount(2);
-  await sheet.getByRole("button", {name: /Googleカレンダーで開く/}).tap();
-  const original = new URL(await page.evaluate(() => window.__sheetPreview.lastCalendar));
-  for (let i = 0; i < 2; i++) {
-    const link = links.nth(i);
-    const target = new URL(await link.getAttribute("href"));
-    expect(target.origin).toBe(original.origin);
-    expect([...target.searchParams]).toEqual([...original.searchParams]);
-    expect(target.pathname).toBe(i ? "/calendar/r/eventedit" : "/calendar/render");
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
-  }
+  const link = sheet.getByRole("link", {name: /Googleカレンダーで開く/});
+  const first = await link.getAttribute("href");
+  await sheet.locator(".field").first().tap();
+  await page.locator("#event-title").tap();
+  await sheet.getByRole("button", {name: "内容を確認", exact: true}).tap();
+  await expect(link).not.toHaveAttribute("href", first);
+  const expected = await link.getAttribute("href");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(sheet.locator(".calendar-handoff-probe")).toHaveCount(0);
+  await link.focus();
+  const opened = page.waitForEvent("popup");
+  await link.press("Enter");
+  const destination = await opened;
+  await destination.waitForLoadState("domcontentloaded");
+  expect(destination.url()).toBe(expected);
+  await destination.close();
+  await expect(sheet.locator(".field").first()).toContainText("蔵前の活版印刷ワークショップ");
 });

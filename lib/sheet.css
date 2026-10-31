@@ -28,8 +28,8 @@
 header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 18px; flex-shrink: 0; background: var(--bar-heading); color: var(--bar-on-heading); }
 h2 { min-width: 0; cursor: grab; touch-action: none; user-select: none; flex: 1; padding: 6px 0; font-size: 15px; line-height: 1.5; margin: 0; font-weight: 600; }
 button, input, select { font: inherit; }
-button { cursor: pointer; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--surface); color: var(--accent); touch-action: manipulation; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+button, .primary { cursor: pointer; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--surface); color: var(--accent); touch-action: manipulation; }
+button:focus-visible, .primary:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 button:disabled { opacity: .45; cursor: default; }
 .icon-button { flex: 0 0 44px; padding: 0; font-size: 25px; border: 0; background: transparent; color: inherit; }
 .content { min-height: 0; flex: 1; overflow: auto; overscroll-behavior: contain; padding: 14px 16px 20px; }
@@ -59,7 +59,7 @@ footer { padding: 10px 16px 14px; border-top: 1px solid var(--line); flex-shrink
 .field { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; color: var(--ink); margin-bottom: 10px; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .field-label { color: var(--muted); font-size: 12px; }
 .actions { display: grid; grid-template-columns: 1fr 44px; align-items: center; gap: 8px; }
-.primary { background: var(--action); color: var(--on-action); border-color: var(--action); font-size: 14px; font-weight: 600; }
+.primary { display: flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; background: var(--action); color: var(--on-action); border-color: var(--action); font-size: 14px; font-weight: 600; }
 .download { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px; font-size: 10px; font-weight: 600; background: transparent; }
 .download svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
 .hint { font-size: 11px; color: var(--muted); margin: 0; grid-column: 1 / -1; }
@@ -146,5 +146,3 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 .steps button.range-preview .step-value { color: var(--ink); }
 .nearby-selection { position: fixed; pointer-events: auto; background: var(--action); color: var(--on-action); border-color: var(--action); box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow) 24%, transparent); font: 600 12px/1.5 -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', sans-serif; white-space: nowrap; }
 .selection-confirm { background: var(--action); color: var(--on-action); border-color: var(--action); }
-
-.calendar-handoff-probe { grid-column: 1 / -1; color: var(--accent); font-size: 12px; padding: 8px 0; }

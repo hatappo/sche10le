@@ -30,14 +30,10 @@ test.beforeAll(async () => {
     viewport: { width: 1000, height: 850 }, timezoneId: "Asia/Tokyo",
   });
   worker = context.serviceWorkers()[0] ?? await context.waitForEvent("serviceworker");
-  // Capture the real validated handoff; tests must not contact Google.
-  await worker.evaluate(() => {
-    const create = chrome.tabs.create.bind(chrome.tabs);
-    chrome.tabs.create = (properties) => {
-      globalThis.__calendarRequest = properties.url;
-      return create({ ...properties, url: "about:blank" });
-    };
-  });
+  // Follow the actual anchor in a new tab, but keep routine tests offline.
+  await context.route("https://calendar.google.com/**", route => route.fulfill({
+    contentType: "text/html", body: "<!doctype html><title>Calendar test destination</title>",
+  }));
 });
 test.afterAll(async () => {
   await context?.close();
@@ -80,9 +76,21 @@ test("共通ドロワーで取得・書式・移動時間・Google URL・ICSを�
     expect(file).toContain("SUMMARY:1400 蔵前の活版印刷ワークショップ 1600");
     expect(file).toContain("DTSTART:20261108T041500Z");
     expect(file).toContain(baseUrl);
-    await sheet.getByRole("button", { name: /Googleカレンダーで開く/ }).click();
-    await expect(sheet.locator(".status")).toContainText("カレンダーを開きました");
-    const handoff = new URL(await worker.evaluate(() => globalThis.__calendarRequest));
+    const calendarLink = sheet.getByRole("link", { name: /Googleカレンダーで開く/ });
+    await worker.evaluate(() => chrome.storage.local.set({titleFormat: "{title}"}));
+    await expect.poll(async () => new URL(await calendarLink.getAttribute("href")).searchParams.get("text"))
+      .toBe("蔵前の活版印刷ワークショップ");
+    await worker.evaluate(() => chrome.storage.local.set({titleFormat: "{from:HHmm} {title} {to:HHmm}"}));
+    await expect.poll(async () => new URL(await calendarLink.getAttribute("href")).searchParams.get("text"))
+      .toBe("1400 蔵前の活版印刷ワークショップ 1600");
+    const opened = page.waitForEvent("popup");
+    await sheet.getByRole("link", { name: /Googleカレンダーで開く/ }).click();
+    const destination = await opened;
+    await destination.waitForLoadState("domcontentloaded");
+    const handoff = new URL(destination.url());
+    expect(handoff.pathname).toBe("/calendar/r/eventedit");
+    expect(await destination.evaluate(() => window.opener)).toBeNull();
+    await destination.close();
     expect(handoff.searchParams.get("dates")).toBe("20261108T041500Z/20261108T074500Z");
     expect(handoff.searchParams.get("text")).toBe("1400 蔵前の活版印刷ワークショップ 1600");
     expect(handoff.searchParams.get("details")).toContain(baseUrl);
