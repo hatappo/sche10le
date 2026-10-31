@@ -146,3 +146,5 @@ label { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; fo
 .steps button.range-preview .step-value { color: var(--ink); }
 .nearby-selection { position: fixed; pointer-events: auto; background: var(--action); color: var(--on-action); border-color: var(--action); box-shadow: 0 3px 12px color-mix(in srgb, var(--shadow) 24%, transparent); font: 600 12px/1.5 -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', sans-serif; white-space: nowrap; }
 .selection-confirm { background: var(--action); color: var(--on-action); border-color: var(--action); }
+
+.calendar-handoff-probe { grid-column: 1 / -1; color: var(--accent); font-size: 12px; padding: 8px 0; }

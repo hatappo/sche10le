@@ -676,3 +676,27 @@ test("旧設定の削除失敗は起動を妨げず、次の背景起動で再�
   expect(attempts).toBe(3);
   expect(saved).toEqual({travelMinutes: 45, titleFormat: "{title}", candidateOrder: "date"});
 });
+
+
+test("実機用のカレンダー直接リンクは検証ビルドだけに含め、予定の全項目を維持する", async ({ page }) => {
+  const sheet = await start(page);
+  await pickDate(sheet);
+  await sheet.getByRole("button", {name: "内容を確認", exact: true}).tap();
+  const links = sheet.locator(".calendar-handoff-probe");
+  if (process.env.VITE_CALENDAR_HANDOFF_PROBE !== "true") {
+    await expect(links).toHaveCount(0);
+    return;
+  }
+  await expect(links).toHaveCount(2);
+  await sheet.getByRole("button", {name: /Googleカレンダーで開く/}).tap();
+  const original = new URL(await page.evaluate(() => window.__sheetPreview.lastCalendar));
+  for (let i = 0; i < 2; i++) {
+    const link = links.nth(i);
+    const target = new URL(await link.getAttribute("href"));
+    expect(target.origin).toBe(original.origin);
+    expect([...target.searchParams]).toEqual([...original.searchParams]);
+    expect(target.pathname).toBe(i ? "/calendar/r/eventedit" : "/calendar/render");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+});
