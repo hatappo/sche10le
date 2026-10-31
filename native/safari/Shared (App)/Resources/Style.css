@@ -7,7 +7,7 @@ main { max-width: 620px; margin: 0 auto; padding: max(28px, env(safe-area-inset-
 .brand img { border-radius: 10px; }
 .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .app-settings, .app-back { width: 44px; padding: 10px; background: transparent; border-color: transparent; color: var(--ink); }
-.app-settings svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.app-settings svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .app-back { font-size: 22px; line-height: 1; }
 .icon-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
 .icon-choice { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px; color: var(--ink); background: var(--surface); border-color: var(--line); }
