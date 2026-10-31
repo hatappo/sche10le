@@ -1,6 +1,7 @@
 // Render the shared CSS mark with the existing browser, without new dependencies.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
+import { brandStyles } from "./brand-styles.js";
 
 if (process.platform !== "darwin") {
   throw new Error("アイコン生成はGeorgiaを使用できるmacOSで実行してください");
@@ -8,7 +9,7 @@ if (process.platform !== "darwin") {
 const root = new URL("../", import.meta.url);
 const directory = new URL("public/icons/", root);
 const theme = await readFile(new URL("lib/theme.css", root), "utf8");
-const brand = await readFile(new URL("lib/brand.css", root), "utf8");
+const brand = await brandStyles();
 const appIcons = new URL("native/safari/Shared (App)/Assets.xcassets/AppIcon.appiconset/", root);
 const catalog = JSON.parse(await readFile(new URL("Contents.json", appIcons), "utf8"));
 await mkdir(directory, { recursive: true });

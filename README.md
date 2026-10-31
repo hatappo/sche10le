@@ -80,7 +80,7 @@ npm run icons     # ブランドのCSS原稿から各サイズのPNGを再生成
 
 開発中は `.output/chrome-mv3-dev` をChromeに読み込みます。ブラウザの自動起動は無効にしています。ランナー用の追加依存を増やさず、既存のChromeで確認できます。
 
-配布用アイコンは `public/icons/` にあります。ストアには `128.png`（128×128px）を使用します。再生成はGeorgiaを使用できるmacOSとPlaywrightのChromiumで行い、`lib/brand.css` のマーク原稿とテーマ色をそのまま描画します。生成済みPNGを同梱するため、利用者の端末にGeorgiaがなくても配布用アイコンの見た目は変わりません。
+配布用アイコンは `public/icons/` にあります。ストアには `128.png`（128×128px）を使用します。再生成はGeorgiaを使用できるmacOSとPlaywrightのChromiumで行い、`lib/brand.css` が参照する `lib/brand-mark.svg` のマーク原稿をそのまま描画します。生成済みPNGを同梱するため、利用者の端末にGeorgiaがなくても配布用アイコンの見た目は変わりません。
 
 main向けPRとmainへのpushでは、`Regression` ワークフローがlint・型検査・単体テスト・両ブラウザ向けビルド・Chrome実拡張・Chromium/WebKit共通UIを検証します。外部イベントサイトの検証とは分離しています。詳しくは [CIの運用](scripts/ci/README.md) を参照してください。
 

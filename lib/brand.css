@@ -1,37 +1,9 @@
-/* Shared source for extension, native app and promotional icons. */
+/* Shared artwork; keep the approved glyph, reflection and handle together. */
 .brand-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 30px;
   height: 32px;
-  padding: 6px 2px 0 0;
-  background: linear-gradient(#ffffff45, #ffffff45) 6px 7px / 18px 1px no-repeat var(--accent);
-  border-radius: 7px;
-  color: var(--paper);
-  font: 16px/1 Georgia, serif;
-  letter-spacing: -1px;
-  position: relative;
-}
-/* Keep the calendar header above the date; overlay a simple lens and handle. */
-.brand-mark::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 4px;
-  width: 20px;
-  height: 20px;
-  border: 1.2px solid currentColor;
-  border-radius: 50%;
-}
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  top: 27px;
-  left: 21px;
-  width: 7px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 1px;
-  transform: rotate(45deg);
-  transform-origin: left center;
+  background: url("./brand-mark.svg") center / 100% 100% no-repeat;
+  color: transparent;
+  font-size: 0;
 }

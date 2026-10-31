@@ -15,7 +15,7 @@
   footer{margin-top:22px;font-size:11px;color:#788473;line-height:1.8}@media(max-width:740px){main{padding:24px 18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{display:block}.note{margin-top:12px}.stage{height:140px}}@media(max-width:420px){.grid{grid-template-columns:1fr}}
 </style>
 <main>
-  <header><div><h1>sche10le. / icon studies</h1><p>カレンダーの形と「10」を残して、「見つける」をどう添えるか。</p></div><p class="note">比較用の試作 · 配布アイコンには未反映</p></header>
+  <header><div><h1>sche10le. / icon studies</h1><p>カレンダーの形と「10」を残して、「見つける」をどう添えるか。</p></div><p class="note">2026-11-01 · C案を採用</p></header>
   <div class="grid" id="options"></div>
   <footer>大きい図は128px。下段は16 / 32 / 48pxの実寸です。A・Bの虫眼鏡はカレンダーの横線と同じ白27%で、反射のみ少し明るくしています。<br>細い反射は小さいサイズでは省略できる装飾として扱い、数字の読みやすさを優先します。</footer>
 </main>
@@ -27,7 +27,7 @@
   const number = `<text x="15.5" y="25" text-anchor="middle" fill="${paper}" font-family="Georgia,serif" font-size="16" letter-spacing="-1">10</text>`;
   function lens(cx,cy,r,color,reflection=false){return `<g fill="none" stroke="${color}" stroke-linecap="round"><circle cx="${cx}" cy="${cy}" r="${r}" stroke-width="1.2"/><path d="M${cx+r*.71} ${cy+r*.71}l4.4 4.4" stroke-width="2"/></g>${reflection?`<path d="M${cx-r*.68} ${cy-r*.12}a${r*.62} ${r*.62} 0 0 1 ${r*.56} ${-r*.52}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".8" stroke-linecap="round"/>`:''}`;}
   const options = [
-    {key:'—',title:'現在の案',body:calendar+number+lens(15,20,9.4,paper),caption:'比較の基準。レンズの輪郭が強く、数字と同じくらい目立つ。'},
+    {key:'—',title:'比較前の案',body:calendar+number+lens(15,20,9.4,paper),caption:'比較の基準。レンズの輪郭が強く、数字と同じくらい目立つ。'},
     {key:'A',title:'淡いレンズを重ねる',body:calendar+number+lens(15,20,9.4,faint,true),caption:'ご提案の方向。横線と同じ薄さに、小さな弧の反射。数字を主役に戻す。'},
     {key:'B',title:'虫眼鏡を右下にずらす',body:calendar+number+lens(23,23,7,faint,true),caption:'「10」の一部にレンズを重ねる。カレンダーと虫眼鏡を見分けやすくする。'},
     {key:'C',title:'「0」をレンズにする',body:calendar+number+`<path d="M23 24l2.5 2.5" stroke="${paper}" stroke-width="1.53" stroke-linecap="round"/><path d="M17.35 20.2C17.4 19.15 17.7 18.3 18.3 17.95" fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".7" stroke-linecap="round"/>`,caption:'0に短く細い柄を添え、内側のカーブに沿った短い弧を反射にする。形を増やさず、レンズらしさを添える。'},
