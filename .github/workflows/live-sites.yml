@@ -1,15 +1,12 @@
 name: Live event sites
 run-name: "Live event sites · ${{ inputs.sites || 'ci' }}"
 
-# Run after merging into main, never while a PR is being developed.
+# Prefer local runs before a release. CI is opt-in for environment diagnostics.
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       sites:
-        description: "標準はci（こくちーずプロを除外）。個別ID・カンマ区切りも指定可。全登録サイトはall"
+        description: "WF実行は非推奨（環境差の調査用）。リリース前はローカルで全件検証。対象はci・個別ID・カンマ区切り・all"
         required: true
         default: ci
         type: string
@@ -23,10 +20,7 @@ concurrency:
 
 jobs:
   live:
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:

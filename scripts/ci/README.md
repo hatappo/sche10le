@@ -22,7 +22,7 @@ Safariビルド後には `scripts/prepare-safari.js` でネイティブプロジ
 
 ブラウザテストはローカルfixtureだけを対象とし、外部イベントサイトへ接続しない。イメージとnpm依存の取得にはネットワークを使う。失敗時のみローカルfixtureのtrace・スクリーンショットを7日間保存する。UIとE2Eの出力先を分け、後続のテストが先の診断を消さないようにする。
 
-ライブ検証のトリガーは変更しない。PR中は走らず、マージ後またはmainからの手動実行に限定する。PRの権限は読み取りのみで、トークンをコンテナへ渡さない。新しいコミットが来たら同じPRの古い回帰実行をキャンセルする。
+ライブ検証はリリース前のローカル実行を推奨し、WFによる実行は非推奨。マージ時の自動実行は行わず、環境差を調査する場合のmainからの手動実行だけを残す。PRの権限は読み取りのみで、トークンをコンテナへ渡さない。新しいコミットが来たら同じPRの古い回帰実行をキャンセルする。
 
 ## ローカルで試す場合
 
@@ -34,7 +34,7 @@ bash scripts/ci/run-playwright.sh npm ci
 bash scripts/ci/run-playwright.sh npm test
 bash scripts/ci/run-playwright.sh npm run build
 bash scripts/ci/run-playwright.sh npx playwright test tests/e2e/live-harness.spec.js --reporter=line
-# 実サイトにアクセスする場合のみ（通常はWFで実行）
+# CI相当の環境差を調べる場合のみ（通常はローカルでnpm run test:live）
 LIVE_SITES=luma bash scripts/ci/run-playwright.sh npm run test:live
 ```
 

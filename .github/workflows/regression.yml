@@ -1,6 +1,6 @@
 name: Regression
 
-# Local fixtures only. Live event sites have their own post-merge workflow.
+# Local fixtures only. Live event sites have their own opt-in diagnostic workflow.
 on:
   pull_request:
     branches: [main]

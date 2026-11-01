@@ -11,6 +11,7 @@ npm ci
 npm run check
 npm run test:ui
 npm run test:e2e
+npm run test:live   # リリース前にローカルで全サイトを1回確認
 npm run zip
 ```
 
@@ -21,7 +22,7 @@ npm run zip
 - ポリシー：ルートの `PRIVACY.md`。旧0.5.0のポリシーへのリンクを残す。
 - スクリーンショット：`store/screenshots/`。`npm run build` の後、`node scripts/generate-store-screenshots.js` で実拡張とローカルのサンプルページから1280×800の4枚を生成する。撮影用コピーだけにlocalhost権限を追加し、配布用manifestは変えない。
 - アイコン：`public/icons/128.png`。プロモーション：`store/promotional/`。
-- PRのRegressionを通し、mainへのマージ後にLive event sitesを一度確認する。CI標準の除外理由も併せて確認する。
+- PRのRegressionを通し、リリース前に配布対象コミットでローカルのライブ検証を1回実行する。全サイトが対象。ワークフローによるライブ検証は非推奨とし、CI環境との差を調べる場合の手動実行だけに使う。
 - タグを作る直前に作業ツリー、対象コミット、バージョン、ZIP内manifest、含まれるファイルを確認する。未検証のネイティブ配布をリリース済みと表記しない。
 
 ## Appleの初回提出

@@ -96,16 +96,16 @@ Safari版はiPhone向けの下部シートとMac向けのドロワーを開発�
 
 ## 変更履歴と配布用ビルド
 
-バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.5.0` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。
+バージョンごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照してください。現在の配布タグは `v0.6.0` です。タグの内容からZIPを作る場合は、作業中の変更を退避してから実行します。
 
 ```sh
 git fetch --tags
-git switch --detach v0.5.0
+git switch --detach v0.6.0
 npm ci
 npm run zip
 ```
 
-Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0.5.0-chrome.zip`** です。ZIP内の `manifest.json` のバージョンも `0.5.0` になります。ビルド後に通常の開発へ戻る場合は `git switch main` を実行します。
+Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0.6.0-chrome.zip`** です。ZIP内の `manifest.json` のバージョンも `0.6.0` になります。ビルド後に通常の開発へ戻る場合は `git switch main` を実行します。
 
 変更してから配布する場合は、`npm run check` と `npm run test:e2e` も実行してください（ブラウザテストの初回準備は `npx playwright install chromium`）。ライブサイトの結果は配布するコミットに対応するものを確認します。バージョン更新時は `package.json`・`package-lock.json`・CHANGELOG・関連資料をそろえてからタグを作成します。
 
@@ -113,7 +113,9 @@ Chrome Web Storeへアップロードするファイルは **`.output/sche10le-0
 
 connpass・Doorkeeper・Peatix・TECH PLAY・こくちーずプロ・Meetup・Lumaの公開イベントページを、その都度Chromiumで開いて本番ビルドの拡張で検証します。HTMLのコピーは保存しません。通常の `npm test` / `npm run test:e2e` / `npm run check` では実サイトへアクセスしません。
 
-PRが **mainにマージされたとき** に、CI標準対象（`sites=ci`）を自動検証します。こくちーずプロはGitHub ActionsからHTTP応答を確認できないため標準対象外とし、理由付きで未検証として報告します。PRの作成・更新中、マージせずに閉じた場合、mainへの直接pushでは検証しません。必要なときはGitHub Actionsの **Live event sites → Run workflow → main** から手動実行でき、対象サイトも絞れます。ストア更新前にはアップロード対象コミットのCI結果と、こくちーずプロのローカル検証結果を確認してください。週次実行は運用が安定してから検討します。
+**ライブサイト検証は、ストアへのリリース前にローカルで全サイトを1回実行することを推奨します。ワークフローによる実行は非推奨です。** 頻繁な実行は不要で、GitHub Actionsからのアクセスだけが制限されることもあるためです。PR・マージ・push・定期スケジュールでは起動しません。CIでは外部サイトに依存しない回帰テストを継続します。
+
+ワークフローはCI環境との差を調査するための手動実行だけ残します。GitHub Actionsの **Live event sites → Run workflow → main** から起動できます。標準の `sites=ci` は `ciExclusionReason` を設定したサイトを理由付きで未検証として報告します。リリース前のローカル実行では、その除外も含めて全サイトを確認してください。
 
 ローカルでは `npm run build` の後に `npm run test:live` で全登録サイトを検証します。対象を絞る場合は `LIVE_SITES=connpass,meetup npm run test:live` を使います。WFの手動実行も `sites` にIDを指定でき、例えば `kokuchpro` でこくちーずプロだけを再調査できます。`all` を明示すればCIでも除外せず全登録サイトを検証します。開始・終了日時の両方を検証し、結果は `test-results/live/report.json` と `summary.md` に出力します。CIでは実行サマリーと14日間保存するArtifactから確認できます。実行対象のアクセス制限やページ消失は失敗とし、自動除外して成功扱いにはしません。
 
