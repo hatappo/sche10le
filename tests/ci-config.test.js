@@ -2,6 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
+test("実サイトへアクセスするWFはmainからの手動実行だけに限定する", async () => {
+  const workflow = await readFile(".github/workflows/live-sites.yml", "utf8");
+  assert.match(workflow, /^on:\n {2}workflow_dispatch:/m);
+  assert.doesNotMatch(workflow, /^ {2}(?:pull_request(?:_target)?|push|schedule|workflow_run):/m);
+  assert.ok(workflow.includes("if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'"));
+  assert.match(workflow, /default: ci/);
+  assert.match(workflow, /contents: read/);
+  assert.match(workflow, /persist-credentials: false/);
+  assert.doesNotMatch(workflow, /secrets\.|: write/);
+});
+
 test("CIの公式イメージとインストールするPlaywrightのバージョンが一致する", async () => {
   const pkg = JSON.parse(await readFile("package.json", "utf8"));
   const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
