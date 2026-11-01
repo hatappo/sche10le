@@ -2,7 +2,7 @@
 
 Webページの日程を見つけて、Googleカレンダーへ。WXT / Manifest V3 / バニラJavaScriptで作るChrome・Safari拡張です。実行時の追加パッケージ、サーバー、OAuthは使いません。
 
-**開発中：0.6.0 はSafari／Chrome共通UIへの移行版です。正式リリース・Safariの配布はまだです。** 最新の公開版は0.5.0です。[統合方針と公開前チェック](docs/dev/unified-0.6.0.md)を参照してください。
+**0.6.0はChrome／Safari共通UIへの移行版です。** Chrome Web Store提出用のパッケージを提供します。ストアでの公開は審査完了後となり、SafariのApp Store配布は引き続き準備中です。[変更履歴](CHANGELOG.md)・[公開手順](docs/dev/release-0.6.0.md)を参照してください。
 
 ## 試す
 

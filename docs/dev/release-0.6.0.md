@@ -2,6 +2,8 @@
 
 ChromeとSafariのコードを0.6.0に揃える。コードのリリース、Chrome Web Storeの公開、Appleの初回審査完了は別の工程とする。Safariの未確認項目を、Chrome向けZIPの生成成功だけで完了扱いにしない。
 
+0.6.0のChrome版は現在の公開者で先行提出する。Appleの登録・配布準備と法人名義の検討は並行して進め、Chrome版のタグ作成を待たせない。将来のChrome公開者の移管は、バージョン更新とは別に扱う。
+
 ## Chrome Web Store
 
 ```sh
