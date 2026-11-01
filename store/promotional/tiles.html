@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sche10le — Promotional tiles</title>
+    <link rel="stylesheet" href="../../lib/theme.css" />
+    <link rel="stylesheet" href="../../lib/brand.css" />
     <style>
+      .promo-mark { transform: scale(7); transform-origin: top left; }
       :root {
         color-scheme: light;
       }
@@ -200,7 +203,7 @@
           <rect x="28" y="280" width="180" height="6" rx="3" fill="#d9dfd2" />
           <rect x="28" y="297" width="125" height="6" rx="3" fill="#d9dfd2" />
         </g>
-        <!-- The same 30:32 calendar mark and Georgia numerals as the sidebar. -->
+        <!-- Shared magnifier and date mark from lib/brand.css. -->
         <g transform="translate(377 146) rotate(7 116 124)">
           <rect
             x="3"
@@ -213,36 +216,7 @@
           />
           <rect width="234" height="248" rx="32" fill="#e8efde" />
           <foreignObject x="12" y="12" width="210" height="224">
-            <div
-              xmlns="http://www.w3.org/1999/xhtml"
-              style="
-                position: relative;
-                display: grid;
-                place-items: center;
-                box-sizing: border-box;
-                width: 210px;
-                height: 224px;
-                padding-top: 42px;
-                border-radius: 49px;
-                background: #2c6045;
-                color: #f8f8f1;
-                font:
-                  112px/1 Georgia,
-                  serif;
-                letter-spacing: -7px;
-              "
-            >
-              <span
-                style="
-                  position: absolute;
-                  top: 49px;
-                  left: 42px;
-                  right: 42px;
-                  border-top: 7px solid #ffffff45;
-                "
-              ></span
-              >10
-            </div>
+            <div xmlns="http://www.w3.org/1999/xhtml" class="brand-mark promo-mark">10</div>
           </foreignObject>
         </g>
         <path

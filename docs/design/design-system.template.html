@@ -924,7 +924,7 @@
           <h1><span class="large-brand">Sche10le</span>デザインシステム</h1>
           <img
             src="{{ICON128}}"
-            alt="横線と数字10のカレンダーマーク"
+            alt="カレンダーの数字10の0を虫眼鏡にしたマーク"
             width="128"
             height="128"
           />
@@ -963,7 +963,7 @@
           <h2>ブランドとアイコン</h2>
         </div>
         <p class="intro">
-          セリフ体の「10」が日付と名前をつなぐ。ワードマークの数字はイタリック、最後の点には黄土色を添える。
+          日付を表すセリフ体の「10」の0をレンズにし、短い柄と淡い反射を添える。ワードマークの数字はイタリック、最後の点には黄土色を添える。
         </p>
         <div class="brand-stage">
           <div>
@@ -999,7 +999,7 @@
             </figure>
           </div>
           <p class="small-note">
-            実際の配布用PNGを埋め込み。<br />生成原稿は30×32px、角丸7px。フッターではPNGを24pxで表示。<br />上下のリングを加えず、横線と数字で表す。
+            実際の配布用PNGを埋め込み。<br />生成原稿は30×32px、角丸7px。アイコンは生成済みPNGを共用。<br />カレンダーの横線と形を残し、0を簡潔な虫眼鏡にする。
           </p>
         </div>
       </section>
@@ -1033,7 +1033,7 @@
           </div>
         </div>
         <p class="small-note">
-          初回スキャン・再試行は白系の背景と細い枠、影なし。再スキャン・選び直すは背景なしの緑文字とし、ホバー時に下線を出す。操作ボタンの深緑の塗りは「Googleカレンダーで開く」に使う。
+          候補・補助操作は白系の背景と細い枠、影なし。再スキャン・選び直すは背景なしの緑文字とし、ホバー時に下線を出す。操作ボタンの深緑の塗りは「Googleカレンダーで開く」に使う。
         </p>
         <p class="callout">
           コントラスト（紙色に対して）：主文 {{INK_CONTRAST}}:1 ／ 補助色
@@ -1046,38 +1046,38 @@
           <h2>文字と余白</h2>
         </div>
         <p class="intro">
-          ブランドと日付はセリフ体。操作の説明は読みやすい日本語サンセリフ。精密さが必要な書式には等幅を使う。
+          ブランドはセリフ体。日付と操作文はOSの日本語フォント。操作の説明は読みやすい日本語サンセリフ。精密さが必要な書式には等幅を使う。
         </p>
         <div class="type-grid">
           <div class="type-sample">
-            <span class="label">GEORGIA / BRAND & DATE</span>
+            <span class="label">GEORGIA / BRAND</span>
             <div class="serif">Sche10le · 10</div>
-            <p>ロゴ 20px・600 ／ 日付 28px。表示例は拡大。</p>
+            <p>ロゴ原稿 20px・600。表示例は拡大。</p>
           </div>
           <div class="type-sample">
-            <span class="label">HIRAGINO / YU GOTHIC / MEIRYO</span>
+            <span class="label">SYSTEM / HIRAGINO</span>
             <div class="sans">ページ上の文字をクリック</div>
-            <p>本文 13px / 1.65 ／ 取得内容 12px / 1.7。</p>
+            <p>本文 14px / 1.55 ／ 補足 12px。</p>
           </div>
           <div class="type-sample">
-            <span class="label">AVENIR NEXT / AVENIR</span>
+            <span class="label">SYSTEM / DATE & TIME</span>
             <div class="time">14:00–16:00</div>
-            <p>候補の時刻は14px / 1.7、字間0.4px。</p>
+            <p>候補の時刻も本文と同じ書体・14px。</p>
           </div>
           <div class="type-sample">
             <span class="label">MONOSPACE / FORMAT</span>
             <div class="format">{from:HHmm} {title}</div>
-            <p>書式入力 12px / 1.6。OS標準のフォントを利用。</p>
+            <p>入力欄は16px。OS標準のフォントを利用。</p>
           </div>
         </div>
         <div class="metrics">
-          <div class="metric"><b>24</b><span>px · 本文の左右余白</span></div>
+          <div class="metric"><b>16</b><span>px · 本文の左右余白</span></div>
           <div class="metric"><b>12</b><span>px · 候補カードの角丸</span></div>
-          <div class="metric"><b>56</b><span>px · 主操作の最小高さ</span></div>
-          <div class="metric"><b>280</b><span>px · パネル最小幅</span></div>
+          <div class="metric"><b>44</b><span>px · 操作対象の最小高さ</span></div>
+          <div class="metric"><b>360</b><span>px · PCのドロワー幅</span></div>
         </div>
         <p class="small-note">
-          4・6・8・10・12・16・18・20・24・32pxを用途に合わせる。厳密な8pxグリッドではない。320px以下では本文の左右を16pxに縮める。
+          画面幅に応じて下部シートと右側ドロワーを切り替える。狭幅では左右12pxの余白を取り、入力・内容のスクロール領域を確保する。
         </p>
       </section>
       <section class="chapter" id="components">
@@ -1086,7 +1086,7 @@
           <h2>UIの部品</h2>
         </div>
         <p class="intro">
-          現在のサイドパネルCSSを使った操作見本。候補に触れて展開し、登録方法や取得結果の行を選べる。実ページの読み取りや保存は行わない。
+          0.6.0開発版の共通シートCSSを使った操作見本。候補に触れて展開し、登録方法や取得結果の行を選べる。実ページの読み取りや保存は行わない。
         </p>
         <div class="demo-controls" role="group" aria-label="UIの状態を切り替え">
           <button class="control" data-view="list" aria-pressed="true">
@@ -1102,7 +1102,7 @@
           <iframe
             class="panel-frame"
             id="panel-demo"
-            title="サイドパネルの操作見本"
+            title="共通ドロワーの操作見本"
             sandbox="allow-scripts"
             srcdoc="{{COMPONENTS}}"
           ></iframe>
@@ -1111,28 +1111,28 @@
               <span class="key">01 / CHOOSE</span>
               <h3>候補と補助操作を分ける</h3>
               <p>
-                日程はカード、初回スキャンは白系の小さな枠付きボタン、再スキャンはリンク風。未許可時は対象ページの情報帯を隠し、アイコンを文中に添えた操作案内だけを表示する。未スキャン・実行中は日程の見出し・件数・並び順も隠し、完了後は0件でも表示する。登場順／日時順は見出しの隣に控えめに置く。
+                拡張アイコンで起動し、日程はカード、再スキャンはリンク風に表示する。再スキャンは件数の隣に、設定はヘッダの歯車に置く。一覧と設定ではフッタを省く。注入できないページでは別の案内ページを表示する。
               </p>
             </article>
             <article>
               <span class="key">02 / PICK</span>
               <h3>取得結果そのものが入口</h3>
               <p>
-                タイトル・場所・詳細の行全体がクリック対象。現在の項目は白系の背景・深緑の枠・項目名の太字で示す。「選択中」ラベルは置かず、完了は淡緑の面と末尾のチェックで示す。
+                取得バーの3ボタンには、現在の内容を最大2行で表示する。確認画面のタイトル・場所・詳細の行全体がクリック対象。現在の項目は白系の背景・深緑の枠・項目名の太字で示す。「選択中」ラベルは置かず、完了は淡緑の面と末尾のチェックで示す。
               </p>
             </article>
             <article>
               <span class="key">03 / OPEN</span>
               <h3>主操作は一か所に</h3>
               <p>
-                深緑の「Googleカレンダーで開く」を下部に固定。その下に小さなロゴと歯車アイコンの設定ボタンを1行で置く。ロゴは表示のみ。途中でも進める。保存自体はカレンダー側で行う。
+                確認画面の下部に「Googleカレンダーで開く」とICSボタンを置く。取得途中でも取得バー右上の展開ボタン（内容を確認）から進める。保存自体はカレンダー側で行う。
               </p>
             </article>
             <article>
               <span class="key">04 / SETTINGS</span>
               <h3>設定では面ごと切り替える</h3>
               <p>
-                一覧とフッターが退き、専用の淡い背景に。自動保存を統一し、エラーは赤い枠と理由で伝える。名言はこの画面の最下部だけに置く。
+                一覧・確認から設定専用の画面へ切り替える。移動時間・書式・テーマを細い区切り線と余白でまとめ、背景色や影は増やさない。自動保存を統一し、エラーは赤い枠と理由で伝える。名言はこの画面の最下部だけに置く。
               </p>
             </article>
           </div>
@@ -1157,11 +1157,11 @@
           srcdoc="{{OVERLAY}}"
         ></iframe>
         <p class="small-note" style="margin-top: 12px">
-          実装の操作バーCSSを使用した静的見本。幅640px、下24px。560px以下では操作列を2行にする。
+          実装の共通シートCSSを使用した静的見本。取得バーの高さは212px。案内帯を上下移動でき、初期位置へ戻せる。
         </p>
         <div class="motion-grid">
           <div class="motion-sample">
-            <h3>取得できた欄を、一瞬だけ照らす</h3>
+            <h3>取得完了を、光とチェックで伝える</h3>
             <div class="motion-field" id="motion-field">
               <small>タイトル</small>活版印刷のワークショップ
             </div>
@@ -1171,24 +1171,24 @@
             </p>
           </div>
           <div>
-            <div class="timing"><b>140ms</b><span>ボタンの色と押下</span></div>
+            <div class="timing"><b>320ms</b><span>シートの高さの変形</span></div>
             <div class="timing">
-              <b>180ms</b><span>登録パターンの開閉</span>
+              <b>180ms</b><span>ホバーから候補を開くまで</span>
             </div>
-            <div class="timing"><b>220ms</b><span>候補カードの出現</span></div>
+            <div class="timing"><b>850ms</b><span>取得した項目のラベルの光</span></div>
             <div class="timing">
-              <b>800ms</b><span>取得先欄のフラッシュ</span>
-            </div>
-            <div class="timing">
-              <b>850ms</b><span>取得モード開始の強調</span>
+              <b>1.2秒</b><span>カレンダーボタンの光</span>
             </div>
             <div class="timing">
-              <b>900ms</b><span>完了チェックの表示</span>
+              <b>10秒</b><span>次の主操作の光までの間隔</span>
+            </div>
+            <div class="timing">
+              <b>3回</b><span>主操作の光の上限</span>
             </div>
           </div>
         </div>
         <p class="callout">
-          元の日時はスクロールと波紋（1.1秒×3回）で示す。対象以外を48%で暗くし、小さな文字も見つけやすくする。取得バーの「閉じる」は全段階で同じ名前にし、取得済みの内容を残す。
+          元の日時はスクロールと波紋（1.1秒×3回）で示す。対象以外を48%で暗くし、小さな文字も見つけやすくする。右上の「×」は全段階で同じ閉じる操作にし、取得済みの内容を残す。
         </p>
       </section>
       <section class="chapter" id="promotion">

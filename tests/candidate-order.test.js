@@ -37,7 +37,7 @@ test("構造化データを優先した統合後も本文の登場順に戻し�
 
 test("同日の時刻は実時刻順、終日は先頭、同時刻は登場順で安定する", () => {
   const make = (start, end, evidence) =>
-    identify({ date: "2026-11-08", start, end, evidence, source: "ai" });
+    identify({ date: "2026-11-08", start, end, evidence, source: "text" });
   const events = [
     make("2026-11-08T16:00:00+09:00", "2026-11-08T17:00:00+09:00", "later"),
     make("2026-11-08T01:00:00Z", "2026-11-08T02:00:00Z", "first ten"),
@@ -56,12 +56,12 @@ test("同日の時刻は実時刻順、終日は先頭、同時刻は登場順�
   assert.deepEqual(orderCandidates([], "date", ""), []);
 });
 
-test("AIの引用は全角・空白と同じ引用の出現回数を考慮して登場順に並べる", () => {
+test("本文の引用は全角・空白と同じ引用の出現回数を考慮して登場順に並べる", () => {
   const text = "告知\nＡ の予定\nＢ の予定\nＡ の予定";
   const make = (evidence, start) =>
     identify({
       date: "2026-11-08",
-      source: "ai",
+      source: "text",
       evidence,
       locator: sourceLocator(text, start, start + evidence.length),
     });

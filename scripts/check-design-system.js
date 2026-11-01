@@ -54,31 +54,20 @@ try {
     await expect(page.frameLocator("#overlay-demo").locator("html")).toHaveAttribute("data-theme", theme.id);
   }
   await page.locator("#demo-theme").selectOption("chitosemidori");
-  assert.ok(
-    await frame
-      .locator(".brand img")
-      .evaluate((img) => img.complete && img.naturalWidth > 0),
-  );
-  await expect(frame.locator("header, a.brand")).toHaveCount(0);
-  await expect(frame.locator(".footer .settings-button")).toBeVisible();
   await page.locator("#panel-demo").scrollIntoViewIfNeeded();
-  await frame.locator('[data-view="list"] .candidate-heading').focus();
-  await expect(frame.locator('[data-view="list"] .candidate')).toHaveClass(
-    /expanded/,
-  );
-  // Continue the keyboard flow without changing to pointer input mid-expansion.
+  await frame.locator(".candidate-toggle").focus();
+  await expect(frame.locator(".candidate-toggle")).toHaveAttribute("aria-expanded", "true");
   await frame.getByRole("button", { name: /移動込み/ }).press("Enter");
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "pick");
-  await expect(page.locator('[data-view="pick"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(frame.locator("#variant-label")).toContainText("13:30–16:30");
+  await frame.getByRole("button", { name: "内容を確認", exact: true }).click();
+  await expect(frame.locator("body")).toHaveAttribute("data-demo", "review");
+  await expect(frame.locator("#download-demo svg text")).toHaveText("ICS");
+  await expect(frame.locator("#download-demo")).toHaveCSS("width", "44px");
+  // Wait for the sheet's expansion before clicking inside the scrolling frame.
+  await frame.locator(".sheet").evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished)));
   await frame.getByRole("button", { name: "選び直す", exact: true }).click();
   await expect(frame.locator("body")).toHaveAttribute("data-demo", "list");
-  await expect(frame.locator('[data-view="list"] .candidate')).not.toHaveClass(
-    /expanded/,
-  );
+  await expect(frame.locator(".candidate-toggle")).toHaveAttribute("aria-expanded", "false");
   await page.getByRole("button", { name: "書式エラー", exact: true }).click();
   await expect(frame.locator("#format")).toHaveAttribute(
     "aria-invalid",

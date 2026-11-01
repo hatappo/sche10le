@@ -1,0 +1,9 @@
+// Defaults for local development. App Store identifiers are not registered yet.
+#include "Version.xcconfig"
+CURRENT_PROJECT_VERSION = 1
+SCHE10LE_BUNDLE_IDENTIFIER = dev.sche10le.prototype
+SCHE10LE_EXTENSION_BUNDLE_IDENTIFIER = $(SCHE10LE_BUNDLE_IDENTIFIER).Extension
+DEVELOPMENT_TEAM =
+
+// Personal signing configuration is deliberately excluded from Git.
+#include? "Signing.local.xcconfig"

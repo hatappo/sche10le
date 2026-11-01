@@ -1,0 +1,9 @@
+/* Shared artwork; keep the approved glyph, reflection and handle together. */
+.brand-mark {
+  display: block;
+  width: 30px;
+  height: 32px;
+  background: url("./brand-mark.svg") center / 100% 100% no-repeat;
+  color: transparent;
+  font-size: 0;
+}

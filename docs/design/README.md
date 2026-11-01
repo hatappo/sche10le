@@ -19,3 +19,7 @@ node scripts/check-design-system.js
 検証にはPlaywrightのChromiumが必要です（初回は `npx playwright install chromium`）。オフライン表示、UIの状態切り替え、狭い画面、動きを減らす設定、Markdownのダウンロード内容を確認します。確認用画像は `test-results/design-system/` に出力します。
 
 色・UI・アイコン・プロモーション素材を変更した場合は、原稿との整合性を確認してHTMLを再生成してください。HTMLには生成時点のバージョンと参照コミットを記録します。画像とCSSを埋め込むため、完成したHTMLの閲覧にリポジトリやサーバーは不要です。
+
+## 保管する内容
+
+採用済みのデザイン仕様・理由・原稿の参照先・再生成手順を維持します。比較案のHTMLや画像、途中経過のスクリーンショットは検討終了後に削除し、必要な結論だけを `design-system.md` に統合します。変更経緯はGit履歴で追跡します。一時成果物の扱いは [docs共通方針](../README.md#資料の保管方針) に従います。
